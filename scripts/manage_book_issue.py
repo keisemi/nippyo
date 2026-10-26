@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import re
 from pathlib import Path
 
 import manage_book
@@ -69,9 +70,55 @@ def get_issue() -> dict:
     return issue
 
 
-def verify_edit_target(book_id: str, current_title: str) -> None:
+def load_rows() -> list[dict[str, str]]:
     with MASTER.open("r", encoding="utf-8-sig", newline="") as f:
-        rows = list(csv.DictReader(f))
+        return list(csv.DictReader(f))
+
+
+def extract_product_code(isbn: str) -> str:
+    digits = re.sub(r"\D", "", isbn or "")
+    # 日本評論社のISBN: 978-4-535-xxxxx-x / 4-535-xxxxx-x
+    # 最終チェックデジットが欠けていても、商品番号5桁が明確なら採用する。
+    if digits.startswith("9784535") and len(digits) >= 12:
+        return digits[7:12]
+    if digits.startswith("4535") and len(digits) >= 9:
+        return digits[4:9]
+    return ""
+
+
+def make_new_book_id(fields: dict[str, str]) -> str:
+    code_new = extract_product_code(fields.get("新ISBN", ""))
+    code_old = extract_product_code(fields.get("旧ISBN", ""))
+    if code_new and code_old and code_new != code_old:
+        raise SystemExit(
+            "新ISBNと旧ISBNの商品番号5桁が一致しません。\n"
+            f"新ISBN: {code_new}\n旧ISBN: {code_old}"
+        )
+    code = code_new or code_old
+    rows = load_rows()
+    used = {(row.get("id") or "").strip() for row in rows}
+    if code:
+        if code in used:
+            raise SystemExit(f"書籍ID {code} はすでに登録されています。既存書誌を修正してください。")
+        return code
+
+    # ISBNなしは N + 5桁連番。既存のN番号の最大値+1を採用する。
+    n_values = []
+    for book_id in used:
+        m = re.fullmatch(r"N(\d{5})", book_id)
+        if m:
+            n_values.append(int(m.group(1)))
+    next_number = max(n_values, default=0) + 1
+    while next_number <= 99999:
+        candidate = f"N{next_number:05d}"
+        if candidate not in used:
+            return candidate
+        next_number += 1
+    raise SystemExit("ISBNなし書籍用IDの空き番号がありません。")
+
+
+def verify_edit_target(book_id: str, current_title: str) -> None:
+    rows = load_rows()
     matches = [row for row in rows if (row.get("id") or "").strip() == book_id]
     if not matches:
         raise SystemExit(f"書籍ID {book_id} は登録されていません。管理用検索ページを更新してください。")
@@ -94,20 +141,19 @@ def main() -> None:
 
     if issue_title.startswith("[書誌修正]"):
         operation = "既存データ修正"
-    elif issue_title.startswith("[書誌新規]"):
-        operation = "新規登録"
-    else:
-        raise SystemExit("書誌管理用Issueではありません。")
-
-    book_id = fields.get("書籍ID", "").strip()
-    if not book_id:
-        raise SystemExit("書籍IDがありません。")
-
-    if operation == "既存データ修正":
+        book_id = fields.get("書籍ID", "").strip()
+        if not book_id:
+            raise SystemExit("書籍IDがありません。")
         current_title = fields.get("現在の書名", "").strip()
         if not current_title:
             raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
         verify_edit_target(book_id, current_title)
+    elif issue_title.startswith("[書誌新規]"):
+        operation = "新規登録"
+        book_id = make_new_book_id(fields)
+        print(f"新規書籍IDを自動採番: {book_id}")
+    else:
+        raise SystemExit("書誌管理用Issueではありません。")
 
     os.environ["BOOK_OPERATION"] = operation
     os.environ["BOOK_ID"] = book_id

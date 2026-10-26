@@ -6,15 +6,8 @@ body:
     attributes:
       value: |
         新規書誌の登録用フォームです。
-        書名と書籍IDは必須です。その他は分かる範囲で入力してください。
-
-  - type: input
-    id: book_id
-    attributes:
-      label: 書籍ID
-      description: "既存の書籍IDと重複しないIDを入力してください。"
-    validations:
-      required: true
+        書籍IDは入力不要です。ISBNがある場合は、日本評論社ISBNの商品番号5桁（例：978-4-535-54143-6 → 54143）を自動で書籍IDにします。
+        ISBNがない場合は、`N` + 5桁の管理用IDを自動採番します。
 
   - type: input
     id: title
@@ -118,6 +111,7 @@ body:
     id: description
     attributes:
       label: 内容紹介
+      description: "文中リンクは [【コチラ】](https://example.com/) の形式で登録できます。"
 
   - type: textarea
     id: toc

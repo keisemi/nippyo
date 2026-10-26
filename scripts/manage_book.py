@@ -157,6 +157,11 @@ def main() -> None:
     book_id = env("BOOK_ID")
     if not book_id:
         raise SystemExit("書籍IDは必須です。")
+    if not re.fullmatch(r"(?:\d{5}|N\d{5})", book_id):
+        raise SystemExit(
+            "書籍IDはISBNの商品番号5桁、またはISBNなし書籍用の N+5桁である必要があります: "
+            + book_id
+        )
 
     rows = load_master()
     by_id = {row["id"]: i for i, row in enumerate(rows)}
