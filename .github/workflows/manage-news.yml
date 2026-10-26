@@ -13,9 +13,16 @@ on:
           - "既存データ修正"
           - "削除"
       target_title:
-        description: "修正・削除する既存タイトル（新規登録では空欄）"
-        required: false
-        type: string
+        description: "修正・削除するお知らせ（新規登録では「選択不要」）"
+        required: true
+        type: choice
+        default: "（新規登録では選択不要）"
+        options:
+          # NEWS_TITLES_START
+          - "（新規登録では選択不要）"
+          - "臨時サイトオープン"
+          - "臨時ホームページを公開しました"
+          # NEWS_TITLES_END
       date:
         description: "日付 YYYY-MM-DD（新規登録で空欄なら今日）"
         required: false
@@ -95,6 +102,9 @@ jobs:
       - name: Generate public news data
         run: python scripts/build_news.py
 
+      - name: Refresh registered-title dropdown
+        run: python scripts/sync_news_workflow.py
+
       - name: Validate news data
         shell: bash
         run: |
@@ -128,7 +138,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt
+          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt .github/workflows/manage-news.yml
           if git diff --cached --quiet; then
             echo "変更はありません。"
           else

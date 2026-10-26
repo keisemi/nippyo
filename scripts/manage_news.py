@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "data" / "news.csv"
 FIELD_ORDER = ["id", "date", "category", "title", "text", "url", "pinned", "published"]
 CLEAR_TOKEN = "__CLEAR__"
+TARGET_PLACEHOLDER = "（新規登録では選択不要）"
 
 
 def env(name: str) -> str:
@@ -110,8 +111,8 @@ def main():
     target_title = env("NEWS_TARGET_TITLE")
 
     if operation == "削除":
-        if not target_title:
-            raise SystemExit("削除時は「修正・削除する既存タイトル」が必須です。")
+        if not target_title or target_title == TARGET_PLACEHOLDER:
+            raise SystemExit("削除時は、登録済みのお知らせタイトルをプルダウンから選んでください。")
         idx = find_target(rows, target_title)
         removed = rows.pop(idx)
         save_rows(rows)
@@ -124,8 +125,8 @@ def main():
         existing = {key: "" for key in FIELD_ORDER}
         idx = None
     else:
-        if not target_title:
-            raise SystemExit("修正時は「修正・削除する既存タイトル」が必須です。")
+        if not target_title or target_title == TARGET_PLACEHOLDER:
+            raise SystemExit("修正時は、登録済みのお知らせタイトルをプルダウンから選んでください。")
         idx = find_target(rows, target_title)
         existing = rows[idx].copy()
 
