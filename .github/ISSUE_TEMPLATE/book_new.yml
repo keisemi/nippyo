@@ -1,0 +1,152 @@
+name: "【入力用】書誌を新規登録"
+description: "新刊等の書誌情報を新規登録します。"
+title: "[書誌新規] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        新規書誌の登録用フォームです。
+        書名と書籍IDは必須です。その他は分かる範囲で入力してください。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "既存の書籍IDと重複しないIDを入力してください。"
+    validations:
+      required: true
+
+  - type: input
+    id: title
+    attributes:
+      label: 書名
+    validations:
+      required: true
+
+  - type: input
+    id: subtitle_before
+    attributes:
+      label: 副題（前）
+
+  - type: input
+    id: subtitle_after
+    attributes:
+      label: 副題（後）
+
+  - type: input
+    id: author
+    attributes:
+      label: 著者
+      description: "複数の場合は | で区切ります。"
+
+  - type: input
+    id: author_kana
+    attributes:
+      label: 著者よみ
+
+  - type: input
+    id: title_kana
+    attributes:
+      label: 書名よみ
+
+  - type: input
+    id: isbn_old
+    attributes:
+      label: 旧ISBN
+
+  - type: input
+    id: isbn_new
+    attributes:
+      label: 新ISBN
+
+  - type: input
+    id: amazon_asin
+    attributes:
+      label: Amazon ASIN
+      description: "任意。10桁。"
+
+  - type: input
+    id: pub_month
+    attributes:
+      label: 刊行年月
+      description: "例：2026-10"
+
+  - type: input
+    id: genres
+    attributes:
+      label: 分野
+      description: "複数の場合は | で区切ります。"
+
+  - type: input
+    id: series
+    attributes:
+      label: シリーズ
+
+  - type: input
+    id: series_volume
+    attributes:
+      label: シリーズ巻数
+
+  - type: input
+    id: price_body
+    attributes:
+      label: 本体価格
+      description: "数字のみ。"
+
+  - type: input
+    id: format
+    attributes:
+      label: 判型
+
+  - type: input
+    id: pages
+    attributes:
+      label: 頁数
+      description: "数字のみ。"
+
+  - type: textarea
+    id: hp_keywords
+    attributes:
+      label: HP検索用キーワード
+
+  - type: input
+    id: pub_note
+    attributes:
+      label: 刊行年月備考
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 内容紹介
+
+  - type: textarea
+    id: toc
+    attributes:
+      label: 目次
+
+  - type: textarea
+    id: original_title
+    attributes:
+      label: 原書名
+
+  - type: dropdown
+    id: has_errata
+    attributes:
+      label: 正誤表
+      options:
+        - なし
+        - あり
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: has_related_info
+    attributes:
+      label: 関連情報・付属データ
+      options:
+        - なし
+        - あり
+      default: 0
+    validations:
+      required: true

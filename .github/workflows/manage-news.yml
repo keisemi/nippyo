@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   reject-unauthorized:
-    if: ${{ !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ startsWith(github.event.issue.title, '[お知らせ管理]') && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -25,7 +25,7 @@ jobs:
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
 
   update:
-    if: ${{ contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ startsWith(github.event.issue.title, '[お知らせ管理]') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

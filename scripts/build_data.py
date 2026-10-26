@@ -14,6 +14,7 @@ JSON_FILE = OUTPUT_DIR / "books.json"
 JS_FILE = OUTPUT_DIR / "books.js"
 UPDATED_FILE = OUTPUT_DIR / "last-updated.txt"
 HOME_JS_FILE = OUTPUT_DIR / "home-books.js"
+ADMIN_JS_FILE = OUTPUT_DIR / "admin-books.js"
 
 
 def clean(value):
@@ -155,6 +156,20 @@ home_books = [
     if b["pub_year"] is not None and min_year <= b["pub_year"] <= max_year
 ]
 
+# Staff-facing lightweight index for bibliographic maintenance.
+# It contains only the fields needed to identify a book before opening the Issue Form.
+admin_books = [
+    {
+        "id": b["id"],
+        "title": b["title"],
+        "author": b["author"],
+        "isbn_old": b["isbn_old"],
+        "isbn_new": b["isbn_new"],
+        "pub_month": b["pub_month"],
+    }
+    for b in books
+]
+
 with JSON_FILE.open("w", encoding="utf-8") as f:
     json.dump(books, f, ensure_ascii=False, separators=(",", ":"))
 
@@ -179,9 +194,19 @@ home_books_js = (
 )
 HOME_JS_FILE.write_text(home_books_js, encoding="utf-8")
 
+admin_books_js = (
+    "window.NIPPYO_ADMIN_BOOKS="
+    + json.dumps(admin_books, ensure_ascii=False, separators=(",", ":"))
+    + ";\nwindow.NIPPYO_LAST_UPDATED="
+    + json.dumps(updated_date, ensure_ascii=False)
+    + ";\n"
+)
+ADMIN_JS_FILE.write_text(admin_books_js, encoding="utf-8")
+
 print("生成完了")
 print(f" - {JSON_FILE}")
 print(f" - {JS_FILE}（検索画面用）")
 print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
+print(f" - {ADMIN_JS_FILE}（書誌管理検索用・軽量）")
 print(f" - {UPDATED_FILE}")
 print(f" - 書籍数: {len(books):,}")

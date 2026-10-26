@@ -181,7 +181,12 @@ def main() -> None:
 
     updated["price_body"] = clean_number(updated["price_body"], "本体価格")
     updated["pages"] = clean_number(updated["pages"], "頁数")
-    updated["pub_month"] = normalize_pub_month(updated["pub_month"])
+
+    # 既存マスターには YYYY-MM-00 の旧形式が残っている。
+    # 修正時に刊行年月を空欄にした場合は既存値をそのまま保持し、
+    # 新規登録または刊行年月を明示入力した場合だけ正規化する。
+    if add_mode or env("BOOK_PUB_MONTH"):
+        updated["pub_month"] = normalize_pub_month(updated["pub_month"])
     updated["pub_year"] = derive_year(updated["pub_month"])
 
     updated["has_errata"] = normalize_flag(

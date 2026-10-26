@@ -1,0 +1,162 @@
+name: "【入力用】既存書誌を修正"
+description: "管理用書誌検索ページで対象書を選んでから使用してください。"
+title: "[書誌修正] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        既存書誌の修正用フォームです。
+        原則として管理用書誌検索ページの「この書誌を修正」から開いてください。
+        **空欄の項目は変更しません。** 現在の値を消したい場合だけ `__CLEAR__` と入力してください。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "管理用検索ページから自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: "対象書の確認用です。管理用検索ページから自動入力されます。"
+    validations:
+      required: true
+
+  - type: input
+    id: title
+    attributes:
+      label: 書名
+      description: "変更する場合だけ入力。"
+
+  - type: input
+    id: subtitle_before
+    attributes:
+      label: 副題（前）
+
+  - type: input
+    id: subtitle_after
+    attributes:
+      label: 副題（後）
+
+  - type: input
+    id: author
+    attributes:
+      label: 著者
+      description: "複数の場合は | で区切ります。"
+
+  - type: input
+    id: author_kana
+    attributes:
+      label: 著者よみ
+
+  - type: input
+    id: title_kana
+    attributes:
+      label: 書名よみ
+
+  - type: input
+    id: isbn_old
+    attributes:
+      label: 旧ISBN
+
+  - type: input
+    id: isbn_new
+    attributes:
+      label: 新ISBN
+
+  - type: input
+    id: amazon_asin
+    attributes:
+      label: Amazon ASIN
+      description: "10桁。不明なら空欄で変更なし。"
+
+  - type: input
+    id: pub_month
+    attributes:
+      label: 刊行年月
+      description: "例：2026-10"
+
+  - type: input
+    id: genres
+    attributes:
+      label: 分野
+      description: "複数の場合は | で区切ります。"
+
+  - type: input
+    id: series
+    attributes:
+      label: シリーズ
+
+  - type: input
+    id: series_volume
+    attributes:
+      label: シリーズ巻数
+
+  - type: input
+    id: price_body
+    attributes:
+      label: 本体価格
+      description: "数字のみ。"
+
+  - type: input
+    id: format
+    attributes:
+      label: 判型
+
+  - type: input
+    id: pages
+    attributes:
+      label: 頁数
+      description: "数字のみ。"
+
+  - type: textarea
+    id: hp_keywords
+    attributes:
+      label: HP検索用キーワード
+
+  - type: input
+    id: pub_note
+    attributes:
+      label: 刊行年月備考
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 内容紹介
+
+  - type: textarea
+    id: toc
+    attributes:
+      label: 目次
+
+  - type: textarea
+    id: original_title
+    attributes:
+      label: 原書名
+
+  - type: dropdown
+    id: has_errata
+    attributes:
+      label: 正誤表
+      options:
+        - 変更しない
+        - なし
+        - あり
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: has_related_info
+    attributes:
+      label: 関連情報・付属データ
+      options:
+        - 変更しない
+        - なし
+        - あり
+      default: 0
+    validations:
+      required: true
