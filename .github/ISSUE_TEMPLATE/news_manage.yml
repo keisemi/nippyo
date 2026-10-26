@@ -1,0 +1,87 @@
+name: "【入力用】お知らせを追加・修正・削除"
+description: "サイト更新権限のある担当者用のお知らせ更新フォームです"
+title: "[お知らせ管理] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        このフォームは日本評論社臨時サイトのお知らせ更新用です。
+        サイト更新権限のあるCollaborator等からの申請だけが自動反映されます。
+
+  - type: dropdown
+    id: operation
+    attributes:
+      label: 操作
+      options:
+        - "新規登録"
+        - "既存データ修正"
+        - "削除"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target_title
+    attributes:
+      label: 修正・削除するお知らせ
+      description: "新規登録では「（新規登録では選択不要）」を選んでください。"
+      options:
+        # NEWS_TITLES_START
+        - "（新規登録では選択不要）"
+        - "臨時サイトオープン"
+        # NEWS_TITLES_END
+    validations:
+      required: true
+
+  - type: input
+    id: date
+    attributes:
+      label: 日付
+      description: "例：2026-10-27、2026/10/27、20261027、261027。新規登録で空欄なら当日です。修正で空欄なら変更しません。"
+      placeholder: "2026-10-27"
+
+  - type: input
+    id: category
+    attributes:
+      label: 種別
+      description: "例：お知らせ／新刊／雑誌。新規登録で空欄なら「お知らせ」です。修正で空欄なら変更しません。"
+
+  - type: input
+    id: title
+    attributes:
+      label: タイトル
+      description: "新規登録では必須です。修正で空欄なら変更しません。"
+
+  - type: textarea
+    id: text
+    attributes:
+      label: 本文
+      description: "空欄可。修正で空欄なら変更しません。内容を空にする場合は __CLEAR__ と入力してください。"
+
+  - type: input
+    id: url
+    attributes:
+      label: リンク先
+      description: "空欄可。修正で空欄なら変更しません。リンクを削除する場合は __CLEAR__ と入力してください。"
+      placeholder: "https://..."
+
+  - type: dropdown
+    id: pinned
+    attributes:
+      label: 重要表示
+      options:
+        - "変更しない"
+        - "いいえ"
+        - "はい"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: published
+    attributes:
+      label: 公開する
+      options:
+        - "変更しない"
+        - "はい"
+        - "いいえ"
+    validations:
+      required: true

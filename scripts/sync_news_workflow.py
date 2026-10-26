@@ -4,10 +4,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "data" / "news.csv"
-WORKFLOW = ROOT / ".github" / "workflows" / "manage-news.yml"
+FORM = ROOT / ".github" / "ISSUE_TEMPLATE" / "news_manage.yml"
 PLACEHOLDER = "（新規登録では選択不要）"
-START_MARKER = "          # NEWS_TITLES_START"
-END_MARKER = "          # NEWS_TITLES_END"
+START_MARKER = "        # NEWS_TITLES_START"
+END_MARKER = "        # NEWS_TITLES_END"
 
 
 def load_titles():
@@ -26,25 +26,25 @@ def load_titles():
 
 def main():
     titles = load_titles()
-    text = WORKFLOW.read_text(encoding="utf-8")
+    text = FORM.read_text(encoding="utf-8")
     lines = text.splitlines()
 
     try:
         start = lines.index(START_MARKER)
         end = lines.index(END_MARKER)
     except ValueError as exc:
-        raise SystemExit("manage-news.yml にタイトル選択肢の更新マーカーがありません。") from exc
+        raise SystemExit("news_manage.yml にタイトル選択肢の更新マーカーがありません。") from exc
 
     if end <= start:
-        raise SystemExit("manage-news.yml のタイトル選択肢マーカーの順序が不正です。")
+        raise SystemExit("news_manage.yml のタイトル選択肢マーカーの順序が不正です。")
 
     option_lines = [
-        "          - " + json.dumps(value, ensure_ascii=False)
+        "        - " + json.dumps(value, ensure_ascii=False)
         for value in [PLACEHOLDER, *titles]
     ]
     updated = lines[: start + 1] + option_lines + lines[end:]
-    WORKFLOW.write_text("\n".join(updated) + "\n", encoding="utf-8")
-    print(f"お知らせタイトルの選択肢を更新: {len(titles):,}件")
+    FORM.write_text("\n".join(updated) + "\n", encoding="utf-8")
+    print(f"Issueフォームのお知らせタイトル候補を更新: {len(titles):,}件")
 
 
 if __name__ == "__main__":

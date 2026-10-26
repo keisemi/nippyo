@@ -1,78 +1,37 @@
-name: "【入力用】お知らせを追加・修正・削除"
+name: "【自動】お知らせ申請を反映"
 
 on:
-  workflow_dispatch:
-    inputs:
-      operation:
-        description: "操作"
-        required: true
-        type: choice
-        default: "新規登録"
-        options:
-          - "新規登録"
-          - "既存データ修正"
-          - "削除"
-      target_title:
-        description: "修正・削除するお知らせ（新規登録では「選択不要」）"
-        required: true
-        type: choice
-        default: "（新規登録では選択不要）"
-        options:
-          # NEWS_TITLES_START
-          - "（新規登録では選択不要）"
-          - "臨時サイトオープン"
-          # NEWS_TITLES_END
-      date:
-        description: "日付（例：2026-10-27／261027。新規登録で空欄なら今日）"
-        required: false
-        type: string
-      category:
-        description: "種別（例：お知らせ／新刊／雑誌）"
-        required: false
-        type: string
-      title:
-        description: "タイトル（新規登録では必須）"
-        required: false
-        type: string
-      text:
-        description: "本文（短い説明。空欄可）"
-        required: false
-        type: string
-      url:
-        description: "リンク先（空欄可。消す場合は __CLEAR__）"
-        required: false
-        type: string
-      pinned:
-        description: "重要表示"
-        required: true
-        type: choice
-        default: "変更しない"
-        options:
-          - "変更しない"
-          - "いいえ"
-          - "はい"
-      published:
-        description: "公開する"
-        required: true
-        type: choice
-        default: "変更しない"
-        options:
-          - "変更しない"
-          - "はい"
-          - "いいえ"
+  issues:
+    types:
+      - opened
 
 concurrency:
   group: news-data-maintenance
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
-  update:
+  reject-unauthorized:
+    if: ${{ !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Reject unauthorized request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "このフォームはサイト更新権限のある担当者専用です。この申請からサイト内容は変更されません。"
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+
+  update:
+    if: ${{ contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -85,18 +44,8 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Update news master
-        env:
-          NEWS_OPERATION: ${{ inputs.operation }}
-          NEWS_TARGET_TITLE: ${{ inputs.target_title }}
-          NEWS_DATE: ${{ inputs.date }}
-          NEWS_CATEGORY: ${{ inputs.category }}
-          NEWS_TITLE: ${{ inputs.title }}
-          NEWS_TEXT: ${{ inputs.text }}
-          NEWS_URL: ${{ inputs.url }}
-          NEWS_PINNED: ${{ inputs.pinned }}
-          NEWS_PUBLISHED: ${{ inputs.published }}
-        run: python scripts/manage_news.py
+      - name: Update news master from issue form
+        run: python scripts/manage_news_issue.py
 
       - name: Generate public news data
         run: python scripts/build_news.py
@@ -132,16 +81,16 @@ jobs:
       - name: Commit updated news
         shell: bash
         env:
-          OPERATION: ${{ inputs.operation }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt .github/workflows/manage-news.yml
+          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt .github/ISSUE_TEMPLATE/news_manage.yml
           if git diff --cached --quiet; then
             echo "変更はありません。"
           else
-            git commit -m "News: ${OPERATION} [skip ci]"
+            git commit -m "News: issue #${ISSUE_NUMBER} [skip ci]"
             git push origin main
           fi
 
@@ -162,7 +111,17 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      issues: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Close completed request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "お知らせの更新を反映し、臨時サイトを再公開しました。${PAGE_URL}"
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
