@@ -99,8 +99,32 @@
     return `<div class="detail-row"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
   }
 
+  function safeLinkHref(value) {
+    const href = String(value || "").trim();
+    if (/^https?:\/\//i.test(href)) return href;
+    if (/^(?:\.\.?\/|\/)/.test(href)) return href;
+    return "";
+  }
+
   function detailText(value) {
-    return esc(value || "").replace(/\r?\n/g, "<br>");
+    const source = String(value || "");
+    const pattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let out = "";
+    let last = 0;
+    let match;
+    while ((match = pattern.exec(source)) !== null) {
+      out += esc(source.slice(last, match.index));
+      const href = safeLinkHref(match[2]);
+      if (href) {
+        const external = /^https?:\/\//i.test(href);
+        out += `<a href="${esc(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${esc(match[1])}</a>`;
+      } else {
+        out += esc(match[0]);
+      }
+      last = match.index + match[0].length;
+    }
+    out += esc(source.slice(last));
+    return out.replace(/\r?\n/g, "<br>");
   }
 
   function openBookModal(bookId, trigger) {

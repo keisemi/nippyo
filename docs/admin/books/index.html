@@ -41,11 +41,27 @@
     .admin-edit-box{margin:26px 0 8px;padding:16px;background:#eef4ec;border:1px solid #d4ddd2;border-radius:8px}
     .admin-edit-box p{margin:0 0 12px;line-height:1.7}
     .admin-book-id{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+
+    .edit-intro{line-height:1.7;color:#4f5b4d}
+    .fixed-fields{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin:18px 0;padding:14px;background:#f6f8f5;border:1px solid #d7dfd5;border-radius:8px}
+    .edit-grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .edit-grid.two-col{grid-template-columns:1fr 1fr;margin-top:14px}
+    .edit-field{display:block}
+    .edit-field>span{display:block;font-weight:700;margin-bottom:6px}
+    .edit-field input,.edit-field textarea,.edit-field select{width:100%;box-sizing:border-box;font:inherit;padding:10px 11px;border:1px solid #b9c5b6;border-radius:6px;background:#fff}
+    .edit-textarea{min-height:92px;resize:vertical}
+    .edit-textarea.large{min-height:220px}
+    .field-help{margin:6px 0 0;font-size:13px;color:#5b6759;line-height:1.6}
+    .field-help code{font-size:12px}
+    .edit-submit-box{margin-top:22px;padding:16px;background:#eef4ec;border:1px solid #d4ddd2;border-radius:8px}
+    .edit-submit-box p{margin:0 0 12px;line-height:1.7}
+    .edit-submit-box .admin-btn{margin-right:8px;margin-bottom:6px}
     body.modal-open{overflow:hidden}
     @media (max-width:720px){
       .admin-modal-dialog{margin:0;max-height:100vh;min-height:100vh;border-radius:0;padding:24px 18px 36px}
       .admin-modal-title{font-size:27px}
       .detail-row{grid-template-columns:1fr;gap:4px}
+      .fixed-fields,.edit-grid.two-col{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -55,8 +71,8 @@
     <h1>書誌管理用検索</h1>
     <div class="admin-note">
       既存書誌を修正するときは、ここで対象書を検索してください。<br>
-      <strong>書名を押すと、公開ページと同じ書誌詳細を確認できます。</strong>
-      その詳細画面から「この書誌を修正」を押すと、表示中の書籍IDを引き継いで修正Issueを開きます。
+      <strong>書名を押すと、公開ページと同じ書誌詳細を確認できます。</strong><br>
+      さらに「この書誌を編集」を押すと、現在値がすべて入力済みの編集フォームを開きます。
     </div>
 
     <div class="admin-actions">
@@ -80,6 +96,7 @@
   </div>
 
   <script src="../../data/books.js"></script>
+  <script src="../../data/admin-books.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

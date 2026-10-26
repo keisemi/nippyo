@@ -26,6 +26,32 @@ def clean_public_text(value):
     if not value:
         return ""
     value = html.unescape(value)
+
+    # 旧HP由来のアンカーを、安全なMarkdownリンクへ変換して残す。
+    # 例: <a href="https://example.com"><font>【コチラ】</font></a>
+    #      -> [【コチラ】](https://example.com)
+    def replace_anchor(match):
+        attrs = match.group(1) or ""
+        inner = match.group(2) or ""
+        href_match = re.search(
+            r"(?i)\bhref\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s>]+))",
+            attrs,
+        )
+        if not href_match:
+            return re.sub(r"<[^>]+>", "", inner)
+        href = next((x for x in href_match.groups() if x is not None), "").strip()
+        if not (
+            href.startswith("https://")
+            or href.startswith("http://")
+            or href.startswith("/")
+            or href.startswith("./")
+            or href.startswith("../")
+        ):
+            return re.sub(r"<[^>]+>", "", inner)
+        label = re.sub(r"<[^>]+>", "", inner).strip() or href
+        return f"[{label}]({href})"
+
+    value = re.sub(r"(?is)<a\b([^>]*)>(.*?)</a>", replace_anchor, value)
     value = re.sub(r"(?i)<br\s*/?>", "\n", value)
     value = re.sub(r"(?i)</?b>", "", value)
     value = re.sub(r"<[^>]+>", "", value)
@@ -156,19 +182,21 @@ home_books = [
     if b["pub_year"] is not None and min_year <= b["pub_year"] <= max_year
 ]
 
-# Staff-facing lightweight index for bibliographic maintenance.
-# It contains only the fields needed to identify a book before opening the Issue Form.
+# Staff-facing supplemental fields for bibliographic maintenance.
+# The admin page reuses the public books dataset for the main record and loads only
+# fields that are not present there, keeping the extra admin payload small.
 admin_books = [
     {
-        "id": b["id"],
-        "title": b["title"],
-        "author": b["author"],
-        "isbn_old": b["isbn_old"],
-        "isbn_new": b["isbn_new"],
-        "pub_month": b["pub_month"],
+        "id": clean(r.get("id")),
+        "author_kana": clean(r.get("author_kana")),
+        "title_kana": clean(r.get("title_kana")),
+        "search_title": clean(r.get("search_title")),
+        "hp_keywords": clean(r.get("hp_keywords")),
+        "pub_month": clean(r.get("pub_month")),
     }
-    for b in books
+    for r in rows
 ]
+
 
 with JSON_FILE.open("w", encoding="utf-8") as f:
     json.dump(books, f, ensure_ascii=False, separators=(",", ":"))
@@ -207,6 +235,6 @@ print("生成完了")
 print(f" - {JSON_FILE}")
 print(f" - {JS_FILE}（検索画面用）")
 print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
-print(f" - {ADMIN_JS_FILE}（書誌管理検索用・軽量）")
+print(f" - {ADMIN_JS_FILE}（書誌管理補助用・軽量）")
 print(f" - {UPDATED_FILE}")
 print(f" - 書籍数: {len(books):,}")
