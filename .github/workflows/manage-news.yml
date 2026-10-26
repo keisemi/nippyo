@@ -21,10 +21,9 @@ on:
           # NEWS_TITLES_START
           - "（新規登録では選択不要）"
           - "臨時サイトオープン"
-          - "臨時ホームページを公開しました"
           # NEWS_TITLES_END
       date:
-        description: "日付 YYYY-MM-DD（新規登録で空欄なら今日）"
+        description: "日付（例：2026-10-27／261027。新規登録で空欄なら今日）"
         required: false
         type: string
       category:

@@ -1,6 +1,5 @@
 import csv
 import os
-import re
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -43,11 +42,25 @@ def normalize_date(value: str, *, default_today=False) -> str:
         return datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
     if not value:
         return ""
-    try:
-        datetime.strptime(value, "%Y-%m-%d")
-    except ValueError:
-        raise SystemExit("日付は YYYY-MM-DD（例: 2026-10-26）で入力してください。")
-    return value
+
+    candidates = []
+    if len(value) == 6 and value.isdigit():
+        candidates.append(("20" + value, "%Y%m%d"))
+    if len(value) == 8 and value.isdigit():
+        candidates.append((value, "%Y%m%d"))
+
+    normalized_sep = value.replace("/", "-").replace(".", "-")
+    candidates.append((normalized_sep, "%Y-%m-%d"))
+
+    for candidate, fmt in candidates:
+        try:
+            return datetime.strptime(candidate, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    raise SystemExit(
+        "日付を解釈できません。例：2026-10-27、2026/10/27、20261027、261027"
+    )
 
 
 def normalize_url(value: str) -> str:
@@ -85,7 +98,10 @@ def update_text(raw: str, *, add_mode: bool, existing: str) -> str:
 def find_target(rows, target_title):
     matches = [i for i, row in enumerate(rows) if row.get("title", "").strip() == target_title]
     if not matches:
-        raise SystemExit(f"対象のお知らせが見つかりません: {target_title}")
+        raise SystemExit(
+            f"対象のお知らせが見つかりません: {target_title}\n"
+            "プルダウン候補が古い可能性があります。最新のWorkflow画面を開き直してください。"
+        )
     if len(matches) > 1:
         raise SystemExit("同じタイトルのお知らせが複数あります。タイトルを一時的に変更するなどして一意にしてください。")
     return matches[0]
@@ -140,9 +156,15 @@ def main():
     elif raw_date:
         updated["date"] = normalize_date(raw_date)
 
-    updated["category"] = update_text(env("NEWS_CATEGORY"), add_mode=add_mode, existing=existing.get("category", "")) or "お知らせ"
-    updated["title"] = update_text(env("NEWS_TITLE"), add_mode=add_mode, existing=existing.get("title", ""))
-    updated["text"] = update_text(env("NEWS_TEXT"), add_mode=add_mode, existing=existing.get("text", ""))
+    updated["category"] = update_text(
+        env("NEWS_CATEGORY"), add_mode=add_mode, existing=existing.get("category", "")
+    ) or "お知らせ"
+    updated["title"] = update_text(
+        env("NEWS_TITLE"), add_mode=add_mode, existing=existing.get("title", "")
+    )
+    updated["text"] = update_text(
+        env("NEWS_TEXT"), add_mode=add_mode, existing=existing.get("text", "")
+    )
 
     raw_url = env("NEWS_URL")
     if raw_url:
@@ -162,7 +184,6 @@ def main():
     if not updated["date"]:
         raise SystemExit("日付は必須です。")
 
-    # Same-title operations are intentionally avoided because title is the human-facing edit key.
     duplicate_titles = [
         i for i, row in enumerate(rows)
         if row.get("title", "").strip() == updated["title"].strip() and i != idx
@@ -182,6 +203,7 @@ def main():
     save_rows(rows)
     print(f"操作: {operation}")
     print(f"タイトル: {updated['title']}")
+    print(f"日付: {updated['date']}")
     print(f"お知らせ件数: {len(rows):,}")
 
 
