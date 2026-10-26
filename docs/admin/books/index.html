@@ -15,9 +15,38 @@
     .admin-search input{flex:1;min-width:260px;font-size:16px;padding:12px 14px;border:1px solid #b9c5b6;border-radius:6px}
     .result-count{margin:12px 0;color:#4b5a49}
     .book-result{border:1px solid #d4ddd2;border-radius:8px;padding:16px;margin:12px 0;background:#fff}
-    .book-result h2{font-size:20px;margin:0 0 8px;color:#255e17}
+    .book-result h2{font-size:20px;margin:0 0 8px}
+    .book-title-button{appearance:none;background:none;border:0;padding:0;color:#255e17;font:inherit;font-weight:700;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
     .book-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:#586455;margin-bottom:12px}
+    .book-actions{display:flex;gap:10px;flex-wrap:wrap}
     .empty{padding:24px;border:1px dashed #b9c5b6;border-radius:8px;color:#5e685c}
+    .admin-modal[hidden]{display:none}
+    .admin-modal{position:fixed;inset:0;z-index:1000}
+    .admin-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42)}
+    .admin-modal-dialog{position:relative;z-index:1;max-width:920px;max-height:90vh;overflow:auto;margin:5vh auto;background:#fff;border-radius:10px;padding:30px 34px 40px;box-shadow:0 18px 48px rgba(0,0,0,.25)}
+    .admin-modal-close{position:absolute;right:16px;top:12px;width:44px;height:44px;border:1px solid #cbd5c8;border-radius:50%;background:#fff;font-size:30px;line-height:1;cursor:pointer}
+    .admin-modal-kicker{margin:0 0 14px;color:#255e17;font-weight:700}
+    .admin-modal-title{font-size:34px;line-height:1.35;margin:0 48px 10px 0}
+    .admin-modal-subtitle{font-size:18px;margin:0 0 18px;color:#4f5b4d}
+    .admin-modal-author{font-size:17px;margin:0 0 18px}
+    .admin-modal-tags{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 24px}
+    .admin-modal-tags .tag{border:1px solid #cbd5c8;padding:5px 9px;font-size:13px}
+    .detail-grid{margin:18px 0 24px;border-top:1px solid #d7dfd5}
+    .detail-row{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid #d7dfd5}
+    .detail-row dt{font-weight:700;color:#536052}
+    .detail-row dd{margin:0}
+    .admin-detail-section{margin-top:26px}
+    .admin-detail-section h3{border-left:4px solid #255e17;padding-left:10px}
+    .admin-detail-copy,.admin-detail-toc{line-height:1.85;white-space:normal}
+    .admin-edit-box{margin:26px 0 8px;padding:16px;background:#eef4ec;border:1px solid #d4ddd2;border-radius:8px}
+    .admin-edit-box p{margin:0 0 12px;line-height:1.7}
+    .admin-book-id{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+    body.modal-open{overflow:hidden}
+    @media (max-width:720px){
+      .admin-modal-dialog{margin:0;max-height:100vh;min-height:100vh;border-radius:0;padding:24px 18px 36px}
+      .admin-modal-title{font-size:27px}
+      .detail-row{grid-template-columns:1fr;gap:4px}
+    }
   </style>
 </head>
 <body>
@@ -25,8 +54,9 @@
     <p><a href="../../">← 臨時ホームページへ戻る</a></p>
     <h1>書誌管理用検索</h1>
     <div class="admin-note">
-      既存書誌を修正するときは、ここで対象書を検索して「この書誌を修正」を押してください。<br>
-      書籍IDと現在の書名がGitHub Issue Formへ自動入力されます。
+      既存書誌を修正するときは、ここで対象書を検索してください。<br>
+      <strong>書名を押すと、公開ページと同じ書誌詳細を確認できます。</strong>
+      その詳細画面から「この書誌を修正」を押すと、表示中の書籍IDを引き継いで修正Issueを開きます。
     </div>
 
     <div class="admin-actions">
@@ -41,7 +71,15 @@
     <div id="results"></div>
   </main>
 
-  <script src="../../data/admin-books.js"></script>
+  <div class="admin-modal" id="book-modal" hidden>
+    <div class="admin-modal-backdrop" data-modal-close></div>
+    <section class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+      <button class="admin-modal-close" id="book-modal-close" type="button" aria-label="閉じる">×</button>
+      <div id="book-modal-content"></div>
+    </section>
+  </div>
+
+  <script src="../../data/books.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
