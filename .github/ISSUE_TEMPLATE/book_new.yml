@@ -16,10 +16,6 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: subtitle_before
-    attributes:
-      label: 副題（前）
 
   - type: input
     id: subtitle_after
