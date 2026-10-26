@@ -17,6 +17,7 @@
     </div>
     <nav class="global-nav" aria-label="主要メニュー">
       <a class="is-current" href="./">ホーム</a>
+      <a href="news/">お知らせ</a>
       <a href="books/">書籍を探す</a>
       <a href="#new-books">新刊</a>
       <a href="magazines/">雑誌</a>
@@ -60,15 +61,14 @@
 
     <section class="section section-tint" id="news">
       <div class="content-width">
-        <div class="section-heading">
+        <div class="section-heading section-heading-with-meta">
           <div>
             <p class="section-kicker">NEWS</p>
             <h2>お知らせ</h2>
           </div>
+          <a class="section-link" href="news/">お知らせ一覧へ →</a>
         </div>
-        <div class="notice-empty">
-          <p>お知らせ更新機能は次工程で実装します。</p>
-        </div>
+        <div class="news-list" data-news-list data-limit="5"></div>
       </div>
     </section>
 
@@ -122,7 +122,9 @@
       <p class="footer-note">臨時ホームページ</p>
     </div>
   </footer>
+  <script src="data/news.js"></script>
   <script src="data/home-books.js"></script>
+  <script src="js/news.js" defer></script>
   <script src="js/home.js" defer></script>
 </body>
 </html>

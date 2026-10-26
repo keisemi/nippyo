@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "data/book_search_master.csv"
+      - "data/news.csv"
       - "scripts/**"
       - "docs/**"
       - ".github/workflows/build-site.yml"
@@ -37,6 +38,9 @@ jobs:
       - name: Generate public book data
         run: python scripts/build_data.py
 
+      - name: Generate public news data
+        run: python scripts/build_news.py
+
       - name: Validate generated files
         shell: bash
         run: |
@@ -46,6 +50,7 @@ jobs:
           from pathlib import Path
 
           books = json.loads(Path('docs/data/books.json').read_text(encoding='utf-8'))
+          news = json.loads(Path('docs/data/news.json').read_text(encoding='utf-8'))
           if not isinstance(books, list) or not books:
               raise SystemExit('books.json が空です。')
           ids = [str(x.get('id', '')).strip() for x in books]
@@ -55,10 +60,11 @@ jobs:
               raise SystemExit('書籍IDが重複しています。')
           if any(not str(x.get('title', '')).strip() for x in books):
               raise SystemExit('空の書名があります。')
-          print(f'検証OK: {len(books):,}件')
+          print(f'書籍検証OK: {len(books):,}件／公開お知らせ: {len(news):,}件')
           PY
           node --check docs/books/js/app.js
           node --check docs/js/home.js
+          node --check docs/js/news.js
           git diff --check
 
       - name: Keep generated data in sync
@@ -67,7 +73,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/last-updated.txt
+          git add docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/last-updated.txt docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt
           if git diff --cached --quiet; then
             echo "生成済みデータは最新です。"
           else

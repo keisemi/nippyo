@@ -1,0 +1,159 @@
+name: "【入力用】お知らせを追加・修正・削除"
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "操作"
+        required: true
+        type: choice
+        default: "新規登録"
+        options:
+          - "新規登録"
+          - "既存データ修正"
+          - "削除"
+      target_title:
+        description: "修正・削除する既存タイトル（新規登録では空欄）"
+        required: false
+        type: string
+      date:
+        description: "日付 YYYY-MM-DD（新規登録で空欄なら今日）"
+        required: false
+        type: string
+      category:
+        description: "種別（例：お知らせ／新刊／雑誌）"
+        required: false
+        type: string
+      title:
+        description: "タイトル（新規登録では必須）"
+        required: false
+        type: string
+      text:
+        description: "本文（短い説明。空欄可）"
+        required: false
+        type: string
+      url:
+        description: "リンク先（空欄可。消す場合は __CLEAR__）"
+        required: false
+        type: string
+      pinned:
+        description: "重要表示"
+        required: true
+        type: choice
+        default: "変更しない"
+        options:
+          - "変更しない"
+          - "いいえ"
+          - "はい"
+      published:
+        description: "公開する"
+        required: true
+        type: choice
+        default: "変更しない"
+        options:
+          - "変更しない"
+          - "はい"
+          - "いいえ"
+
+concurrency:
+  group: news-data-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Update news master
+        env:
+          NEWS_OPERATION: ${{ inputs.operation }}
+          NEWS_TARGET_TITLE: ${{ inputs.target_title }}
+          NEWS_DATE: ${{ inputs.date }}
+          NEWS_CATEGORY: ${{ inputs.category }}
+          NEWS_TITLE: ${{ inputs.title }}
+          NEWS_TEXT: ${{ inputs.text }}
+          NEWS_URL: ${{ inputs.url }}
+          NEWS_PINNED: ${{ inputs.pinned }}
+          NEWS_PUBLISHED: ${{ inputs.published }}
+        run: python scripts/manage_news.py
+
+      - name: Generate public news data
+        run: python scripts/build_news.py
+
+      - name: Validate news data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          with Path('data/news.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          public = json.loads(Path('docs/data/news.json').read_text(encoding='utf-8'))
+
+          ids = [str(x.get('id', '')).strip() for x in rows]
+          if any(not x for x in ids):
+              raise SystemExit('空のお知らせIDがあります。')
+          if len(ids) != len(set(ids)):
+              raise SystemExit('お知らせIDが重複しています。')
+          if any(not str(x.get('title', '')).strip() for x in rows):
+              raise SystemExit('空のタイトルがあります。')
+          print(f'検証OK: 全{len(rows):,}件／公開{len(public):,}件')
+          PY
+          node --check docs/js/news.js
+          git diff --check
+
+      - name: Commit updated news
+        shell: bash
+        env:
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt
+          if git diff --cached --quiet; then
+            echo "変更はありません。"
+          else
+            git commit -m "News: ${OPERATION} [skip ci]"
+            git push origin main
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
