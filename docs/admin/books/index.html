@@ -95,8 +95,34 @@
     </section>
   </div>
 
-  <script src="../../data/books.js"></script>
-  <script src="../../data/admin-books.js"></script>
-  <script src="admin.js"></script>
+  <script>
+    (() => {
+      const stamp = Date.now().toString();
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+
+      (async () => {
+        try {
+          const response = await fetch(`../../data/last-updated.txt?t=${stamp}`, { cache: "no-store" });
+          const version = response.ok ? (await response.text()).trim() : stamp;
+          const dataVersion = encodeURIComponent(version || stamp);
+          await Promise.all([
+            loadScript(`../../data/books.js?v=${dataVersion}`),
+            loadScript(`../../data/admin-books.js?v=${dataVersion}`)
+          ]);
+          await loadScript(`admin.js?v=${stamp}`);
+        } catch (error) {
+          console.error("Failed to load current admin book data.", error);
+          const count = document.getElementById("result-count");
+          if (count) count.textContent = "書誌データを読み込めませんでした。ページを再読み込みしてください。";
+        }
+      })();
+    })();
+  </script>
 </body>
 </html>

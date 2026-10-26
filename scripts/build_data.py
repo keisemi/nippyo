@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import html
 import json
 import re
@@ -202,7 +203,6 @@ with JSON_FILE.open("w", encoding="utf-8") as f:
     json.dump(books, f, ensure_ascii=False, separators=(",", ":"))
 
 updated_date = build_date_jst()
-UPDATED_FILE.write_text(updated_date + "\n", encoding="utf-8")
 
 books_json = json.dumps(books, ensure_ascii=False, separators=(",", ":"))
 books_js = (
@@ -211,7 +211,6 @@ books_js = (
     + json.dumps(updated_date, ensure_ascii=False)
     + ";\n"
 )
-JS_FILE.write_text(books_js, encoding="utf-8")
 
 home_books_js = (
     "window.NIPPYO_HOME_BOOKS="
@@ -220,7 +219,6 @@ home_books_js = (
     + json.dumps(updated_date, ensure_ascii=False)
     + ";\n"
 )
-HOME_JS_FILE.write_text(home_books_js, encoding="utf-8")
 
 admin_books_js = (
     "window.NIPPYO_ADMIN_BOOKS="
@@ -229,6 +227,17 @@ admin_books_js = (
     + json.dumps(updated_date, ensure_ascii=False)
     + ";\n"
 )
+
+# Large generated files are cacheable, but the browser must switch to a new URL
+# whenever any book-data payload changes.  Use one stable content hash as the
+# version key for books.js / home-books.js / admin-books.js.
+data_version = hashlib.sha256(
+    (books_js + "\n" + home_books_js + "\n" + admin_books_js).encode("utf-8")
+).hexdigest()[:16]
+
+UPDATED_FILE.write_text(data_version + "\n", encoding="utf-8")
+JS_FILE.write_text(books_js, encoding="utf-8")
+HOME_JS_FILE.write_text(home_books_js, encoding="utf-8")
 ADMIN_JS_FILE.write_text(admin_books_js, encoding="utf-8")
 
 print("生成完了")

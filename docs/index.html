@@ -123,8 +123,29 @@
     </div>
   </footer>
   <script src="data/news.js"></script>
-  <script src="data/home-books.js"></script>
   <script src="js/news.js" defer></script>
-  <script src="js/home.js" defer></script>
+  <script>
+    (() => {
+      const stamp = Date.now().toString();
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+
+      (async () => {
+        try {
+          const response = await fetch(`data/last-updated.txt?t=${stamp}`, { cache: "no-store" });
+          const version = response.ok ? (await response.text()).trim() : stamp;
+          await loadScript(`data/home-books.js?v=${encodeURIComponent(version || stamp)}`);
+          await loadScript(`js/home.js?v=${stamp}`);
+        } catch (error) {
+          console.error("Failed to load current home-book data.", error);
+        }
+      })();
+    })();
+  </script>
 </body>
 </html>
