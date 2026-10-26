@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="株式会社日本評論社の会社概要、所在地、アクセスをご案内します。">
+  <meta name="description" content="株式会社日本評論社の会社概要、各部署の連絡先、所在地、アクセスをご案内します。">
   <title>会社概要・アクセス｜日本評論社</title>
   <link rel="stylesheet" href="../css/site.css">
   <style>
@@ -59,10 +59,71 @@
     .company-row dd {
       margin: 0;
     }
-    .company-row a {
+    .company-row a,
+    .contact-phone a {
       color: var(--green-dark);
       text-decoration-thickness: 1px;
       text-underline-offset: 3px;
+    }
+    .contact-intro {
+      margin: -6px 0 20px;
+      color: #555;
+    }
+    .contact-list {
+      border-top: 3px solid var(--green);
+      background: #fff;
+    }
+    .contact-row {
+      display: grid;
+      grid-template-columns: minmax(220px, .7fr) minmax(0, 1fr);
+      gap: 30px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .contact-department {
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .contact-note {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+    .contact-numbers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 28px;
+    }
+    .contact-phone,
+    .contact-fax {
+      margin: 0;
+    }
+    .contact-label {
+      margin-right: 7px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+    }
+    .service-center {
+      margin-top: 24px;
+      padding: 24px 26px;
+      border-top: 4px solid var(--green-light);
+      background: var(--green-pale);
+    }
+    .service-center h3 {
+      margin: 0 0 12px;
+      color: var(--green-dark);
+      font-size: 1.12rem;
+    }
+    .service-center p {
+      margin: 5px 0 0;
+    }
+    .service-center .contact-numbers {
+      margin-top: 10px;
     }
     .access-box {
       padding: 26px 28px;
@@ -129,10 +190,21 @@
       .company-main {
         padding: 48px 0 64px;
       }
-      .company-row {
+      .company-row,
+      .contact-row {
         grid-template-columns: 1fr;
         gap: 5px;
         padding: 16px 4px;
+      }
+      .contact-list {
+        border-top-width: 2px;
+      }
+      .contact-numbers {
+        margin-top: 4px;
+        gap: 4px 22px;
+      }
+      .service-center {
+        padding: 22px 20px;
       }
       .access-box {
         padding: 22px 20px;
@@ -168,7 +240,7 @@
     <div class="company-header">
       <p class="section-kicker">COMPANY</p>
       <h1>会社概要・アクセス</h1>
-      <p class="company-lead">株式会社日本評論社の所在地・連絡先と、弊社までのアクセスをご案内します。</p>
+      <p class="company-lead">株式会社日本評論社の会社概要、各部署の連絡先と、弊社までのアクセスをご案内します。</p>
     </div>
 
     <section class="company-section" aria-labelledby="company-profile-heading">
@@ -191,6 +263,93 @@
           <dd>03-3987-8593</dd>
         </div>
       </dl>
+    </section>
+
+    <section class="company-section" aria-labelledby="contact-heading">
+      <h2 id="contact-heading">各部署へのお問い合わせ</h2>
+      <p class="contact-intro">お問い合わせ内容に応じて、各部署へ直接ご連絡ください。</p>
+
+      <div class="contact-list">
+        <div class="contact-row">
+          <div class="contact-department">総務部（代表）</div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878611">03-3987-8611</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8593</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">営業部販売課</div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878621">03-3987-8621</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8590</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">営業部宣伝課</div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878641">03-3987-8641</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8590</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">仕入製作部</div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878591">03-3987-8591</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8593</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">法律出版部</div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878631">03-3987-8631</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8596</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">法律雑誌部<span class="contact-note">法律時報編集部、法学セミナー編集部、電子情報編集室</span></div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878592">03-3987-8592</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8596</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">経済編集部<span class="contact-note">経済セミナー編集部</span></div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878595">03-3987-8595</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8597</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">心理学・医学編集部<span class="contact-note">こころの科学編集部、そだちの科学編集部</span></div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878598">03-3987-8598</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8593</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">数学編集部<span class="contact-note">数学セミナー編集部</span></div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878599">03-3987-8599</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8597</p>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-department">事業出版部</div>
+          <div class="contact-numbers">
+            <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0339878601">03-3987-8601</a></p>
+            <p class="contact-fax"><span class="contact-label">FAX</span>03-3987-8590</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="service-center">
+        <h3>日本評論社サービスセンター（受注センター）</h3>
+        <p>〒354-8790　埼玉県入間郡三芳町北永井宮本879-7</p>
+        <div class="contact-numbers">
+          <p class="contact-phone"><span class="contact-label">電話</span><a href="tel:0492741780">049-274-1780</a></p>
+          <p class="contact-fax"><span class="contact-label">FAX</span>049-274-1788</p>
+        </div>
+      </div>
     </section>
 
     <section class="company-section" aria-labelledby="access-heading">
