@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>日本評論社 臨時書籍検索</title>
+  <meta name="description" content="日本評論社Webサイトのメンテナンス期間中に書籍情報を検索するための臨時ページです。">
+  <meta name="robots" content="index,follow">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="back-home"><a href="../">← 日本評論社 臨時ホームページへ</a></div>
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="kicker">NIHON HYORONSHA</p>
+      <p class="site-title"><span>日本評論社</span> 臨時書籍検索</p>
+    </div>
+  </header>
+
+  <div class="notice">
+    <div class="notice-inner">
+      日本評論社Webサイトのメンテナンス期間中に、書籍情報を検索するための臨時ページです。
+    </div>
+  </div>
+
+  <main>
+    <section class="intro" aria-labelledby="search-heading">
+      <h1 id="search-heading">書籍を探す</h1>
+      <p>書名・著者名・ISBN・分野・検索キーワードから検索できます。複数の語を空白で区切ると、すべてを含む書籍に絞り込みます。</p>
+      <p class="updated">書誌データ最終更新：<span id="lastUpdated">—</span></p>
+    </section>
+
+    <section class="search-panel" aria-label="検索条件">
+      <div class="search-row">
+        <input id="q" class="search-input" type="search" autocomplete="off"
+               placeholder="例：マクロ経済学／著者名／978453..."
+               aria-label="書名・著者名・ISBN・キーワード">
+        <button id="searchButton" class="search-button" type="button">検索</button>
+      </div>
+      <p class="help">ISBNはハイフンあり・なしのどちらでも検索できます。</p>
+
+      <div class="filters">
+        <div class="filter">
+          <label for="genre">分野</label>
+          <select id="genre"><option value="">すべて</option></select>
+        </div>
+        <div class="filter">
+          <label for="year">刊行年</label>
+          <select id="year"><option value="">すべて</option></select>
+        </div>
+        <div class="filter">
+          <label for="sort">並び順</label>
+          <select id="sort">
+            <option value="relevance">関連度順</option>
+            <option value="newest">刊行年月の新しい順</option>
+            <option value="oldest">刊行年月の古い順</option>
+            <option value="title">書名順</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <p class="result-count" id="count" aria-live="polite">読み込み中…</p>
+      <button id="clear" class="clear-button" type="button">条件をクリア</button>
+    </div>
+
+    <div id="loading" class="loading">書籍データを読み込んでいます…</div>
+    <div id="error" class="error" hidden>
+      書籍データを読み込めませんでした。時間をおいて再度お試しください。
+    </div>
+    <ul id="results" class="results" hidden></ul>
+    <div id="pagination" class="pagination" aria-label="検索結果ページ"></div>
+  </main>
+
+  <div id="bookModal" class="book-modal" hidden role="dialog" aria-modal="true" aria-labelledby="bookModalTitle">
+    <div class="book-modal-backdrop" data-modal-close></div>
+    <div class="book-modal-panel" role="document">
+      <button id="bookModalClose" class="book-modal-close" type="button" aria-label="詳細を閉じる">×</button>
+      <div id="bookModalContent" class="book-modal-content"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>© 日本評論社</span>
+      <span>臨時書籍検索ページ</span>
+    </div>
+  </footer>
+  <script src="../data/books.js"></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

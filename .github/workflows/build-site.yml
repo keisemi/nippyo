@@ -1,0 +1,95 @@
+name: "【自動】臨時サイトを再構築・公開（通常は操作不要）"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "data/book_search_master.csv"
+      - "scripts/**"
+      - "docs/**"
+      - ".github/workflows/build-site.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Generate public book data
+        run: python scripts/build_data.py
+
+      - name: Validate generated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          books = json.loads(Path('docs/data/books.json').read_text(encoding='utf-8'))
+          if not isinstance(books, list) or not books:
+              raise SystemExit('books.json が空です。')
+          ids = [str(x.get('id', '')).strip() for x in books]
+          if any(not x for x in ids):
+              raise SystemExit('空の書籍IDがあります。')
+          if len(ids) != len(set(ids)):
+              raise SystemExit('書籍IDが重複しています。')
+          if any(not str(x.get('title', '')).strip() for x in books):
+              raise SystemExit('空の書名があります。')
+          print(f'検証OK: {len(books):,}件')
+          PY
+          node --check docs/books/js/app.js
+          node --check docs/js/home.js
+          git diff --check
+
+      - name: Keep generated data in sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/last-updated.txt
+          if git diff --cached --quiet; then
+            echo "生成済みデータは最新です。"
+          else
+            git commit -m "Sync generated search data [skip ci]"
+            git push origin HEAD:main
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

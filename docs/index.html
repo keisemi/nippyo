@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="株式会社日本評論社の臨時ホームページです。書籍情報、雑誌情報、会社概要等を提供します。">
+  <title>日本評論社｜臨時ホームページ</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="日本評論社 臨時ホームページ トップ">
+        <img src="assets/logo.png" alt="日本評論社">
+      </a>
+      <p class="site-label">臨時ホームページ</p>
+    </div>
+    <nav class="global-nav" aria-label="主要メニュー">
+      <a class="is-current" href="./">ホーム</a>
+      <a href="books/">書籍を探す</a>
+      <a href="#new-books">新刊</a>
+      <a href="magazines/">雑誌</a>
+      <a href="company/">会社概要・アクセス</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="maintenance-banner">
+      <div class="content-width">
+        <p class="banner-title">日本評論社ウェブサイトをご利用のみなさまへ</p>
+        <p>現在、通常の日本評論社ウェブサイトはメンテナンスのため公開を停止しています。この臨時ホームページで、書籍情報・雑誌情報・会社情報等を順次提供します。</p>
+      </div>
+    </section>
+
+    <section class="hero content-width">
+      <p class="eyebrow">NIPPYO TEMPORARY WEBSITE</p>
+      <h1>日本評論社</h1>
+      <p class="lead">書籍・雑誌を探すための情報と、読者のみなさまへのお知らせを提供する臨時ホームページです。</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="books/">書籍を探す</a>
+        <a class="button button-secondary" href="magazines/">雑誌情報を見る</a>
+      </div>
+    </section>
+
+    <section class="section section-search-home">
+      <div class="content-width">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">BOOK SEARCH</p>
+            <h2>書籍を探す</h2>
+          </div>
+        </div>
+        <form class="home-book-search" action="books/" method="get">
+          <input type="search" name="q" placeholder="書名・著者名・ISBN・キーワード" aria-label="書籍を検索">
+          <button type="submit">検索</button>
+        </form>
+        <p class="home-search-help">詳細検索では、分野・刊行年でも絞り込めます。</p>
+      </div>
+    </section>
+
+    <section class="section section-tint" id="news">
+      <div class="content-width">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">NEWS</p>
+            <h2>お知らせ</h2>
+          </div>
+        </div>
+        <div class="notice-empty">
+          <p>お知らせ更新機能は次工程で実装します。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="new-books">
+      <div class="content-width">
+        <div class="section-heading section-heading-with-meta">
+          <div>
+            <p class="section-kicker">NEW BOOKS</p>
+            <h2>新刊</h2>
+          </div>
+          <a class="section-link" href="books/?sort=newest">書籍一覧へ →</a>
+        </div>
+        <p class="new-books-note" id="newBooksNote">新刊情報を読み込んでいます。</p>
+        <div class="new-books-grid" id="newBooksList">
+          <p class="new-books-empty">新刊情報を読み込んでいます。</p>
+        </div>
+        <p class="data-updated">書誌データ最終更新：<span id="bookDataUpdated">—</span></p>
+      </div>
+    </section>
+
+    <section class="section section-tint">
+      <div class="content-width link-grid">
+        <a class="feature-card" href="books/">
+          <p class="card-kicker">BOOKS</p>
+          <h2>書籍を探す</h2>
+          <p>書名・著者名・ISBN・分野・キーワードから日本評論社の書籍を検索します。</p>
+          <span>書籍検索へ →</span>
+        </a>
+        <a class="feature-card" href="magazines/">
+          <p class="card-kicker">MAGAZINES</p>
+          <h2>雑誌</h2>
+          <p>日本評論社が刊行する雑誌のお知らせを掲載します。『経済セミナー』の公式note・全記事データベースへのリンクもご案内します。</p>
+          <span>雑誌情報へ →</span>
+        </a>
+        <a class="feature-card" href="company/">
+          <p class="card-kicker">COMPANY</p>
+          <h2>会社概要・アクセス</h2>
+          <p>株式会社日本評論社の会社情報とアクセスをご案内します。</p>
+          <span>会社情報へ →</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="content-width footer-inner">
+      <div>
+        <img class="footer-logo" src="assets/logo.png" alt="日本評論社">
+        <p>株式会社日本評論社</p>
+      </div>
+      <p class="footer-note">臨時ホームページ</p>
+    </div>
+  </footer>
+  <script src="data/home-books.js"></script>
+  <script src="js/home.js" defer></script>
+</body>
+</html>

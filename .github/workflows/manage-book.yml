@@ -1,0 +1,245 @@
+name: "【入力用】書誌データを追加・修正"
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "操作"
+        required: true
+        type: choice
+        default: "新規登録"
+        options:
+          - "新規登録"
+          - "既存データ修正"
+      book_id:
+        description: "書籍ID（必須。修正時は対象ID）"
+        required: true
+        type: string
+      title:
+        description: "書名（新規時は必須。修正時は空欄なら変更なし）"
+        required: false
+        type: string
+      subtitle_before:
+        description: "副題（前）"
+        required: false
+        type: string
+      subtitle_after:
+        description: "副題（後）"
+        required: false
+        type: string
+      author:
+        description: "著者（複数の場合は | で区切る）"
+        required: false
+        type: string
+      author_kana:
+        description: "著者よみ"
+        required: false
+        type: string
+      title_kana:
+        description: "書名よみ"
+        required: false
+        type: string
+      isbn_old:
+        description: "旧ISBN"
+        required: false
+        type: string
+      isbn_new:
+        description: "新ISBN"
+        required: false
+        type: string
+      amazon_asin:
+        description: "Amazon ASIN（任意。10桁。不明なら空欄で可）"
+        required: false
+        type: string
+      pub_month:
+        description: "刊行年月（例: 2026-10）"
+        required: false
+        type: string
+      genres:
+        description: "分野（複数の場合は | で区切る）"
+        required: false
+        type: string
+      series:
+        description: "シリーズ"
+        required: false
+        type: string
+      series_volume:
+        description: "シリーズ巻数"
+        required: false
+        type: string
+      price_body:
+        description: "本体価格（数字のみ）"
+        required: false
+        type: string
+      format:
+        description: "判型"
+        required: false
+        type: string
+      pages:
+        description: "頁数（数字のみ）"
+        required: false
+        type: string
+      hp_keywords:
+        description: "HP検索用キーワード"
+        required: false
+        type: string
+      pub_note:
+        description: "刊行年月備考（任意）"
+        required: false
+        type: string
+      description:
+        description: "内容紹介（任意）"
+        required: false
+        type: string
+      toc:
+        description: "目次（任意）"
+        required: false
+        type: string
+      original_title:
+        description: "原書名（任意）"
+        required: false
+        type: string
+      has_errata:
+        description: "正誤表"
+        required: true
+        type: choice
+        default: "変更しない"
+        options:
+          - "変更しない"
+          - "なし"
+          - "あり"
+      has_related_info:
+        description: "関連情報・付属データ"
+        required: true
+        type: choice
+        default: "変更しない"
+        options:
+          - "変更しない"
+          - "なし"
+          - "あり"
+
+concurrency:
+  group: book-data-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Update master CSV
+        env:
+          BOOK_OPERATION: ${{ inputs.operation }}
+          BOOK_ID: ${{ inputs.book_id }}
+          BOOK_TITLE: ${{ inputs.title }}
+          BOOK_SUBTITLE_BEFORE: ${{ inputs.subtitle_before }}
+          BOOK_SUBTITLE_AFTER: ${{ inputs.subtitle_after }}
+          BOOK_AUTHOR: ${{ inputs.author }}
+          BOOK_AUTHOR_KANA: ${{ inputs.author_kana }}
+          BOOK_TITLE_KANA: ${{ inputs.title_kana }}
+          BOOK_ISBN_OLD: ${{ inputs.isbn_old }}
+          BOOK_ISBN_NEW: ${{ inputs.isbn_new }}
+          BOOK_AMAZON_ASIN: ${{ inputs.amazon_asin }}
+          BOOK_PUB_MONTH: ${{ inputs.pub_month }}
+          BOOK_GENRES: ${{ inputs.genres }}
+          BOOK_SERIES: ${{ inputs.series }}
+          BOOK_SERIES_VOLUME: ${{ inputs.series_volume }}
+          BOOK_PRICE_BODY: ${{ inputs.price_body }}
+          BOOK_FORMAT: ${{ inputs.format }}
+          BOOK_PAGES: ${{ inputs.pages }}
+          BOOK_HP_KEYWORDS: ${{ inputs.hp_keywords }}
+          BOOK_PUB_NOTE: ${{ inputs.pub_note }}
+          BOOK_DESCRIPTION: ${{ inputs.description }}
+          BOOK_TOC: ${{ inputs.toc }}
+          BOOK_ORIGINAL_TITLE: ${{ inputs.original_title }}
+          BOOK_HAS_ERRATA: ${{ inputs.has_errata }}
+          BOOK_HAS_RELATED_INFO: ${{ inputs.has_related_info }}
+        run: python scripts/manage_book.py
+
+      - name: Generate search data
+        run: python scripts/build_data.py
+
+      - name: Validate generated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          master = Path('data/book_search_master.csv')
+          with master.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          books = json.loads(Path('docs/data/books.json').read_text(encoding='utf-8'))
+
+          if not rows or not books:
+              raise SystemExit('書誌データが空です。')
+          if len(rows) != len(books):
+              raise SystemExit('マスターCSVと検索データの件数が一致しません。')
+          ids = [str(x.get('id', '')).strip() for x in books]
+          if any(not x for x in ids):
+              raise SystemExit('空の書籍IDがあります。')
+          if len(ids) != len(set(ids)):
+              raise SystemExit('書籍IDが重複しています。')
+          if any(not str(x.get('title', '')).strip() for x in books):
+              raise SystemExit('空の書名があります。')
+          print(f'検証OK: {len(books):,}件')
+          PY
+          node --check docs/books/js/app.js
+          node --check docs/js/home.js
+          git diff --check
+
+      - name: Commit updated data
+        shell: bash
+        env:
+          BOOK_ID: ${{ inputs.book_id }}
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/book_search_master.csv docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/last-updated.txt
+          if git diff --cached --quiet; then
+            echo "変更はありません。"
+          else
+            git commit -m "Book data: ${OPERATION} ${BOOK_ID} [skip ci]"
+            git push origin main
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
