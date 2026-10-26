@@ -187,7 +187,7 @@
           <label class="edit-field"><span>関連情報・付属データ</span><select id="edit-has_related_info" data-field="has_related_info"><option value="0"${related === "0" ? " selected" : ""}>なし</option><option value="1"${related === "1" ? " selected" : ""}>あり</option></select></label>
         </div>
         <div class="edit-submit-box">
-          <p>「GitHubで変更を確定」を押すと、<strong>変更した項目だけ</strong>を入れた確認用Issueが開きます。</p>
+          <p>「GitHubで変更を確定」を押すと、<strong>現在の書誌情報をすべて入力済み</strong>の確認用Issueが開きます。GitHub側でも内容を確認・修正できます。</p>
           <button class="admin-btn" type="submit">GitHubで変更を確定</button>
           <button class="admin-btn secondary" id="back-to-detail" type="button">詳細表示へ戻る</button>
         </div>
@@ -204,30 +204,19 @@
       params.set("book_id", source.id);
       params.set("current_title", source.title);
 
-      let changes = 0;
       for (const [id] of editFields) {
         const el = document.getElementById(`edit-${id}`);
         const before = String(source[id] || "");
         const after = String(el.value || "").trim();
-        if (after !== before) {
-          params.set(id, after === "" && before !== "" ? "__CLEAR__" : after);
-          changes += 1;
-        }
+        // GitHub側の確認フォームにも現在値をすべて表示する。
+        // 既存値を明示的に空欄へ変更した場合だけ __CLEAR__ を渡す。
+        params.set(id, after === "" && before !== "" ? "__CLEAR__" : after);
       }
       for (const id of ["has_errata", "has_related_info"]) {
         const el = document.getElementById(`edit-${id}`);
-        const before = String(source[id] || "0");
-        const after = String(el.value || "0");
-        if (after !== before) {
-          params.set(id, after === "1" ? "あり" : "なし");
-          changes += 1;
-        }
+        params.set(id, String(el.value || "0") === "1" ? "あり" : "なし");
       }
 
-      if (!changes) {
-        window.alert("変更された項目がありません。");
-        return;
-      }
       window.location.href = `${issueBase}?${params.toString()}`;
     });
     document.getElementById("back-to-detail").addEventListener("click", () => openBookModal(book, trigger));

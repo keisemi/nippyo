@@ -256,6 +256,20 @@ body.modal-open { overflow: hidden; }
   font-size: 17px;
 }
 .book-detail-copy { margin: 0; font-size: 14px; }
+
+.book-detail-copy a,
+.book-detail-toc a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: .16em;
+}
+.book-detail-copy a:hover,
+.book-detail-copy a:focus-visible,
+.book-detail-toc a:hover,
+.book-detail-toc a:focus-visible {
+  color: var(--accent-dark);
+}
 .book-detail-toc {
   max-height: 340px;
   overflow: auto;
