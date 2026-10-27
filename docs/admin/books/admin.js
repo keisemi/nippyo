@@ -14,6 +14,7 @@
   let books = [];
   let dataVersion = Date.now().toString();
   let lastModalTrigger = null;
+  let searchIndexPromise = null;
   const detailCache = new Map();
 
   const editFields = [
@@ -166,6 +167,31 @@
       throw new Error("books-search.json の形式が不正です。");
     }
     return expandRows(payload, "books").map(normalizeSearchBook);
+  }
+
+  async function ensureSearchIndex() {
+    if (!searchIndexPromise) {
+      searchIndexPromise = fetch(`../../data/books-admin-search-index.json?v=${encodeURIComponent(dataVersion)}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`books-admin-search-index.json を取得できませんでした（HTTP ${response.status}）`);
+          }
+          return response.json();
+        })
+        .then((payload) => {
+          if (!payload || !Array.isArray(payload.search) || payload.search.length !== books.length) {
+            throw new Error("書籍検索索引と表示データの件数が一致しません。");
+          }
+          books.forEach((book, index) => {
+            book.__adminSearch = String(payload.search[index] || "");
+          });
+        })
+        .catch((error) => {
+          searchIndexPromise = null;
+          throw error;
+        });
+    }
+    return searchIndexPromise;
   }
 
   async function loadDetailShard(detailKey) {
@@ -439,7 +465,7 @@
     });
   }
 
-  function search() {
+  async function search() {
     const terms = queryInput.value.trim().split(/\s+/).filter(Boolean).map(normalize);
     if (!terms.length) {
       count.textContent = "検索語を入力してください。";
@@ -447,23 +473,17 @@
       return;
     }
 
-    const matched = books.filter((book) => {
-      const haystack = normalize([
-        book.id,
-        book.title,
-        book.subtitle_before,
-        book.subtitle_after,
-        book.author,
-        book.isbn,
-        book.isbn_old,
-        book.isbn_new,
-        book.identifiers,
-        (book.genres || []).join(" "),
-        book.series,
-        book.search_extra,
-      ].filter(Boolean).join(" "));
-      return terms.every((term) => haystack.includes(term));
-    }).slice(0, 50);
+    try {
+      await ensureSearchIndex();
+    } catch (error) {
+      console.error("Failed to load admin search index.", error);
+      count.textContent = "検索用データを読み込めませんでした。ページを再読み込みしてください。";
+      return;
+    }
+
+    const matched = books.filter((book) =>
+      terms.every((term) => String(book.__adminSearch || "").includes(term))
+    ).slice(0, 50);
 
     render(matched);
     if (matched.length === 50) {
@@ -475,9 +495,9 @@
     try {
       books = await loadSearchData();
       newBookLink.href = newUrl();
-      searchButton.addEventListener("click", search);
+      searchButton.addEventListener("click", () => { void search(); });
       queryInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") search();
+        if (event.key === "Enter") void search();
       });
       modalClose?.addEventListener("click", closeBookModal);
       modal?.addEventListener("click", (event) => {

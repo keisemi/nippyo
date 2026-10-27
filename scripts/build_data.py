@@ -3,6 +3,7 @@ import hashlib
 import html
 import json
 import re
+import unicodedata
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -13,6 +14,8 @@ DOCS = ROOT / "docs"
 OUTPUT_DIR = DOCS / "data"
 COVERS_DIR = DOCS / "assets" / "covers"
 SEARCH_JSON_FILE = OUTPUT_DIR / "books-search.json"
+SEARCH_INDEX_FILE = OUTPUT_DIR / "books-search-index.json"
+ADMIN_SEARCH_INDEX_FILE = OUTPUT_DIR / "books-admin-search-index.json"
 DETAIL_DIR = OUTPUT_DIR / "book-details"
 UPDATED_FILE = OUTPUT_DIR / "last-updated.txt"
 HOME_JS_FILE = OUTPUT_DIR / "home-books.js"
@@ -24,8 +27,8 @@ LEGACY_FILES = [
     OUTPUT_DIR / "admin-books.js",
 ]
 
-# 検索用JSONは同じキー名を全書籍で繰り返さない列指向形式にする。
-# 表示項目・検索対象は減らさず、転送量とJSON解析負荷だけを下げる。
+# 初期表示用JSONは同じキー名を全書籍で繰り返さない列指向形式にする。
+# 検索専用の補助文字列は別索引へ分離し、初期表示の転送量と処理負荷を下げる。
 SEARCH_COLUMNS = [
     "id",
     "pub_year",
@@ -43,7 +46,6 @@ SEARCH_COLUMNS = [
     "pages",
     "status_flags",
     "identifiers",
-    "search_extra",
 ]
 
 
@@ -134,6 +136,24 @@ def normalized_pub_month(value):
 
 def detail_key(pub_year):
     return str(pub_year) if isinstance(pub_year, int) and pub_year > 0 else "undated"
+
+
+def normalize_search_text(value):
+    value = unicodedata.normalize("NFKC", str(value or "")).lower()
+    value = re.sub(r"[‐-‒–—―−ーｰ]", "-", value)
+    value = re.sub(r"[・･,，、。\./:;；：()（）\[\]【】「」『』<>＜＞]", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def normalize_identifier(value):
+    return re.sub(r"[^0-9x]", "", normalize_search_text(value))
+
+
+def publication_sort_key(book):
+    match = re.match(r"^(\d{4})[.\/-]?(\d{1,2})?", str(book.get("pub_month") or ""))
+    if match:
+        return int(match.group(1)) * 10000 + int(match.group(2) or 0) * 100
+    return int(book.get("pub_year") or 0) * 10000
 
 
 if not INPUT.exists():
@@ -259,12 +279,20 @@ home_books = [
 ]
 
 search_rows = []
+search_index = []
+admin_search_index = []
+sort_keys = []
 for book in search_books:
     identifiers = []
     for value in (book.get("isbn_old"), book.get("isbn_new")):
         value = clean(value)
         if value and value not in identifiers:
             identifiers.append(value)
+    index_identifiers = []
+    for value in (book.get("isbn"), *identifiers):
+        normalized = normalize_identifier(value)
+        if normalized and normalized not in index_identifiers:
+            index_identifiers.append(normalized)
     status_flags = (1 if book.get("has_errata") else 0) | (2 if book.get("has_related_info") else 0)
     search_rows.append([
         book.get("id", ""),
@@ -283,15 +311,60 @@ for book in search_books:
         book.get("pages"),
         status_flags,
         "|".join(identifiers),
-        book.get("search_extra", ""),
     ])
+    search_index.append(normalize_search_text(" ".join(
+        str(value)
+        for value in (
+            book.get("title", ""),
+            book.get("subtitle_before", ""),
+            book.get("subtitle_after", ""),
+            book.get("author", ""),
+            " ".join(index_identifiers),
+            " ".join(book.get("genres", [])),
+            book.get("series", ""),
+            book.get("search_extra", ""),
+        )
+        if value
+    )))
+    # 管理画面は現行検索挙動（書籍ID・ハイフン付きISBN等）を変えないため、
+    # 公開検索用とは別の正規化済み索引を持つ。
+    admin_search_index.append(normalize_search_text(" ".join(
+        str(value)
+        for value in (
+            book.get("id", ""),
+            book.get("title", ""),
+            book.get("subtitle_before", ""),
+            book.get("subtitle_after", ""),
+            book.get("author", ""),
+            book.get("isbn", ""),
+            "|".join(identifiers),
+            " ".join(book.get("genres", [])),
+            book.get("series", ""),
+            book.get("search_extra", ""),
+        )
+        if value
+    )))
+    sort_keys.append(publication_sort_key(book))
+
+default_order = sorted(range(len(search_rows)), key=lambda i: (-sort_keys[i], i))
 
 search_payload = {
     "updated": updated_date,
     "columns": SEARCH_COLUMNS,
+    "default_order": default_order,
     "books": search_rows,
 }
+search_index_payload = {
+    "updated": updated_date,
+    "search": search_index,
+}
+admin_search_index_payload = {
+    "updated": updated_date,
+    "search": admin_search_index,
+}
 search_json = json.dumps(search_payload, ensure_ascii=False, separators=(",", ":"))
+search_index_json = json.dumps(search_index_payload, ensure_ascii=False, separators=(",", ":"))
+admin_search_index_json = json.dumps(admin_search_index_payload, ensure_ascii=False, separators=(",", ":"))
 home_books_js = (
     "window.NIPPYO_HOME_BOOKS="
     + json.dumps(home_books, ensure_ascii=False, separators=(",", ":"))
@@ -314,12 +387,14 @@ for year_key in sorted(details_by_year, key=lambda x: (x == "undated", x)):
     detail_contents.append(f"{year_key}\n{detail_json}")
 
 SEARCH_JSON_FILE.write_text(search_json + "\n", encoding="utf-8")
+SEARCH_INDEX_FILE.write_text(search_index_json + "\n", encoding="utf-8")
+ADMIN_SEARCH_INDEX_FILE.write_text(admin_search_index_json + "\n", encoding="utf-8")
 HOME_JS_FILE.write_text(home_books_js, encoding="utf-8")
 
 # 検索用・詳細用・トップ用のどれかが変わればURLも切り替わるよう、
 # 生成データ全体から一つのバージョンキーを作る。
 data_version = hashlib.sha256(
-    (search_json + "\n" + home_books_js + "\n" + "\n".join(detail_contents)).encode("utf-8")
+    (search_json + "\n" + search_index_json + "\n" + admin_search_index_json + "\n" + home_books_js + "\n" + "\n".join(detail_contents)).encode("utf-8")
 ).hexdigest()[:16]
 UPDATED_FILE.write_text(data_version + "\n", encoding="utf-8")
 
@@ -329,10 +404,14 @@ for legacy_file in LEGACY_FILES:
         legacy_file.unlink()
 
 print("生成完了")
-print(f" - {SEARCH_JSON_FILE}（検索一覧用・軽量）")
+print(f" - {SEARCH_JSON_FILE}（初期表示用・軽量）")
+print(f" - {SEARCH_INDEX_FILE}（公開用・正規化済み検索索引・遅延読込）")
+print(f" - {ADMIN_SEARCH_INDEX_FILE}（管理画面用・正規化済み検索索引・遅延読込）")
 print(f" - {DETAIL_DIR}（書籍詳細・刊行年別）")
 print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
 print(f" - {UPDATED_FILE}")
 print(f" - 書籍数: {len(search_books):,}")
 print(f" - 詳細ファイル数: {len(details_by_year):,}")
-print(f" - 検索用データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 初期表示データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 公開検索索引: {SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 管理画面検索索引: {ADMIN_SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")

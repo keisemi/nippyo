@@ -30,6 +30,8 @@
   let modalHistoryPushed = false;
   let bookDataVersion = Date.now().toString();
   let magazineDataVersion = Date.now().toString();
+  let searchIndexPayloadPromise = null;
+  let searchIndexReady = false;
   const bookDetailCache = new Map();
   const magazineDetailCache = new Map();
 
@@ -59,6 +61,8 @@
   }
 
   function pubKey(item) {
+    if (Number.isFinite(item?.__pub)) return item.__pub;
+
     if (item.__type === "magazine_issue") {
       const match = String(item.pub_date || "").match(/^(\d{4})[-/.]?(\d{1,2})?[-/.]?(\d{1,2})?/);
       if (match) {
@@ -288,11 +292,73 @@
     });
   }
 
+  function startSearchIndexFetch() {
+    if (!searchIndexPayloadPromise) {
+      searchIndexPayloadPromise = Promise.all([
+        fetch(`../data/books-search-index.json?v=${encodeURIComponent(bookDataVersion)}`),
+        fetch(`../data/magazine-issues-search-index.json?v=${encodeURIComponent(magazineDataVersion)}`)
+      ]).then(async ([bookResponse, magazineResponse]) => {
+        if (!bookResponse.ok) {
+          throw new Error(`books-search-index.json を取得できませんでした（HTTP ${bookResponse.status}）`);
+        }
+        if (!magazineResponse.ok) {
+          throw new Error(`magazine-issues-search-index.json を取得できませんでした（HTTP ${magazineResponse.status}）`);
+        }
+        const [bookIndex, magazineIndex] = await Promise.all([
+          bookResponse.json(),
+          magazineResponse.json()
+        ]);
+        if (!bookIndex || !Array.isArray(bookIndex.search)) {
+          throw new Error("books-search-index.json の形式が不正です。");
+        }
+        if (!magazineIndex || !Array.isArray(magazineIndex.search)) {
+          throw new Error("magazine-issues-search-index.json の形式が不正です。");
+        }
+        return { bookIndex, magazineIndex };
+      }).catch((error) => {
+        searchIndexPayloadPromise = null;
+        throw error;
+      });
+    }
+    return searchIndexPayloadPromise;
+  }
+
+  async function ensureSearchIndexes() {
+    if (searchIndexReady) return;
+    const { bookIndex, magazineIndex } = await startSearchIndexFetch();
+    if (bookIndex.search.length !== books.length) {
+      throw new Error("書籍検索索引と表示データの件数が一致しません。");
+    }
+    if (magazineIndex.search.length !== magazineIssues.length) {
+      throw new Error("雑誌検索索引と表示データの件数が一致しません。");
+    }
+    books.forEach((book, index) => { book.__n = String(bookIndex.search[index] || ""); });
+    magazineIssues.forEach((issue, index) => { issue.__n = String(magazineIndex.search[index] || ""); });
+    searchIndexReady = true;
+  }
+
+  function scheduleSearchIndexPrefetch() {
+    const prefetch = () => {
+      startSearchIndexFetch().catch((error) => {
+        console.warn("検索索引の先読みを完了できませんでした。検索時に再試行します。", error);
+      });
+    };
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(prefetch, { timeout: 2000 });
+    } else {
+      window.setTimeout(prefetch, 1200);
+    }
+  }
+
   async function loadSearchData() {
     [bookDataVersion, magazineDataVersion] = await Promise.all([
       readVersion("../data/last-updated.txt"),
       readVersion("../data/magazine-last-updated.txt")
     ]);
+
+    if (String(new URLSearchParams(location.search).get("q") || "").trim()) {
+      void startSearchIndexFetch().catch(() => {});
+    }
 
     const [bookResponse, magazineResponse] = await Promise.all([
       fetch(`../data/books-search.json?v=${encodeURIComponent(bookDataVersion)}`),
@@ -547,7 +613,40 @@
     await openItemModal(direct.type, direct.id, null, { updateUrl: false });
   }
 
-  function prepareItems(bookData, issueData) {
+  function orderedByDefault(itemsForType, order) {
+    if (!Array.isArray(order) || order.length !== itemsForType.length) return itemsForType;
+    const seen = new Set();
+    const ordered = [];
+    for (const value of order) {
+      const index = Number(value);
+      if (!Number.isInteger(index) || index < 0 || index >= itemsForType.length || seen.has(index)) {
+        return itemsForType;
+      }
+      seen.add(index);
+      ordered.push(itemsForType[index]);
+    }
+    return ordered;
+  }
+
+  function mergeNewest(bookItems, issueItems) {
+    const merged = [];
+    let bi = 0;
+    let mi = 0;
+    while (bi < bookItems.length || mi < issueItems.length) {
+      if (mi >= issueItems.length) {
+        merged.push(bookItems[bi++]);
+      } else if (bi >= bookItems.length) {
+        merged.push(issueItems[mi++]);
+      } else if (pubKey(bookItems[bi]) >= pubKey(issueItems[mi])) {
+        merged.push(bookItems[bi++]);
+      } else {
+        merged.push(issueItems[mi++]);
+      }
+    }
+    return merged;
+  }
+
+  function prepareItems(bookData, issueData, bookOrder, issueOrder) {
     books = bookData.map((book, i) => {
       const statusFlags = Number(book.status_flags || 0);
       const normalizedBook = {
@@ -556,22 +655,12 @@
         has_errata: book.has_errata ?? Boolean(statusFlags & 1),
         has_related_info: book.has_related_info ?? Boolean(statusFlags & 2),
       };
-      const identifiers = itemIdentifiers(normalizedBook).join(" ");
-      const searchParts = [
-        normalizedBook.title,
-        normalizedBook.subtitle_before,
-        normalizedBook.subtitle_after,
-        normalizedBook.author,
-        identifiers,
-        ...(Array.isArray(normalizedBook.genres) ? normalizedBook.genres : []),
-        normalizedBook.series,
-        normalizedBook.search_extra,
-      ];
       return {
         ...normalizedBook,
         __type: "book",
-        __n: norm(searchParts.filter(Boolean).join(" ")),
-        __i: i
+        __n: "",
+        __i: i,
+        __pub: pubKey({ ...normalizedBook, __type: "book" })
       };
     });
 
@@ -580,28 +669,18 @@
         ...issue,
         detail_key: issue.detail_key || (Number(issue.pub_year) > 0 ? String(Number(issue.pub_year)) : "undated"),
       };
-      const identifiers = itemIdentifiers({ ...normalizedIssue, __type: "magazine_issue" }).join(" ");
-      const searchParts = [
-        normalizedIssue.magazine_name,
-        normalizedIssue.issue,
-        normalizedIssue.issue_number,
-        normalizedIssue.feature,
-        normalizedIssue.feature_subtitle,
-        normalizedIssue.feature2,
-        normalizedIssue.feature2_subtitle,
-        identifiers,
-        ...(Array.isArray(normalizedIssue.contributors) ? normalizedIssue.contributors : []),
-        normalizedIssue.search_extra,
-      ];
       return {
         ...normalizedIssue,
         __type: "magazine_issue",
-        __n: norm(searchParts.filter(Boolean).join(" ")),
-        __i: books.length + i
+        __n: "",
+        __i: books.length + i,
+        __pub: pubKey({ ...normalizedIssue, __type: "magazine_issue" })
       };
     });
 
-    items = [...books, ...magazineIssues];
+    const orderedBooks = orderedByDefault(books, bookOrder);
+    const orderedIssues = orderedByDefault(magazineIssues, issueOrder);
+    items = mergeNewest(orderedBooks, orderedIssues);
 
     const genres = [...new Set(books.flatMap((b) => Array.isArray(b.genres) ? b.genres : []).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, "ja"));
@@ -686,7 +765,21 @@
     return score;
   }
 
-  function apply() {
+  async function apply() {
+    const rawBeforeLoad = els.q.value.trim();
+    const identifierBeforeLoad = normIdentifier(rawBeforeLoad);
+    const identifierOnly = identifierBeforeLoad.length >= 9 && /^[0-9x]+$/.test(identifierBeforeLoad);
+
+    if (rawBeforeLoad && !identifierOnly) {
+      try {
+        await ensureSearchIndexes();
+      } catch (error) {
+        console.error("Failed to load search index.", error);
+        els.count.textContent = "検索用データを読み込めませんでした";
+        return;
+      }
+    }
+
     const raw = els.q.value.trim();
     const tokens = norm(raw).split(" ").filter(Boolean);
     const identifierQuery = normIdentifier(raw);
@@ -705,17 +798,15 @@
     });
 
     if (els.sort.value === "relevance") {
-      if (!raw) {
-        filtered.sort((a, b) => pubKey(b) - pubKey(a) || a.__i - b.__i);
-      } else {
+      if (raw) {
         filtered.sort((a, b) => relevanceScore(b, raw, tokens) - relevanceScore(a, raw, tokens) || pubKey(b) - pubKey(a) || a.__i - b.__i);
       }
     } else if (els.sort.value === "newest") {
-      filtered.sort((a, b) => pubKey(b) - pubKey(a) || a.__i - b.__i);
+      // items はビルド時の既定順（刊行日の新しい順）に整列済み。filter() は順序を維持する。
     } else if (els.sort.value === "oldest") {
       filtered.sort((a, b) => pubKey(a) - pubKey(b) || a.__i - b.__i);
     } else {
-      filtered.sort((a, b) => itemTitle(a).localeCompare(itemTitle(b), "ja"));
+      filtered.sort((a, b) => itemTitle(a).localeCompare(itemTitle(b), "ja") || a.__i - b.__i);
     }
 
     const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -823,17 +914,17 @@
     let timer;
     const schedule = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => { page = 1; apply(); }, 180);
+      timer = setTimeout(() => { page = 1; void apply(); }, 180);
     };
 
     els.q.addEventListener("input", schedule);
     els.q.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") { clearTimeout(timer); page = 1; apply(); }
+      if (event.key === "Enter") { clearTimeout(timer); page = 1; void apply(); }
     });
-    els.searchButton.addEventListener("click", () => { clearTimeout(timer); page = 1; apply(); });
-    els.genre.addEventListener("change", () => { page = 1; apply(); });
-    els.year.addEventListener("change", () => { page = 1; apply(); });
-    els.sort.addEventListener("change", () => { page = 1; apply(); });
+    els.searchButton.addEventListener("click", () => { clearTimeout(timer); page = 1; void apply(); });
+    els.genre.addEventListener("change", () => { page = 1; void apply(); });
+    els.year.addEventListener("change", () => { page = 1; void apply(); });
+    els.sort.addEventListener("change", () => { page = 1; void apply(); });
     els.results.addEventListener("click", (event) => {
       const button = event.target.closest(".book-title-button");
       if (!button) return;
@@ -855,7 +946,7 @@
       els.year.value = "";
       els.sort.value = "relevance";
       page = 1;
-      apply();
+      void apply();
       els.q.focus();
     });
   }
@@ -863,14 +954,20 @@
   async function init() {
     try {
       const { bookPayload, magazinePayload } = await loadSearchData();
-      prepareItems(bookPayload.books, magazinePayload.issues);
+      prepareItems(
+        bookPayload.books,
+        magazinePayload.issues,
+        bookPayload.default_order,
+        magazinePayload.default_order
+      );
       restoreUrl();
       bindEvents();
       els.lastUpdated.textContent = `書籍 ${String(bookPayload.updated || "—")} ／ 雑誌 ${String(magazinePayload.updated || "—")}`;
       els.loading.hidden = true;
       els.results.hidden = false;
-      apply();
+      await apply();
       await syncModalFromUrl();
+      scheduleSearchIndexPrefetch();
     } catch (error) {
       console.error("Failed to load search data.", error);
       els.loading.hidden = true;

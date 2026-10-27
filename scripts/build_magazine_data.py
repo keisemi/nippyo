@@ -3,6 +3,7 @@ import hashlib
 import html
 import json
 import re
+import unicodedata
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -12,6 +13,7 @@ SOURCE_DIR = ROOT / "data" / "magazines"
 OUTPUT_DIR = ROOT / "docs" / "data"
 DETAIL_DIR = OUTPUT_DIR / "magazine-details"
 SEARCH_JSON_FILE = OUTPUT_DIR / "magazine-issues-search.json"
+SEARCH_INDEX_FILE = OUTPUT_DIR / "magazine-issues-search-index.json"
 UPDATED_FILE = OUTPUT_DIR / "magazine-last-updated.txt"
 
 MAGAZINES = [
@@ -23,7 +25,7 @@ MAGAZINES = [
     ("7", "そだちの科学", "06_sodachi_no_kagaku.csv"),
 ]
 
-# 検索用JSONは列名を1回だけ持つ列指向形式にし、表示情報を落とさず軽量化する。
+# 初期表示用JSONは列名を1回だけ持つ列指向形式にし、検索専用文字列は別索引へ分離する。
 SEARCH_COLUMNS = [
     "id",
     "magazine_id",
@@ -42,7 +44,6 @@ SEARCH_COLUMNS = [
     "pages",
     "price_body",
     "contributors",
-    "search_extra",
 ]
 
 EXPECTED_COLUMNS = [
@@ -133,6 +134,24 @@ def publication_year(row):
 
 def detail_key(year):
     return str(year) if isinstance(year, int) and year > 0 else "undated"
+
+
+def normalize_search_text(value):
+    value = unicodedata.normalize("NFKC", str(value or "")).lower()
+    value = re.sub(r"[‐-‒–—―−ーｰ]", "-", value)
+    value = re.sub(r"[・･,，、。\./:;；：()（）\[\]【】「」『』<>＜＞]", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def normalize_identifier(value):
+    return re.sub(r"[^0-9x]", "", normalize_search_text(value))
+
+
+def publication_sort_key(issue):
+    match = re.match(r"^(\d{4})[-/.]?(\d{1,2})?[-/.]?(\d{1,2})?", str(issue.get("pub_date") or ""))
+    if match:
+        return int(match.group(1)) * 10000 + int(match.group(2) or 0) * 100 + int(match.group(3) or 0)
+    return int(issue.get("pub_year") or 0) * 10000
 
 
 def normalize_contributor_piece(value):
@@ -438,6 +457,8 @@ search_issues.sort(
 )
 
 search_rows = []
+search_index = []
+sort_keys = []
 for issue in search_issues:
     identifiers = []
     for value in (
@@ -449,6 +470,11 @@ for issue in search_issues:
         value = clean(value)
         if value and value not in identifiers:
             identifiers.append(value)
+    index_identifiers = []
+    for value in (issue.get("isbn"), *identifiers):
+        normalized = normalize_identifier(value)
+        if normalized and normalized not in index_identifiers:
+            index_identifiers.append(normalized)
     search_rows.append([
         issue.get("id", ""),
         issue.get("magazine_id", ""),
@@ -467,16 +493,41 @@ for issue in search_issues:
         issue.get("pages"),
         issue.get("price_body"),
         issue.get("contributors", []),
-        issue.get("search_extra", ""),
     ])
+    search_index.append(normalize_search_text(" ".join(
+        str(value)
+        for value in (
+            issue.get("magazine_name", ""),
+            issue.get("issue", ""),
+            issue.get("issue_number", ""),
+            issue.get("feature", ""),
+            issue.get("feature_subtitle", ""),
+            issue.get("feature2", ""),
+            issue.get("feature2_subtitle", ""),
+            " ".join(index_identifiers),
+            " ".join(issue.get("contributors", [])),
+            issue.get("search_extra", ""),
+        )
+        if value
+    )))
+    sort_keys.append(publication_sort_key(issue))
+
+default_order = sorted(range(len(search_rows)), key=lambda i: (-sort_keys[i], i))
 
 search_payload = {
     "updated": updated_date,
     "columns": SEARCH_COLUMNS,
+    "default_order": default_order,
     "issues": search_rows,
 }
+search_index_payload = {
+    "updated": updated_date,
+    "search": search_index,
+}
 search_json = json.dumps(search_payload, ensure_ascii=False, separators=(",", ":"))
+search_index_json = json.dumps(search_index_payload, ensure_ascii=False, separators=(",", ":"))
 SEARCH_JSON_FILE.write_text(search_json + "\n", encoding="utf-8")
+SEARCH_INDEX_FILE.write_text(search_index_json + "\n", encoding="utf-8")
 
 # 前回生成した年別詳細だけを削除し、現在の6CSVから再生成する。
 for old_detail in DETAIL_DIR.glob("magazine-details-*.json"):
@@ -491,17 +542,19 @@ for year_key in sorted(details_by_year, key=lambda value: (value == "undated", v
     detail_contents.append(f"{year_key}\n{detail_json}")
 
 version = hashlib.sha256(
-    (search_json + "\n" + "\n".join(detail_contents)).encode("utf-8")
+    (search_json + "\n" + search_index_json + "\n" + "\n".join(detail_contents)).encode("utf-8")
 ).hexdigest()[:16]
 UPDATED_FILE.write_text(version + "\n", encoding="utf-8")
 
 print("雑誌号データ生成完了")
-print(f" - {SEARCH_JSON_FILE}（検索一覧用・軽量）")
+print(f" - {SEARCH_JSON_FILE}（初期表示用・軽量）")
+print(f" - {SEARCH_INDEX_FILE}（正規化済み検索索引・遅延読込）")
 print(f" - {DETAIL_DIR}（雑誌号詳細・刊行年別）")
 print(f" - {UPDATED_FILE}")
 print(f" - 雑誌号数: {len(search_issues):,}")
 print(f" - 詳細ファイル数: {len(details_by_year):,}")
-print(f" - 検索用データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 初期表示データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 検索索引: {SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")
 for _, magazine_name, filename in MAGAZINES:
     stats = contributor_stats[magazine_name]
     rate = stats["with_contributors"] / stats["issues"] if stats["issues"] else 0

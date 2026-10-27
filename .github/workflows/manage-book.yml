@@ -64,6 +64,10 @@ jobs:
               rows = list(csv.DictReader(f))
           search_payload = json.loads(Path('docs/data/books-search.json').read_text(encoding='utf-8'))
           search_rows = search_payload.get('books') if isinstance(search_payload, dict) else None
+          book_search_index = json.loads(Path('docs/data/books-search-index.json').read_text(encoding='utf-8'))
+          book_index_rows = book_search_index.get('search') if isinstance(book_search_index, dict) else None
+          admin_search_index = json.loads(Path('docs/data/books-admin-search-index.json').read_text(encoding='utf-8'))
+          admin_index_rows = admin_search_index.get('search') if isinstance(admin_search_index, dict) else None
           if isinstance(search_rows, list) and search_rows and isinstance(search_rows[0], list):
               columns = search_payload.get('columns')
               if not isinstance(columns, list) or not columns:
@@ -85,6 +89,19 @@ jobs:
               raise SystemExit('書籍IDが重複しています。')
           if any(not str(x.get('title', '')).strip() for x in books):
               raise SystemExit('空の書名があります。')
+          if not isinstance(book_index_rows, list) or len(book_index_rows) != len(books):
+              raise SystemExit('書籍検索索引と表示データの件数が一致しません。')
+          if any(not isinstance(x, str) for x in book_index_rows):
+              raise SystemExit('書籍検索索引に文字列以外の値があります。')
+          if not isinstance(admin_index_rows, list) or len(admin_index_rows) != len(books):
+              raise SystemExit('管理画面用書籍検索索引と表示データの件数が一致しません。')
+          if any(not isinstance(x, str) for x in admin_index_rows):
+              raise SystemExit('管理画面用書籍検索索引に文字列以外の値があります。')
+          book_order = search_payload.get('default_order') if isinstance(search_payload, dict) else None
+          if not isinstance(book_order, list) or sorted(book_order) != list(range(len(books))):
+              raise SystemExit('書籍の既定表示順が不正です。')
+          if 'search_extra' in (search_payload.get('columns') or []):
+              raise SystemExit('初期表示用書籍データに検索専用補助文字列が残っています。')
 
           detail_ids = []
           detail_files = sorted(Path('docs/data/book-details').glob('books-detail-*.json'))
@@ -99,11 +116,17 @@ jobs:
               raise SystemExit('検索用データと刊行年別詳細データの書籍IDが一致しません。')
 
           search_size = Path('docs/data/books-search.json').stat().st_size
-          if search_size > 5 * 1024 * 1024:
-              raise SystemExit(f'検索用書誌データが5MBを超えています: {search_size:,} bytes')
+          book_index_size = Path('docs/data/books-search-index.json').stat().st_size
+          admin_index_size = Path('docs/data/books-admin-search-index.json').stat().st_size
+          if search_size > 3 * 1024 * 1024:
+              raise SystemExit(f'初期表示用書誌データが3MBを超えています: {search_size:,} bytes')
+          if book_index_size > 4 * 1024 * 1024:
+              raise SystemExit(f'書籍検索索引が4MBを超えています: {book_index_size:,} bytes')
+          if admin_index_size > 4 * 1024 * 1024:
+              raise SystemExit(f'管理画面用書籍検索索引が4MBを超えています: {admin_index_size:,} bytes')
           if Path('docs/data/books.js').exists() or Path('docs/data/books.json').exists() or Path('docs/data/admin-books.js').exists():
               raise SystemExit('旧形式の巨大書誌データが残っています。')
-          print(f'検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／検索用{search_size / 1024 / 1024:.2f}MB')
+          print(f'検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／初期表示{search_size / 1024 / 1024:.2f}MB／公開索引{book_index_size / 1024 / 1024:.2f}MB／管理索引{admin_index_size / 1024 / 1024:.2f}MB')
           PY
           node --check docs/books/js/app.js
           node --check docs/js/home.js
