@@ -129,6 +129,32 @@
     return stamp;
   }
 
+  function expandRows(payload, key) {
+    const rows = payload && Array.isArray(payload[key]) ? payload[key] : null;
+    if (!rows) throw new Error(`${key} の検索データがありません。`);
+    if (!rows.length || !Array.isArray(rows[0])) return rows;
+    const columns = Array.isArray(payload.columns) ? payload.columns : [];
+    if (!columns.length) throw new Error(`${key} の列定義がありません。`);
+    return rows.map((row) => {
+      if (!Array.isArray(row) || row.length !== columns.length) {
+        throw new Error(`${key} の行長が列定義と一致しません。`);
+      }
+      const item = {};
+      columns.forEach((column, index) => { item[column] = row[index]; });
+      return item;
+    });
+  }
+
+  function normalizeSearchBook(book) {
+    const statusFlags = Number(book.status_flags || 0);
+    return {
+      ...book,
+      detail_key: book.detail_key || (Number(book.pub_year) > 0 ? String(Number(book.pub_year)) : "undated"),
+      has_errata: book.has_errata ?? Boolean(statusFlags & 1),
+      has_related_info: book.has_related_info ?? Boolean(statusFlags & 2),
+    };
+  }
+
   async function loadSearchData() {
     dataVersion = await readDataVersion();
     const response = await fetch(`../../data/books-search.json?v=${encodeURIComponent(dataVersion)}`);
@@ -139,7 +165,7 @@
     if (!payload || !Array.isArray(payload.books)) {
       throw new Error("books-search.json の形式が不正です。");
     }
-    return payload.books;
+    return expandRows(payload, "books").map(normalizeSearchBook);
   }
 
   async function loadDetailShard(detailKey) {
@@ -387,7 +413,7 @@
       meta.className = "book-meta";
       const parts = [
         book.author ? `著者：${authorDisplay(book.author)}` : "",
-        book.isbn_new ? `ISBN：${book.isbn_new}` : (book.isbn_old ? `ISBN：${book.isbn_old}` : ""),
+        book.isbn ? `ISBN：${book.isbn}` : (book.isbn_new ? `ISBN：${book.isbn_new}` : (book.isbn_old ? `ISBN：${book.isbn_old}` : "")),
         book.pub_month ? `刊行：${formatMonth(book.pub_month)}` : "",
         `書籍ID：${book.id}`,
       ].filter(Boolean);
@@ -428,8 +454,10 @@
         book.subtitle_before,
         book.subtitle_after,
         book.author,
+        book.isbn,
         book.isbn_old,
         book.isbn_new,
+        book.identifiers,
         (book.genres || []).join(" "),
         book.series,
         book.search_extra,

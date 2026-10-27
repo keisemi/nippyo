@@ -63,7 +63,16 @@ jobs:
           with master.open(encoding='utf-8-sig', newline='') as f:
               rows = list(csv.DictReader(f))
           search_payload = json.loads(Path('docs/data/books-search.json').read_text(encoding='utf-8'))
-          books = search_payload.get('books') if isinstance(search_payload, dict) else None
+          search_rows = search_payload.get('books') if isinstance(search_payload, dict) else None
+          if isinstance(search_rows, list) and search_rows and isinstance(search_rows[0], list):
+              columns = search_payload.get('columns')
+              if not isinstance(columns, list) or not columns:
+                  raise SystemExit('books の列定義がありません。')
+              if any(not isinstance(row, list) or len(row) != len(columns) for row in search_rows):
+                  raise SystemExit('books の行長が列定義と一致しません。')
+              books = [dict(zip(columns, row)) for row in search_rows]
+          else:
+              books = search_rows
 
           if not rows or not isinstance(books, list) or not books:
               raise SystemExit('書誌データが空です。')
@@ -90,8 +99,8 @@ jobs:
               raise SystemExit('検索用データと刊行年別詳細データの書籍IDが一致しません。')
 
           search_size = Path('docs/data/books-search.json').stat().st_size
-          if search_size > 8 * 1024 * 1024:
-              raise SystemExit(f'検索用書誌データが8MBを超えています: {search_size:,} bytes')
+          if search_size > 5 * 1024 * 1024:
+              raise SystemExit(f'検索用書誌データが5MBを超えています: {search_size:,} bytes')
           if Path('docs/data/books.js').exists() or Path('docs/data/books.json').exists() or Path('docs/data/admin-books.js').exists():
               raise SystemExit('旧形式の巨大書誌データが残っています。')
           print(f'検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／検索用{search_size / 1024 / 1024:.2f}MB')

@@ -25,13 +25,13 @@
 
 このCSVから `scripts/build_data.py` が、用途ごとに軽量化した公開用データを自動生成します。
 
-- `docs/data/books-search.json`：書籍検索・一覧表示用の軽量データ
+- `docs/data/books-search.json`：書籍検索・一覧表示用の軽量データ（列名を1回だけ持つコンパクト形式）
 - `docs/data/book-details/books-detail-YYYY.json`：書籍詳細・管理画面用の刊行年別データ
 - `docs/data/book-details/books-detail-undated.json`：刊行年がない書籍の詳細データ
 - `docs/data/home-books.js`：トップページの新刊表示用・軽量
 - `docs/data/last-updated.txt`：書誌生成データのバージョンキー
 
-書籍検索ページは、最初に `books-search.json` だけを読み込みます。内容紹介・目次等の長い詳細情報は、書名をクリックしたときに該当する刊行年の詳細JSONだけを読み込みます。
+書籍検索ページは、最初に `books-search.json` だけを読み込みます。検索用JSONは表示項目を減らさず、列名を各書籍で繰り返さないコンパクト形式にして転送量を抑えています。内容紹介・目次等の長い詳細情報は、書名をクリックしたときに該当する刊行年の詳細JSONだけを読み込みます。
 
 旧形式の `docs/data/books.js`、`docs/data/books.json`、`docs/data/admin-books.js` は使用しません。
 
@@ -50,14 +50,14 @@
 
 `scripts/build_magazine_data.py` が以下を自動生成します。
 
-- `docs/data/magazine-issues-search.json`：6誌全号の検索・一覧表示用の軽量データ
+- `docs/data/magazine-issues-search.json`：6誌全号の検索・一覧表示用の軽量データ（列名を1回だけ持つコンパクト形式）
 - `docs/data/magazine-details/magazine-details-YYYY.json`：雑誌号詳細用の刊行年別データ
 - `docs/data/magazine-details/magazine-details-undated.json`：発刊年が取れない号がある場合の詳細データ
 - `docs/data/magazine-last-updated.txt`：雑誌号生成データのバージョンキー
 
 検索用JSONには目次全文・記事タイトル・長い内容紹介を入れません。雑誌名、月号、通巻番号、特集、ISBN・雑誌コード等に加え、目次から明確に判定できる執筆者・評者等の人名だけを検索補助情報として保持します。古い号などで人名を安全に判定できない場合は無理に補完しません。
 
-書籍・雑誌検索ページでは `books-search.json` と `magazine-issues-search.json` の軽量データだけを最初に読み込みます。雑誌号の内容紹介・目次等は、号をクリックしたときに該当する刊行年の `magazine-details-YYYY.json` だけを読み込みます。
+書籍・雑誌検索ページでは `books-search.json` と `magazine-issues-search.json` の軽量データだけを最初に読み込みます。どちらも表示項目は維持したまま、列名の重複をなくしたコンパクト形式です。雑誌号の内容紹介・目次等は、号をクリックしたときに該当する刊行年の `magazine-details-YYYY.json` だけを読み込みます。
 
 雑誌の検索結果はあくまで「号」単位です。目次全文や記事タイトルは検索対象にせず、目次から明確に判定できた執筆者・評者等の人名だけを検索補助に使います。
 

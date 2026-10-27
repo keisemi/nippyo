@@ -24,6 +24,28 @@ LEGACY_FILES = [
     OUTPUT_DIR / "admin-books.js",
 ]
 
+# 検索用JSONは同じキー名を全書籍で繰り返さない列指向形式にする。
+# 表示項目・検索対象は減らさず、転送量とJSON解析負荷だけを下げる。
+SEARCH_COLUMNS = [
+    "id",
+    "pub_year",
+    "title",
+    "subtitle_before",
+    "subtitle_after",
+    "author",
+    "isbn",
+    "pub_month",
+    "genres",
+    "series",
+    "series_volume",
+    "price_body",
+    "format",
+    "pages",
+    "status_flags",
+    "identifiers",
+    "search_extra",
+]
+
 
 def clean(value):
     return (value or "").replace("\x00", "").strip()
@@ -236,9 +258,38 @@ home_books = [
     if b["pub_year"] is not None and min_year <= b["pub_year"] <= max_year
 ]
 
+search_rows = []
+for book in search_books:
+    identifiers = []
+    for value in (book.get("isbn_old"), book.get("isbn_new")):
+        value = clean(value)
+        if value and value not in identifiers:
+            identifiers.append(value)
+    status_flags = (1 if book.get("has_errata") else 0) | (2 if book.get("has_related_info") else 0)
+    search_rows.append([
+        book.get("id", ""),
+        book.get("pub_year"),
+        book.get("title", ""),
+        book.get("subtitle_before", ""),
+        book.get("subtitle_after", ""),
+        book.get("author", ""),
+        book.get("isbn", ""),
+        book.get("pub_month", ""),
+        book.get("genres", []),
+        book.get("series", ""),
+        book.get("series_volume", ""),
+        book.get("price_body"),
+        book.get("format", ""),
+        book.get("pages"),
+        status_flags,
+        "|".join(identifiers),
+        book.get("search_extra", ""),
+    ])
+
 search_payload = {
     "updated": updated_date,
-    "books": search_books,
+    "columns": SEARCH_COLUMNS,
+    "books": search_rows,
 }
 search_json = json.dumps(search_payload, ensure_ascii=False, separators=(",", ":"))
 home_books_js = (

@@ -53,8 +53,23 @@ jobs:
           import json
           from pathlib import Path
 
+          def expand_rows(payload, key):
+              if not isinstance(payload, dict):
+                  return None
+              rows = payload.get(key)
+              if not isinstance(rows, list):
+                  return None
+              if not rows or not isinstance(rows[0], list):
+                  return rows
+              columns = payload.get('columns')
+              if not isinstance(columns, list) or not columns:
+                  raise SystemExit(f'{key} の列定義がありません。')
+              if any(not isinstance(row, list) or len(row) != len(columns) for row in rows):
+                  raise SystemExit(f'{key} の行長が列定義と一致しません。')
+              return [dict(zip(columns, row)) for row in rows]
+
           search_payload = json.loads(Path('docs/data/books-search.json').read_text(encoding='utf-8'))
-          books = search_payload.get('books') if isinstance(search_payload, dict) else None
+          books = expand_rows(search_payload, 'books')
           news = json.loads(Path('docs/data/news.json').read_text(encoding='utf-8'))
           if not isinstance(books, list) or not books:
               raise SystemExit('books-search.json が空です。')
@@ -82,14 +97,14 @@ jobs:
               raise SystemExit('検索用データと刊行年別詳細データの書籍IDが一致しません。')
 
           search_size = Path('docs/data/books-search.json').stat().st_size
-          if search_size > 8 * 1024 * 1024:
-              raise SystemExit(f'検索用書誌データが8MBを超えています: {search_size:,} bytes')
+          if search_size > 5 * 1024 * 1024:
+              raise SystemExit(f'検索用書誌データが5MBを超えています: {search_size:,} bytes')
           if Path('docs/data/books.js').exists() or Path('docs/data/books.json').exists() or Path('docs/data/admin-books.js').exists():
               raise SystemExit('旧形式の巨大書誌データが残っています。')
 
           magazine_search_path = Path('docs/data/magazine-issues-search.json')
           magazine_payload = json.loads(magazine_search_path.read_text(encoding='utf-8'))
-          issues = magazine_payload.get('issues') if isinstance(magazine_payload, dict) else None
+          issues = expand_rows(magazine_payload, 'issues')
           if not isinstance(issues, list) or not issues:
               raise SystemExit('magazine-issues-search.json が空です。')
           magazine_ids = [str(x.get('id', '')).strip() for x in issues]
@@ -118,8 +133,8 @@ jobs:
               raise SystemExit('雑誌検索用データと刊行年別詳細データのIDが一致しません。')
 
           magazine_search_size = magazine_search_path.stat().st_size
-          if magazine_search_size > 4 * 1024 * 1024:
-              raise SystemExit(f'雑誌検索用データが4MBを超えています: {magazine_search_size:,} bytes')
+          if magazine_search_size > 2 * 1024 * 1024:
+              raise SystemExit(f'雑誌検索用データが2MBを超えています: {magazine_search_size:,} bytes')
 
           if not Path('docs/data/admin-news.js').exists():
               raise SystemExit('お知らせ管理用データが生成されていません。')

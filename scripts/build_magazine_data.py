@@ -23,6 +23,28 @@ MAGAZINES = [
     ("7", "そだちの科学", "06_sodachi_no_kagaku.csv"),
 ]
 
+# 検索用JSONは列名を1回だけ持つ列指向形式にし、表示情報を落とさず軽量化する。
+SEARCH_COLUMNS = [
+    "id",
+    "magazine_id",
+    "magazine_name",
+    "issue",
+    "issue_number",
+    "pub_date",
+    "pub_year",
+    "feature",
+    "feature_subtitle",
+    "feature2",
+    "feature2_subtitle",
+    "isbn",
+    "identifiers",
+    "format",
+    "pages",
+    "price_body",
+    "contributors",
+    "search_extra",
+]
+
 EXPECTED_COLUMNS = [
     "書籍ID", "WEB公開属性", "出版形態", "アーカイブズID", "雑誌ID", "雑誌月号", "雑誌通算番号",
     "前副題", "特集", "特集よみ", "後副題", "特集用内容紹介文見出", "特集用内容紹介文",
@@ -366,7 +388,6 @@ for magazine_id, magazine_name, filename in MAGAZINES:
                 for value in (
                     clean(row.get("特集よみ")),
                     clean(row.get("特集2よみ")),
-                    " ".join(contributors),
                 )
                 if value
             ),
@@ -416,9 +437,43 @@ search_issues.sort(
     reverse=True,
 )
 
+search_rows = []
+for issue in search_issues:
+    identifiers = []
+    for value in (
+        issue.get("isbn_old"),
+        issue.get("isbn_new"),
+        issue.get("magazine_code_1"),
+        issue.get("magazine_code_2"),
+    ):
+        value = clean(value)
+        if value and value not in identifiers:
+            identifiers.append(value)
+    search_rows.append([
+        issue.get("id", ""),
+        issue.get("magazine_id", ""),
+        issue.get("magazine_name", ""),
+        issue.get("issue", ""),
+        issue.get("issue_number", ""),
+        issue.get("pub_date", ""),
+        issue.get("pub_year"),
+        issue.get("feature", ""),
+        issue.get("feature_subtitle", ""),
+        issue.get("feature2", ""),
+        issue.get("feature2_subtitle", ""),
+        issue.get("isbn", ""),
+        "|".join(identifiers),
+        issue.get("format", ""),
+        issue.get("pages"),
+        issue.get("price_body"),
+        issue.get("contributors", []),
+        issue.get("search_extra", ""),
+    ])
+
 search_payload = {
     "updated": updated_date,
-    "issues": search_issues,
+    "columns": SEARCH_COLUMNS,
+    "issues": search_rows,
 }
 search_json = json.dumps(search_payload, ensure_ascii=False, separators=(",", ":"))
 SEARCH_JSON_FILE.write_text(search_json + "\n", encoding="utf-8")

@@ -48,10 +48,13 @@
 
   function itemIdentifiers(item) {
     const values = [item.isbn, item.isbn_old, item.isbn_new];
+    if (item.identifiers) {
+      values.push(...String(item.identifiers).split("|").filter(Boolean));
+    }
     if (item.__type === "magazine_issue") {
       values.push(item.magazine_code_1, item.magazine_code_2);
     }
-    return values.map(normIdentifier).filter(Boolean);
+    return [...new Set(values.map(normIdentifier).filter(Boolean))];
   }
 
   function pubKey(item) {
@@ -241,6 +244,22 @@
     return stamp;
   }
 
+  function expandRows(payload, key) {
+    const rows = payload && Array.isArray(payload[key]) ? payload[key] : null;
+    if (!rows) throw new Error(`${key} の検索データがありません。`);
+    if (!rows.length || !Array.isArray(rows[0])) return rows;
+    const columns = Array.isArray(payload.columns) ? payload.columns : [];
+    if (!columns.length) throw new Error(`${key} の列定義がありません。`);
+    return rows.map((row) => {
+      if (!Array.isArray(row) || row.length !== columns.length) {
+        throw new Error(`${key} の行長が列定義と一致しません。`);
+      }
+      const item = {};
+      columns.forEach((column, index) => { item[column] = row[index]; });
+      return item;
+    });
+  }
+
   async function loadSearchData() {
     [bookDataVersion, magazineDataVersion] = await Promise.all([
       readVersion("../data/last-updated.txt"),
@@ -271,7 +290,10 @@
       throw new Error("magazine-issues-search.json の形式が不正です。");
     }
 
-    return { bookPayload, magazinePayload };
+    return {
+      bookPayload: { ...bookPayload, books: expandRows(bookPayload, "books") },
+      magazinePayload: { ...magazinePayload, issues: expandRows(magazinePayload, "issues") }
+    };
   }
 
   async function loadBookDetailShard(detailKey) {
@@ -451,19 +473,26 @@
 
   function prepareItems(bookData, issueData) {
     books = bookData.map((book, i) => {
-      const identifiers = itemIdentifiers(book).join(" ");
+      const statusFlags = Number(book.status_flags || 0);
+      const normalizedBook = {
+        ...book,
+        detail_key: book.detail_key || (Number(book.pub_year) > 0 ? String(Number(book.pub_year)) : "undated"),
+        has_errata: book.has_errata ?? Boolean(statusFlags & 1),
+        has_related_info: book.has_related_info ?? Boolean(statusFlags & 2),
+      };
+      const identifiers = itemIdentifiers(normalizedBook).join(" ");
       const searchParts = [
-        book.title,
-        book.subtitle_before,
-        book.subtitle_after,
-        book.author,
+        normalizedBook.title,
+        normalizedBook.subtitle_before,
+        normalizedBook.subtitle_after,
+        normalizedBook.author,
         identifiers,
-        ...(Array.isArray(book.genres) ? book.genres : []),
-        book.series,
-        book.search_extra,
+        ...(Array.isArray(normalizedBook.genres) ? normalizedBook.genres : []),
+        normalizedBook.series,
+        normalizedBook.search_extra,
       ];
       return {
-        ...book,
+        ...normalizedBook,
         __type: "book",
         __n: norm(searchParts.filter(Boolean).join(" ")),
         __i: i
@@ -471,21 +500,25 @@
     });
 
     magazineIssues = issueData.map((issue, i) => {
-      const identifiers = itemIdentifiers({ ...issue, __type: "magazine_issue" }).join(" ");
+      const normalizedIssue = {
+        ...issue,
+        detail_key: issue.detail_key || (Number(issue.pub_year) > 0 ? String(Number(issue.pub_year)) : "undated"),
+      };
+      const identifiers = itemIdentifiers({ ...normalizedIssue, __type: "magazine_issue" }).join(" ");
       const searchParts = [
-        issue.magazine_name,
-        issue.issue,
-        issue.issue_number,
-        issue.feature,
-        issue.feature_subtitle,
-        issue.feature2,
-        issue.feature2_subtitle,
+        normalizedIssue.magazine_name,
+        normalizedIssue.issue,
+        normalizedIssue.issue_number,
+        normalizedIssue.feature,
+        normalizedIssue.feature_subtitle,
+        normalizedIssue.feature2,
+        normalizedIssue.feature2_subtitle,
         identifiers,
-        ...(Array.isArray(issue.contributors) ? issue.contributors : []),
-        issue.search_extra,
+        ...(Array.isArray(normalizedIssue.contributors) ? normalizedIssue.contributors : []),
+        normalizedIssue.search_extra,
       ];
       return {
-        ...issue,
+        ...normalizedIssue,
         __type: "magazine_issue",
         __n: norm(searchParts.filter(Boolean).join(" ")),
         __i: books.length + i
