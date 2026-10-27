@@ -152,14 +152,22 @@
       els.list.innerHTML = slice.map((issue) => {
         const feature = [issue.feature, issue.feature_subtitle].filter(Boolean).join("　");
         const meta = issue.issue_number ? `通巻${issue.issue_number}号` : "";
-        return `<li class="backnumber-item">
-          <div>
-            <h2 class="backnumber-item-title">${esc(issue.issue || "（月号未登録）")}</h2>
-            ${feature ? `<p class="backnumber-feature">特集：${esc(feature)}</p>` : ""}
-            ${meta ? `<p class="backnumber-meta">${esc(meta)}</p>` : ""}
+        const url = detailUrl(issue);
+        const coverAlt = [issue.magazine_name, issue.issue].filter(Boolean).join(" ");
+        const cover = issue.cover
+          ? `<a class="backnumber-cover-link" href="${esc(url)}"><img class="backnumber-cover" src="../../${esc(issue.cover)}" alt="${esc(coverAlt)}"></a>`
+          : "";
+        return `<li class="backnumber-item${issue.cover ? " has-cover" : ""}">
+          <div class="backnumber-entry">
+            ${cover}
+            <div>
+              <h2 class="backnumber-item-title">${esc(issue.issue || "（月号未登録）")}</h2>
+              ${feature ? `<p class="backnumber-feature">特集：${esc(feature)}</p>` : ""}
+              ${meta ? `<p class="backnumber-meta">${esc(meta)}</p>` : ""}
+            </div>
           </div>
           <div class="backnumber-side">
-            <a class="backnumber-detail-link" href="${esc(detailUrl(issue))}">詳細を見る</a>
+            <a class="backnumber-detail-link" href="${esc(url)}">詳細を見る</a>
           </div>
         </li>`;
       }).join("");

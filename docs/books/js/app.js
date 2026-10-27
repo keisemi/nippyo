@@ -512,11 +512,21 @@
     const descriptionHeading = detail.description_heading || "内容紹介";
     const descriptionHeading2 = detail.description_heading2 || "第2特集 内容紹介";
 
+    const coverAlt = magazineTitle(detail) || "雑誌書影";
+    const cover = detail.cover
+      ? `<img class="magazine-modal-cover" src="../${esc(detail.cover)}" alt="${esc(coverAlt)}">`
+      : "";
+
     return `
-      <p class="book-modal-kicker">雑誌号詳細</p>
-      <h2 id="bookModalTitle" class="book-modal-title">${esc(magazineTitle(detail) || "（雑誌号未登録）")}</h2>
-      ${feature ? `<p class="book-modal-subtitle">特集：${esc(feature)}</p>` : ""}
-      ${feature2 ? `<p class="book-modal-subtitle">第2特集：${esc(feature2)}</p>` : ""}
+      <div class="magazine-modal-summary${detail.cover ? " has-cover" : ""}">
+        ${cover}
+        <div>
+          <p class="book-modal-kicker">雑誌号詳細</p>
+          <h2 id="bookModalTitle" class="book-modal-title">${esc(magazineTitle(detail) || "（雑誌号未登録）")}</h2>
+          ${feature ? `<p class="book-modal-subtitle">特集：${esc(feature)}</p>` : ""}
+          ${feature2 ? `<p class="book-modal-subtitle">第2特集：${esc(feature2)}</p>` : ""}
+        </div>
+      </div>
       ${metaRows ? `<dl class="detail-grid">${metaRows}</dl>` : ""}
       ${detail.description ? `<section class="book-detail-section"><h3>${esc(descriptionHeading)}</h3><p class="book-detail-copy">${detailText(detail.description)}</p></section>` : ""}
       ${detail.description2 ? `<section class="book-detail-section"><h3>${esc(descriptionHeading2)}</h3><p class="book-detail-copy">${detailText(detail.description2)}</p></section>` : ""}

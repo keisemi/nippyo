@@ -202,6 +202,20 @@ body.modal-open { overflow: hidden; }
   font-weight: 600;
 }
 .book-modal-subtitle { margin: 7px 0 0; color: #555; font-size: 15px; }
+.magazine-modal-summary.has-cover {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+.magazine-modal-cover {
+  display: block;
+  width: 150px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: #fff;
+}
 .book-modal-author { margin: 16px 0 0; font-size: 15px; }
 .book-modal-tags { margin-top: 14px; }
 .detail-grid {
@@ -293,6 +307,8 @@ body.modal-open { overflow: hidden; }
   .book-modal-panel { max-height: 92vh; }
   .book-modal-content { padding: 28px 20px 32px; }
   .book-modal-title { padding-right: 42px; font-size: 24px; }
+  .magazine-modal-summary.has-cover { grid-template-columns: 100px minmax(0, 1fr); gap: 16px; }
+  .magazine-modal-cover { width: 100px; }
   .detail-grid { grid-template-columns: 90px 1fr; }
   .detail-grid dd { padding-left: 10px; }
 }

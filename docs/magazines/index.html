@@ -36,6 +36,21 @@
       padding-top: 16px;
       border-top: 1px solid var(--line);
     }
+    .magazine-current-layout {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .magazine-current-cover-link { display: block; }
+    .magazine-current-cover {
+      display: block;
+      width: 96px;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
     .magazine-current-label {
       margin: 0 0 6px;
       color: var(--green);
@@ -85,6 +100,8 @@
       .magazine-grid .magazine-card {
         min-height: auto;
       }
+      .magazine-current-layout { grid-template-columns: 84px minmax(0, 1fr); }
+      .magazine-current-cover { width: 84px; }
     }
   </style>
 </head>

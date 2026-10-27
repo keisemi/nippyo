@@ -64,6 +64,22 @@
       padding: 24px;
       border-bottom: 1px solid var(--line);
     }
+    .backnumber-entry { min-width: 0; }
+    .backnumber-item.has-cover .backnumber-entry {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .backnumber-cover-link { display: block; }
+    .backnumber-cover {
+      display: block;
+      width: 78px;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
     .backnumber-item-title {
       margin: 0;
       font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
@@ -126,6 +142,8 @@
       .backnumber-main { padding: 48px 0 64px; }
       .backnumber-controls { grid-template-columns: 1fr; padding: 18px; }
       .backnumber-item { grid-template-columns: 1fr; gap: 14px; padding: 20px 16px; }
+      .backnumber-item.has-cover .backnumber-entry { grid-template-columns: 68px minmax(0, 1fr); gap: 14px; }
+      .backnumber-cover { width: 68px; }
       .backnumber-side { min-width: 0; text-align: left; }
       .backnumber-toolbar { align-items: flex-start; }
     }

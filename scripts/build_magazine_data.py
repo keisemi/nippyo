@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT / "data" / "magazines"
 OUTPUT_DIR = ROOT / "docs" / "data"
+COVERS_DIR = ROOT / "docs" / "assets" / "magazine-covers"
 DETAIL_DIR = OUTPUT_DIR / "magazine-details"
 SEARCH_JSON_FILE = OUTPUT_DIR / "magazine-issues-search.json"
 SEARCH_INDEX_FILE = OUTPUT_DIR / "magazine-issues-search-index.json"
@@ -28,6 +29,7 @@ MAGAZINES = [
 # 初期表示用JSONは列名を1回だけ持つ列指向形式にし、検索専用文字列は別索引へ分離する。
 SEARCH_COLUMNS = [
     "id",
+    "cover",
     "magazine_id",
     "magazine_name",
     "issue",
@@ -107,6 +109,17 @@ def number(value):
         return int(float(value))
     except ValueError:
         return None
+
+
+def cover_path(issue_id):
+    issue_id = clean(issue_id)
+    if not issue_id:
+        return ""
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        candidate = COVERS_DIR / f"{issue_id}.{ext}"
+        if candidate.exists():
+            return f"assets/magazine-covers/{issue_id}.{ext}"
+    return ""
 
 
 def build_date_jst():
@@ -385,6 +398,7 @@ for magazine_id, magazine_name, filename in MAGAZINES:
 
         search_issue = {
             "id": issue_id,
+            "cover": cover_path(issue_id),
             "detail_key": year_key,
             "type": "magazine_issue",
             "magazine_id": magazine_id,
@@ -482,6 +496,7 @@ for issue in search_issues:
             index_identifiers.append(normalized)
     search_rows.append([
         issue.get("id", ""),
+        issue.get("cover", ""),
         issue.get("magazine_id", ""),
         issue.get("magazine_name", ""),
         issue.get("issue", ""),

@@ -59,6 +59,7 @@
       return;
     }
 
+    const detailUrl = issueDetailUrl(issue);
     const feature = [issue.feature, issue.feature_subtitle].filter(Boolean).join("　");
     const meta = [
       issue.pub_date ? formatDate(issue.pub_date) : "",
@@ -67,18 +68,31 @@
       issue.pages ? `${issue.pages}頁` : ""
     ].filter(Boolean).join(" ／ ");
     const price = Number(issue.price_body || 0);
-
-    container.innerHTML = `
+    const coverAlt = [issue.magazine_name, issue.issue].filter(Boolean).join(" ");
+    const body = `
       <p class="magazine-current-label">最新号</p>
       <p class="magazine-current-title">${esc(issue.issue || "（月号未登録）")}</p>
       ${feature ? `<p class="magazine-current-feature">特集：${esc(feature)}</p>` : ""}
       ${meta ? `<p class="magazine-current-meta">${esc(meta)}</p>` : ""}
       ${price ? `<p class="magazine-current-price">本体 ${price.toLocaleString("ja-JP")}円</p>` : ""}
       <div class="magazine-current-actions">
-        <a class="button button-primary" href="${esc(issueDetailUrl(issue))}">最新号を詳しく見る</a>
+        <a class="button button-primary" href="${esc(detailUrl)}">最新号を詳しく見る</a>
         <a class="button button-secondary" href="${esc(backnumberUrl(issue))}">バックナンバーを見る</a>
       </div>
     `;
+
+    if (issue.cover) {
+      container.innerHTML = `
+        <div class="magazine-current-layout">
+          <a class="magazine-current-cover-link" href="${esc(detailUrl)}">
+            <img class="magazine-current-cover" src="../${esc(issue.cover)}" alt="${esc(coverAlt)}">
+          </a>
+          <div>${body}</div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = body;
+    }
   }
 
   async function init() {
