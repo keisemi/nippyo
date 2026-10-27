@@ -48,9 +48,9 @@
     return `../books/?${params.toString()}`;
   }
 
-  function backnumberSearchUrl(issue) {
-    const params = new URLSearchParams({ q: String(issue.magazine_name || ""), sort: "newest" });
-    return `../books/?${params.toString()}`;
+  function backnumberUrl(issue) {
+    const params = new URLSearchParams({ magazine: String(issue.magazine_id || "") });
+    return `backnumbers/?${params.toString()}`;
   }
 
   function renderCurrent(container, issue) {
@@ -76,7 +76,7 @@
       ${price ? `<p class="magazine-current-price">本体 ${price.toLocaleString("ja-JP")}円</p>` : ""}
       <div class="magazine-current-actions">
         <a class="button button-primary" href="${esc(issueDetailUrl(issue))}">最新号を詳しく見る</a>
-        <a class="button button-secondary" href="${esc(backnumberSearchUrl(issue))}">この雑誌の号を検索</a>
+        <a class="button button-secondary" href="${esc(backnumberUrl(issue))}">バックナンバーを見る</a>
       </div>
     `;
   }
