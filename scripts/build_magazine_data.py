@@ -94,6 +94,11 @@ def clean_public_text(value):
     return value.strip()
 
 
+def clean_feature_subtitle(value):
+    value = clean_public_text(value)
+    return re.sub(r"^\?\?", "―", value)
+
+
 def number(value):
     value = clean(value)
     if not value:
@@ -389,9 +394,9 @@ for magazine_id, magazine_name, filename in MAGAZINES:
             "pub_date": clean(row.get("発刊日")),
             "pub_year": pub_year,
             "feature": clean_public_text(row.get("特集")),
-            "feature_subtitle": clean_public_text(row.get("後副題")),
+            "feature_subtitle": clean_feature_subtitle(row.get("後副題")),
             "feature2": clean_public_text(row.get("特集2")),
-            "feature2_subtitle": clean_public_text(row.get("後副題2")),
+            "feature2_subtitle": clean_feature_subtitle(row.get("後副題2")),
             "isbn": isbn_new or isbn_old,
             "isbn_old": isbn_old,
             "isbn_new": isbn_new,
