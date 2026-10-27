@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img">
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",Meiryo,sans-serif;fill:#222}
+.title{font-size:28px;font-weight:700} .label{font-size:20px;font-weight:700} .small{font-size:16px}
+.box{fill:#f3f7f2;stroke:#255e17;stroke-width:2;rx:12} .white{fill:#fff;stroke:#789c18;stroke-width:2;rx:12}
+.arrow{stroke:#255e17;stroke-width:3;fill:none;marker-end:url(#arrow)}
+.note{fill:#fff9e8;stroke:#c29a2b;stroke-width:2;rx:10}
+</style>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#255e17"/></marker></defs>
+
+<text class="title" x="600" y="48" text-anchor="middle">このサイトの更新は「2種類」に分けて考える</text>
+<rect class="box" x="70" y="95" width="500" height="90" rx="12"/>
+<text class="label" x="320" y="132" text-anchor="middle">A. 日常のデータ更新</text>
+<text class="small" x="320" y="162" text-anchor="middle">書誌・お知らせはフォームから更新</text>
+<rect class="box" x="630" y="95" width="500" height="90" rx="12"/>
+<text class="label" x="880" y="132" text-anchor="middle">B. ページ・画像の保守</text>
+<text class="small" x="880" y="162" text-anchor="middle">HTML・書影などはGitHub Desktopで更新</text>
+<rect class="white" x="105" y="185" width="430" height="70" rx="12"/>
+<text class="label" x="320" y="225" text-anchor="middle">管理ページ / Issue Form</text>
+<path class="arrow" d="M320,260 L320,290"/>
+<rect class="white" x="105" y="295" width="430" height="70" rx="12"/>
+<text class="small" x="320" y="335" text-anchor="middle">確認用Issueを送信</text>
+<path class="arrow" d="M320,370 L320,400"/>
+<rect class="white" x="105" y="405" width="430" height="70" rx="12"/>
+<text class="small" x="320" y="445" text-anchor="middle">GitHub Actionsが自動処理</text>
+<path class="arrow" d="M320,480 L320,510"/>
+<rect class="white" x="105" y="515" width="430" height="70" rx="12"/>
+<text class="small" x="320" y="555" text-anchor="middle">公開サイトを確認</text>
+<rect class="white" x="665" y="185" width="430" height="70" rx="12"/>
+<text class="label" x="880" y="225" text-anchor="middle">Fetch / Pull</text>
+<path class="arrow" d="M880,260 L880,290"/>
+<rect class="white" x="665" y="295" width="430" height="70" rx="12"/>
+<text class="small" x="880" y="335" text-anchor="middle">変更ファイルだけ差し替え</text>
+<path class="arrow" d="M880,370 L880,400"/>
+<rect class="white" x="665" y="405" width="430" height="70" rx="12"/>
+<text class="small" x="880" y="445" text-anchor="middle">Commit / Push</text>
+<path class="arrow" d="M880,480 L880,510"/>
+<rect class="white" x="665" y="515" width="430" height="70" rx="12"/>
+<text class="small" x="880" y="555" text-anchor="middle">Actions完了 → 公開確認</text>
+</svg>

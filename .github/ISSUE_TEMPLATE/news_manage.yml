@@ -7,6 +7,8 @@ body:
       value: |
         このフォームは日本評論社臨時サイトのお知らせ更新用です。
         サイト更新権限のあるCollaborator等からの申請だけが自動反映されます。
+        **既存データの修正・削除は、原則としてお知らせ管理ページから対象を選んで開いてください。**
+        管理ページの編集画面では現在の登録内容を確認でき、変更した項目だけがこのIssueに引き継がれます。
 
   - type: dropdown
     id: operation
@@ -23,7 +25,7 @@ body:
     id: target_title
     attributes:
       label: 修正・削除するお知らせ
-      description: "新規登録では「（新規登録では選択不要）」を選んでください。"
+      description: "修正・削除では管理ページから自動入力されます。新規登録では「（新規登録では選択不要）」を選んでください。"
       options:
         # NEWS_TITLES_START
         - "（新規登録では選択不要）"
@@ -46,7 +48,7 @@ body:
       description: "例：お知らせ／新刊／雑誌。新規登録で空欄なら「お知らせ」です。修正で空欄なら変更しません。"
 
   - type: input
-    id: title
+    id: news_title
     attributes:
       label: タイトル
       description: "新規登録では必須です。修正で空欄なら変更しません。"

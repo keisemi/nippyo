@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="620" viewBox="0 0 1400 620" role="img">
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",Meiryo,sans-serif;fill:#222}
+.title{font-size:28px;font-weight:700} .label{font-size:20px;font-weight:700} .small{font-size:16px}
+.box{fill:#f3f7f2;stroke:#255e17;stroke-width:2;rx:12} .white{fill:#fff;stroke:#789c18;stroke-width:2;rx:12}
+.arrow{stroke:#255e17;stroke-width:3;fill:none;marker-end:url(#arrow)}
+.note{fill:#fff9e8;stroke:#c29a2b;stroke-width:2;rx:10}
+</style>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#255e17"/></marker></defs>
+
+<text class="title" x="700" y="46" text-anchor="middle">触ってよいファイル / 直接触らないファイル</text>
+<rect class="box" x="70" y="95" width="590" height="70" rx="12"/>
+<text class="label" x="365" y="138" text-anchor="middle">通常担当者が扱うもの</text>
+<rect class="white" x="100" y="205" width="530" height="75" rx="12"/>
+<text class="label" x="130" y="237" text-anchor="start">docs/*.html</text>
+<text class="small" x="130" y="263" text-anchor="start">ページ本文・レイアウト</text>
+<rect class="white" x="100" y="300" width="530" height="75" rx="12"/>
+<text class="label" x="130" y="332" text-anchor="start">docs/assets/covers/</text>
+<text class="small" x="130" y="358" text-anchor="start">書影画像</text>
+<rect class="white" x="100" y="395" width="530" height="75" rx="12"/>
+<text class="label" x="130" y="427" text-anchor="start">MAINTENANCE.md</text>
+<text class="small" x="130" y="453" text-anchor="start">この手順書</text>
+<rect class="box" x="740" y="95" width="590" height="70" rx="12"/>
+<text class="label" x="1035" y="138" text-anchor="middle">通常は直接編集しないもの</text>
+<rect class="white" x="770" y="205" width="530" height="75" rx="12"/>
+<text class="label" x="800" y="237" text-anchor="start">docs/data/*.js / *.json</text>
+<text class="small" x="800" y="263" text-anchor="start">自動生成。直接編集しない</text>
+<rect class="white" x="770" y="295" width="530" height="75" rx="12"/>
+<text class="label" x="800" y="327" text-anchor="start">data/book_search_master.csv</text>
+<text class="small" x="800" y="353" text-anchor="start">正本だが通常は管理フォーム経由</text>
+<rect class="white" x="770" y="385" width="530" height="75" rx="12"/>
+<text class="label" x="800" y="417" text-anchor="start">data/news.csv</text>
+<text class="small" x="800" y="443" text-anchor="start">正本だが通常は管理ページ → Issue経由</text>
+<rect class="white" x="770" y="475" width="530" height="75" rx="12"/>
+<text class="label" x="800" y="507" text-anchor="start">.github/workflows / scripts</text>
+<text class="small" x="800" y="533" text-anchor="start">仕組みの変更時だけ</text>
+</svg>

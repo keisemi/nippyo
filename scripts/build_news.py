@@ -8,6 +8,7 @@ INPUT = ROOT / "data" / "news.csv"
 OUTPUT_DIR = ROOT / "docs" / "data"
 JSON_FILE = OUTPUT_DIR / "news.json"
 JS_FILE = OUTPUT_DIR / "news.js"
+ADMIN_JS_FILE = OUTPUT_DIR / "admin-news.js"
 UPDATED_FILE = OUTPUT_DIR / "news-last-updated.txt"
 
 FIELD_ORDER = ["id", "date", "category", "title", "text", "url", "pinned", "published"]
@@ -45,6 +46,7 @@ with INPUT.open("r", encoding="utf-8-sig", newline="") as f:
 
 ids = []
 public_news = []
+admin_news = []
 for row in rows:
     news_id = clean(row.get("id"))
     date = clean(row.get("date"))
@@ -57,21 +59,28 @@ for row in rows:
         raise SystemExit(f"タイトルが空です（{news_id}）。")
     ids.append(news_id)
 
-    if truthy(row.get("published")):
-        public_news.append({
-            "id": news_id,
-            "date": date,
-            "category": clean(row.get("category")) or "お知らせ",
-            "title": title,
-            "text": clean(row.get("text")),
-            "url": clean(row.get("url")),
-            "pinned": truthy(row.get("pinned")),
-        })
+    item = {
+        "id": news_id,
+        "date": date,
+        "category": clean(row.get("category")) or "お知らせ",
+        "title": title,
+        "text": clean(row.get("text")),
+        "url": clean(row.get("url")),
+        "pinned": truthy(row.get("pinned")),
+    }
+
+    admin_item = dict(item)
+    admin_item["published"] = truthy(row.get("published"))
+    admin_news.append(admin_item)
+
+    if admin_item["published"]:
+        public_news.append(item)
 
 if len(ids) != len(set(ids)):
     raise SystemExit("お知らせIDが重複しています。")
 
 public_news.sort(key=lambda x: (x["pinned"], x["date"], x["id"]), reverse=True)
+admin_news.sort(key=lambda x: (x["date"], x["id"]), reverse=True)
 
 with JSON_FILE.open("w", encoding="utf-8") as f:
     json.dump(public_news, f, ensure_ascii=False, separators=(",", ":"))
@@ -81,10 +90,17 @@ JS_FILE.write_text(
     encoding="utf-8",
 )
 
+ADMIN_JS_FILE.write_text(
+    "window.NIPPYO_ADMIN_NEWS=" + json.dumps(admin_news, ensure_ascii=False, separators=(",", ":")) + ";\n",
+    encoding="utf-8",
+)
+
 updated = datetime.now(timezone(timedelta(hours=9))).strftime("%Y/%m/%d")
 UPDATED_FILE.write_text(updated + "\n", encoding="utf-8")
 
 print("お知らせデータ生成完了")
+print(f" - 全件数: {len(admin_news):,}")
 print(f" - 公開件数: {len(public_news):,}")
 print(f" - {JSON_FILE}")
 print(f" - {JS_FILE}")
+print(f" - {ADMIN_JS_FILE}（お知らせ管理用）")

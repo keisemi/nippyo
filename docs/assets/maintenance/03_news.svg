@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="520" viewBox="0 0 1500 520" role="img" aria-labelledby="title desc">
+<title id="title">お知らせを更新するときの流れ</title>
+<desc id="desc">お知らせ管理ページで対象を選び、現在値入りの編集画面で必要箇所だけ修正し、GitHub Issueで確定して自動反映する流れ。</desc>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",Meiryo,sans-serif;fill:#222}
+.title{font-size:28px;font-weight:700}.label{font-size:19px;font-weight:700}.small{font-size:15px}
+.white{fill:#fff;stroke:#789c18;stroke-width:2;rx:12}.arrow{stroke:#255e17;stroke-width:3;fill:none;marker-end:url(#arrow)}
+.note{fill:#fff9e8;stroke:#c29a2b;stroke-width:2;rx:10}
+</style>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#255e17"/></marker></defs>
+<text class="title" x="750" y="48" text-anchor="middle">お知らせを更新するときの流れ</text>
+
+<rect class="white" x="35" y="120" width="240" height="150" rx="12"/>
+<text class="label" x="155" y="160" text-anchor="middle">① 管理ページ</text>
+<text class="small" x="155" y="198" text-anchor="middle">/admin/news/ を開く</text>
+<text class="small" x="155" y="224" text-anchor="middle">対象のお知らせを確認</text>
+<path class="arrow" d="M280,195 L320,195"/>
+
+<rect class="white" x="330" y="120" width="240" height="150" rx="12"/>
+<text class="label" x="450" y="160" text-anchor="middle">② 修正を押す</text>
+<text class="small" x="450" y="198" text-anchor="middle">現在値がすべて入った</text>
+<text class="small" x="450" y="224" text-anchor="middle">編集画面を開く</text>
+<path class="arrow" d="M575,195 L615,195"/>
+
+<rect class="white" x="625" y="120" width="240" height="150" rx="12"/>
+<text class="label" x="745" y="160" text-anchor="middle">③ 必要箇所だけ変更</text>
+<text class="small" x="745" y="198" text-anchor="middle">変更しない欄は</text>
+<text class="small" x="745" y="224" text-anchor="middle">そのままにする</text>
+<path class="arrow" d="M870,195 L910,195"/>
+
+<rect class="white" x="920" y="120" width="240" height="150" rx="12"/>
+<text class="label" x="1040" y="160" text-anchor="middle">④ GitHub Issue</text>
+<text class="small" x="1040" y="198" text-anchor="middle">変更項目だけを確認</text>
+<text class="small" x="1040" y="224" text-anchor="middle">してIssueを作成</text>
+<path class="arrow" d="M1165,195 L1205,195"/>
+
+<rect class="white" x="1215" y="120" width="240" height="150" rx="12"/>
+<text class="label" x="1335" y="160" text-anchor="middle">⑤ 自動反映</text>
+<text class="small" x="1335" y="198" text-anchor="middle">Actions → 再公開</text>
+<text class="small" x="1335" y="224" text-anchor="middle">Issueが閉じたら確認</text>
+
+<rect class="note" x="260" y="340" width="980" height="105" rx="12"/>
+<text class="label" x="750" y="378" text-anchor="middle">現在値を覚えて再入力する必要はありません。</text>
+<text class="small" x="750" y="412" text-anchor="middle">本文やリンクを空にした場合は、Issueへ自動で __CLEAR__ として渡されます。</text>
+</svg>

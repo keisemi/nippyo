@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>お知らせ管理｜日本評論社 臨時ホームページ</title>
+  <link rel="stylesheet" href="../../css/site.css">
+  <style>
+    .admin-wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+    .admin-note{background:#eef4ec;border-left:5px solid #255e17;padding:14px 16px;margin:18px 0 24px;line-height:1.7}
+    .admin-actions{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 24px}
+    .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:11px 18px;font-weight:700;cursor:pointer}
+    .admin-btn.secondary{background:#fff;color:#255e17;border:1px solid #255e17}
+    .admin-btn.danger{background:#fff;color:#8a1f11;border:1px solid #b94b3d}
+    .admin-search{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+    .admin-search input{flex:1;min-width:260px;font-size:16px;padding:12px 14px;border:1px solid #b9c5b6;border-radius:6px}
+    .result-count{margin:12px 0;color:#4b5a49}
+    .news-result{border:1px solid #d4ddd2;border-radius:8px;padding:16px;margin:12px 0;background:#fff}
+    .news-result h2{font-size:19px;margin:0 0 8px}
+    .news-meta{display:flex;gap:8px 14px;flex-wrap:wrap;font-size:14px;color:#586455;margin-bottom:10px}
+    .news-text{margin:8px 0 12px;line-height:1.7;color:#4f5b4d;white-space:pre-wrap}
+    .news-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .status{display:inline-block;padding:2px 8px;border:1px solid #cbd5c8;border-radius:999px;font-size:12px}
+    .status.on{background:#eef4ec;color:#255e17}
+    .status.off{background:#f3f3f3;color:#666}
+    .empty{padding:24px;border:1px dashed #b9c5b6;border-radius:8px;color:#5e685c}
+    .admin-modal[hidden]{display:none}
+    .admin-modal{position:fixed;inset:0;z-index:1000}
+    .admin-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42)}
+    .admin-modal-dialog{position:relative;z-index:1;max-width:860px;max-height:90vh;overflow:auto;margin:5vh auto;background:#fff;border-radius:10px;padding:30px 34px 40px;box-shadow:0 18px 48px rgba(0,0,0,.25)}
+    .admin-modal-close{position:absolute;right:16px;top:12px;width:44px;height:44px;border:1px solid #cbd5c8;border-radius:50%;background:#fff;font-size:30px;line-height:1;cursor:pointer}
+    .admin-modal-title{font-size:30px;line-height:1.35;margin:0 48px 16px 0}
+    .edit-intro{line-height:1.7;color:#4f5b4d}
+    .fixed-fields{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin:18px 0;padding:14px;background:#f6f8f5;border:1px solid #d7dfd5;border-radius:8px}
+    .edit-grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .edit-grid.two-col{grid-template-columns:1fr 1fr}
+    .edit-field{display:block}
+    .edit-field>span{display:block;font-weight:700;margin-bottom:6px}
+    .edit-field input,.edit-field textarea,.edit-field select{width:100%;box-sizing:border-box;font:inherit;padding:10px 11px;border:1px solid #b9c5b6;border-radius:6px;background:#fff}
+    .edit-field textarea{min-height:150px;resize:vertical}
+    .field-help{margin:6px 0 0;font-size:13px;color:#5b6759;line-height:1.6}
+    .edit-submit-box{margin-top:22px;padding:16px;background:#eef4ec;border:1px solid #d4ddd2;border-radius:8px}
+    .edit-submit-box p{margin:0 0 12px;line-height:1.7}
+    body.modal-open{overflow:hidden}
+    @media (max-width:720px){
+      .admin-modal-dialog{margin:0;max-height:100vh;min-height:100vh;border-radius:0;padding:24px 18px 36px}
+      .fixed-fields,.edit-grid.two-col{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <p><a href="../../">← 臨時ホームページへ戻る</a></p>
+    <h1>お知らせ管理</h1>
+    <div class="admin-note">
+      既存のお知らせを修正するときは、ここで対象を選んでください。<br>
+      <strong>「修正」を押すと、現在登録されている内容がすべて入力済みのフォームを開きます。</strong><br>
+      必要な箇所だけ変更し、最後にGitHub Issueで確定します。
+    </div>
+
+    <div class="admin-actions">
+      <a class="admin-btn" id="new-news-link" href="#">新しいお知らせを登録</a>
+      <a class="admin-btn secondary" href="../books/">書誌管理へ</a>
+    </div>
+
+    <div class="admin-search">
+      <input id="news-query" type="search" placeholder="タイトル・種別・本文で検索" autocomplete="off">
+      <button class="admin-btn" id="search-button" type="button">検索</button>
+    </div>
+    <p class="result-count" id="result-count"></p>
+    <div id="results"></div>
+  </main>
+
+  <div class="admin-modal" id="news-modal" hidden>
+    <div class="admin-modal-backdrop" data-modal-close></div>
+    <section class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+      <button class="admin-modal-close" id="news-modal-close" type="button" aria-label="閉じる">×</button>
+      <div id="news-modal-content"></div>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const stamp = Date.now().toString();
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+
+      (async () => {
+        try {
+          await loadScript(`../../data/admin-news.js?v=${stamp}`);
+          await loadScript(`admin.js?v=${stamp}`);
+        } catch (error) {
+          console.error("Failed to load current admin news data.", error);
+          const count = document.getElementById("result-count");
+          if (count) count.textContent = "お知らせデータを読み込めませんでした。ページを再読み込みしてください。";
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>

@@ -60,12 +60,15 @@ jobs:
               raise SystemExit('書籍IDが重複しています。')
           if any(not str(x.get('title', '')).strip() for x in books):
               raise SystemExit('空の書名があります。')
+          if not Path('docs/data/admin-news.js').exists():
+              raise SystemExit('お知らせ管理用データが生成されていません。')
           print(f'書籍検証OK: {len(books):,}件／公開お知らせ: {len(news):,}件')
           PY
           node --check docs/books/js/app.js
           node --check docs/js/home.js
           node --check docs/js/news.js
           node --check docs/admin/books/admin.js
+          node --check docs/admin/news/admin.js
           git diff --check
 
       - name: Keep generated data in sync
@@ -74,7 +77,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/admin-books.js docs/data/last-updated.txt docs/data/news.json docs/data/news.js docs/data/news-last-updated.txt
+          git add docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/admin-books.js docs/data/last-updated.txt docs/data/news.json docs/data/news.js docs/data/admin-news.js docs/data/news-last-updated.txt
           if git diff --cached --quiet; then
             echo "生成済みデータは最新です。"
           else
