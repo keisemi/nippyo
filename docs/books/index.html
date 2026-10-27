@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>日本評論社 書籍検索</title>
-  <meta name="description" content="日本評論社で発行する書籍情報を検索するためのページです。">
+  <title>日本評論社 書籍・雑誌検索</title>
+  <meta name="description" content="日本評論社で発行する書籍と定期雑誌の各号を検索するためのページです。">
   <meta name="robots" content="index,follow">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -13,31 +13,31 @@
   <header class="site-header">
     <div class="header-inner">
       <p class="kicker">NIHON HYORONSHA</p>
-      <p class="site-title"><span>日本評論社</span> 書籍検索</p>
+      <p class="site-title"><span>日本評論社</span> 書籍・雑誌検索</p>
     </div>
   </header>
 
   <div class="notice">
     <div class="notice-inner">
-      日本評論社で発行する書籍情報を検索するためのページです。
+      日本評論社で発行する書籍と定期雑誌の各号を検索するためのページです。
     </div>
   </div>
 
   <main>
     <section class="intro" aria-labelledby="search-heading">
-      <h1 id="search-heading">書籍を探す</h1>
-      <p>書名・著者名・ISBN・分野・検索キーワードから検索できます。複数の語を空白で区切ると、すべてを含む書籍に絞り込みます。</p>
-      <p class="updated">書誌データ最終更新：<span id="lastUpdated">—</span></p>
+      <h1 id="search-heading">書籍・雑誌を探す</h1>
+      <p>書名・著者名・ISBN・分野、雑誌名・月号・通巻番号・特集・執筆者名などから検索できます。複数の語を空白で区切ると、すべてを含む書籍・雑誌号に絞り込みます。</p>
+      <p class="updated">検索データ最終更新：<span id="lastUpdated">—</span></p>
     </section>
 
     <section class="search-panel" aria-label="検索条件">
       <div class="search-row">
         <input id="q" class="search-input" type="search" autocomplete="off"
-               placeholder="例：マクロ経済学／著者名／978453..."
-               aria-label="書名・著者名・ISBN・キーワード">
+               placeholder="例：マクロ経済学／著者名／経済セミナー／978453..."
+               aria-label="書名・著者名・雑誌名・ISBN・キーワード">
         <button id="searchButton" class="search-button" type="button">検索</button>
       </div>
-      <p class="help">ISBNはハイフンあり・なしのどちらでも検索できます。</p>
+      <p class="help">ISBNはハイフンあり・なしのどちらでも検索できます。雑誌は号単位で検索し、記事タイトルそのものは検索対象にしていません。</p>
 
       <div class="filters">
         <div class="filter">
@@ -54,7 +54,7 @@
             <option value="relevance">関連度順</option>
             <option value="newest">刊行年月の新しい順</option>
             <option value="oldest">刊行年月の古い順</option>
-            <option value="title">書名順</option>
+            <option value="title">書名・雑誌名順</option>
           </select>
         </div>
       </div>
@@ -65,9 +65,9 @@
       <button id="clear" class="clear-button" type="button">条件をクリア</button>
     </div>
 
-    <div id="loading" class="loading">書籍データを読み込んでいます…</div>
+    <div id="loading" class="loading">書籍・雑誌データを読み込んでいます…</div>
     <div id="error" class="error" hidden>
-      書籍データを読み込めませんでした。時間をおいて再度お試しください。
+      書籍・雑誌データを読み込めませんでした。時間をおいて再度お試しください。
     </div>
     <ul id="results" class="results" hidden></ul>
     <div id="pagination" class="pagination" aria-label="検索結果ページ"></div>
@@ -84,7 +84,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <span>© 日本評論社</span>
-      <span>書籍検索ページ</span>
+      <span>書籍・雑誌検索ページ</span>
     </div>
   </footer>
   <script>
