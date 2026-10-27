@@ -94,13 +94,16 @@ img { max-width: 100%; }
 .placeholder-main h1 { margin: 0 0 20px; font-family: "Yu Mincho", "Hiragino Mincho ProN", serif; font-size: 2.8rem; font-weight: 500; }
 .placeholder-box { padding: 26px 28px; background: var(--tint); border-left: 4px solid var(--green); }
 
+@media (max-width: 1100px) {
+  .global-nav { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+  .global-nav a { min-width: auto; flex: 0 0 auto; padding: 13px 16px; font-size: .9rem; }
+}
+
 @media (max-width: 800px) {
   .content-width, .header-inner { width: min(calc(100% - 30px), var(--max)); }
   .header-inner { min-height: 90px; }
   .brand img { width: 190px; }
   .site-label { display: none; }
-  .global-nav { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
-  .global-nav a { min-width: auto; flex: 0 0 auto; padding: 13px 16px; font-size: .9rem; }
   .hero { padding: 52px 0 60px; }
   .link-grid { grid-template-columns: 1fr; }
   .footer-inner { align-items: flex-start; flex-direction: column; }
