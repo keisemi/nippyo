@@ -48,7 +48,7 @@
     const cover = book.cover
       ? `<img class="new-book-cover" src="${esc(book.cover)}" alt="${esc(book.title)} 書影" loading="lazy">`
       : `<div class="new-book-cover-placeholder" aria-hidden="true">NIPPYO</div>`;
-    const qs = new URLSearchParams({ q: String(book.title || "") }).toString();
+    const qs = new URLSearchParams({ book: String(book.id || "") }).toString();
     return `
       <article class="new-book-card">
         <a class="new-book-cover-link" href="books/?${qs}">${cover}</a>

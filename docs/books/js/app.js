@@ -27,6 +27,7 @@
   let filtered = [];
   let page = 1;
   let lastModalTrigger = null;
+  let modalHistoryPushed = false;
   let bookDataVersion = Date.now().toString();
   let magazineDataVersion = Date.now().toString();
   const bookDetailCache = new Map();
@@ -131,6 +132,33 @@
 
   function itemTitle(item) {
     return item.__type === "magazine_issue" ? magazineTitle(item) : String(item.title || "");
+  }
+
+  function detailParamForType(type) {
+    return type === "magazine_issue" ? "mag" : "book";
+  }
+
+  function directDetailUrl(type, itemId) {
+    const params = new URLSearchParams();
+    params.set(detailParamForType(type), String(itemId));
+    return `${location.pathname}?${params.toString()}`;
+  }
+
+  function currentDirectDetail() {
+    const params = new URLSearchParams(location.search);
+    const bookId = String(params.get("book") || "").trim();
+    const magazineId = String(params.get("mag") || "").trim();
+    if (bookId) return { type: "book", id: bookId };
+    if (magazineId) return { type: "magazine_issue", id: magazineId };
+    return null;
+  }
+
+  function removeDirectDetailFromUrl() {
+    const params = new URLSearchParams(location.search);
+    params.delete("book");
+    params.delete("mag");
+    const url = `${location.pathname}${params.toString() ? `?${params}` : ""}${location.hash || ""}`;
+    try { history.replaceState(null, "", url); } catch (_) {}
   }
 
   function amazonUrl(book) {
@@ -432,11 +460,23 @@
     `;
   }
 
-  async function openItemModal(type, itemId, trigger) {
+  async function openItemModal(type, itemId, trigger, options = {}) {
     const item = items.find((candidate) => candidate.__type === type && String(candidate.id) === String(itemId));
-    if (!item || !els.bookModal || !els.bookModalContent) return;
+    if (!item || !els.bookModal || !els.bookModalContent) return false;
 
-    lastModalTrigger = trigger || document.activeElement;
+    const updateUrl = options.updateUrl !== false;
+    if (updateUrl) {
+      try {
+        history.pushState({ nippyoDetail: true }, "", directDetailUrl(type, itemId));
+        modalHistoryPushed = true;
+      } catch (_) {
+        modalHistoryPushed = false;
+      }
+    } else {
+      modalHistoryPushed = false;
+    }
+
+    lastModalTrigger = trigger || null;
     const loadingLabel = type === "magazine_issue" ? "雑誌号詳細" : "書籍詳細";
     els.bookModalContent.innerHTML = `<p class="book-modal-kicker">${loadingLabel}</p><p>詳細情報を読み込んでいます…</p>`;
     els.bookModal.hidden = false;
@@ -459,16 +499,52 @@
         <p>詳細情報を読み込めませんでした。ページを再読み込みして、もう一度お試しください。</p>
       `;
     }
+    return true;
   }
 
-  function closeBookModal() {
-    if (!els.bookModal || els.bookModal.hidden) return;
+  function closeBookModal(options = {}) {
+    const fromHistory = options.fromHistory === true;
+    if (!els.bookModal || els.bookModal.hidden) {
+      if (!fromHistory) removeDirectDetailFromUrl();
+      modalHistoryPushed = false;
+      return;
+    }
+
     els.bookModal.hidden = true;
     document.body.classList.remove("modal-open");
     if (lastModalTrigger && typeof lastModalTrigger.focus === "function") {
       lastModalTrigger.focus();
     }
     lastModalTrigger = null;
+
+    if (!fromHistory && modalHistoryPushed) {
+      modalHistoryPushed = false;
+      history.back();
+      return;
+    }
+
+    modalHistoryPushed = false;
+    if (!fromHistory) removeDirectDetailFromUrl();
+  }
+
+  async function syncModalFromUrl() {
+    const direct = currentDirectDetail();
+    if (!direct) {
+      closeBookModal({ fromHistory: true });
+      return;
+    }
+
+    const item = items.find((candidate) =>
+      candidate.__type === direct.type && String(candidate.id) === String(direct.id)
+    );
+    if (!item) {
+      const label = direct.type === "magazine_issue" ? "雑誌号" : "書籍";
+      console.warn(`指定された${label}IDが見つかりません: ${direct.id}`);
+      closeBookModal({ fromHistory: true });
+      return;
+    }
+
+    await openItemModal(direct.type, direct.id, null, { updateUrl: false });
   }
 
   function prepareItems(bookData, issueData) {
@@ -543,7 +619,11 @@
     if (els.year.value) p.set("year", els.year.value);
     if (els.sort.value !== "relevance") p.set("sort", els.sort.value);
     if (page > 1) p.set("page", String(page));
-    const url = `${location.pathname}${p.toString() ? `?${p}` : ""}`;
+
+    const direct = currentDirectDetail();
+    if (direct) p.set(detailParamForType(direct.type), direct.id);
+
+    const url = `${location.pathname}${p.toString() ? `?${p}` : ""}${location.hash || ""}`;
     try { history.replaceState(null, "", url); } catch (_) {}
   }
 
@@ -766,6 +846,9 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && els.bookModal && !els.bookModal.hidden) closeBookModal();
     });
+    window.addEventListener("popstate", () => {
+      syncModalFromUrl();
+    });
     els.clear.addEventListener("click", () => {
       els.q.value = "";
       els.genre.value = "";
@@ -787,6 +870,7 @@
       els.loading.hidden = true;
       els.results.hidden = false;
       apply();
+      await syncModalFromUrl();
     } catch (error) {
       console.error("Failed to load search data.", error);
       els.loading.hidden = true;

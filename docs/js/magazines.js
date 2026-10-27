@@ -43,9 +43,8 @@
     return result;
   }
 
-  function issueSearchUrl(issue) {
-    const query = [issue.magazine_name, issue.issue].filter(Boolean).join(" ");
-    const params = new URLSearchParams({ q: query });
+  function issueDetailUrl(issue) {
+    const params = new URLSearchParams({ mag: String(issue.id || "") });
     return `../books/?${params.toString()}`;
   }
 
@@ -76,7 +75,7 @@
       ${meta ? `<p class="magazine-current-meta">${esc(meta)}</p>` : ""}
       ${price ? `<p class="magazine-current-price">本体 ${price.toLocaleString("ja-JP")}円</p>` : ""}
       <div class="magazine-current-actions">
-        <a class="button button-primary" href="${esc(issueSearchUrl(issue))}">最新号を詳しく見る</a>
+        <a class="button button-primary" href="${esc(issueDetailUrl(issue))}">最新号を詳しく見る</a>
         <a class="button button-secondary" href="${esc(backnumberSearchUrl(issue))}">この雑誌の号を検索</a>
       </div>
     `;
