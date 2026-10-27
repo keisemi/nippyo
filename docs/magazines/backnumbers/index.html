@@ -71,10 +71,15 @@
       font-weight: 600;
       line-height: 1.5;
     }
-    .backnumber-feature { margin: 8px 0 0; color: #444; }
+    .backnumber-feature {
+      margin: 8px 0 0;
+      color: var(--ink);
+      font-size: 1.2rem;
+      font-weight: 600;
+      line-height: 1.55;
+    }
     .backnumber-meta { margin: 8px 0 0; color: var(--muted); font-size: .86rem; }
     .backnumber-side { min-width: 140px; text-align: right; }
-    .backnumber-price { margin: 0 0 12px; font-weight: 700; }
     .backnumber-detail-link {
       display: inline-block;
       padding: 9px 16px;
@@ -114,7 +119,6 @@
       color: #fff;
     }
     .backnumber-page-button:disabled { opacity: .35; cursor: default; }
-    .backnumber-updated { margin: 18px 0 0; color: var(--muted); font-size: .86rem; text-align: right; }
     .back-to-magazines { margin: 0 0 20px; }
     .back-to-magazines a { color: var(--green); font-weight: 700; text-decoration: none; }
     .back-to-magazines a:hover { text-decoration: underline; }
@@ -180,7 +184,6 @@
       </div>
       <ul class="backnumber-list" id="backnumberList"></ul>
       <div class="backnumber-pagination" id="backnumberPagination" aria-label="バックナンバーのページ送り"></div>
-      <p class="backnumber-updated">雑誌データ最終更新：<span id="backnumberUpdated">—</span></p>
     </div>
   </main>
 

@@ -21,8 +21,7 @@
     content: document.getElementById("backnumberContent"),
     count: document.getElementById("backnumberCount"),
     list: document.getElementById("backnumberList"),
-    pagination: document.getElementById("backnumberPagination"),
-    updated: document.getElementById("backnumberUpdated")
+    pagination: document.getElementById("backnumberPagination")
   };
 
   let allIssues = [];
@@ -48,14 +47,6 @@
       columns.forEach((name, index) => { item[name] = row[index]; });
       return item;
     });
-  }
-
-  function formatDate(value) {
-    const m = String(value || "").match(/^(\d{4})[-/.](\d{1,2})(?:[-/.](\d{1,2}))?$/);
-    if (!m) return String(value || "");
-    return m[3]
-      ? `${m[1]}年${Number(m[2])}月${Number(m[3])}日`
-      : `${m[1]}年${Number(m[2])}月`;
   }
 
   function detailUrl(issue) {
@@ -149,7 +140,7 @@
     page = Math.min(Math.max(1, page), totalPages);
 
     els.title.textContent = `${magazineName} バックナンバー`;
-    els.lead.textContent = `${magazineName}の登録済みバックナンバーを新しい号から掲載しています。各号の「詳細を見る」から内容紹介・目次等をご覧いただけます。`;
+    els.lead.textContent = `${magazineName}のバックナンバーを新しい号から掲載しています。`;
     document.title = `${magazineName} バックナンバー｜日本評論社`;
     els.count.innerHTML = `<strong>${filtered.length.toLocaleString("ja-JP")}</strong> 号`;
 
@@ -160,13 +151,7 @@
     } else {
       els.list.innerHTML = slice.map((issue) => {
         const feature = [issue.feature, issue.feature_subtitle].filter(Boolean).join("　");
-        const meta = [
-          issue.pub_date ? `${formatDate(issue.pub_date)}刊` : "",
-          issue.issue_number ? `通巻${issue.issue_number}号` : "",
-          issue.format || "",
-          issue.pages ? `${issue.pages}頁` : ""
-        ].filter(Boolean).join(" ／ ");
-        const price = Number(issue.price_body || 0);
+        const meta = issue.issue_number ? `通巻${issue.issue_number}号` : "";
         return `<li class="backnumber-item">
           <div>
             <h2 class="backnumber-item-title">${esc(issue.issue || "（月号未登録）")}</h2>
@@ -174,7 +159,6 @@
             ${meta ? `<p class="backnumber-meta">${esc(meta)}</p>` : ""}
           </div>
           <div class="backnumber-side">
-            ${price ? `<p class="backnumber-price">本体 ${price.toLocaleString("ja-JP")}円</p>` : ""}
             <a class="backnumber-detail-link" href="${esc(detailUrl(issue))}">詳細を見る</a>
           </div>
         </li>`;
@@ -197,8 +181,6 @@
 
       rebuildYears();
       restoreUrl();
-      els.updated.textContent = String(payload.updated || "—");
-
       els.magazine.addEventListener("change", () => {
         page = 1;
         els.year.value = "";
