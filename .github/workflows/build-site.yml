@@ -49,10 +49,11 @@ jobs:
           import json
           from pathlib import Path
 
-          books = json.loads(Path('docs/data/books.json').read_text(encoding='utf-8'))
+          search_payload = json.loads(Path('docs/data/books-search.json').read_text(encoding='utf-8'))
+          books = search_payload.get('books') if isinstance(search_payload, dict) else None
           news = json.loads(Path('docs/data/news.json').read_text(encoding='utf-8'))
           if not isinstance(books, list) or not books:
-              raise SystemExit('books.json が空です。')
+              raise SystemExit('books-search.json が空です。')
           ids = [str(x.get('id', '')).strip() for x in books]
           if any(not x for x in ids):
               raise SystemExit('空の書籍IDがあります。')
@@ -60,9 +61,30 @@ jobs:
               raise SystemExit('書籍IDが重複しています。')
           if any(not str(x.get('title', '')).strip() for x in books):
               raise SystemExit('空の書名があります。')
+
+          detail_ids = []
+          detail_dir = Path('docs/data/book-details')
+          detail_files = sorted(detail_dir.glob('books-detail-*.json'))
+          if not detail_files:
+              raise SystemExit('刊行年別の書籍詳細データが生成されていません。')
+          for path in detail_files:
+              payload = json.loads(path.read_text(encoding='utf-8'))
+              if not isinstance(payload, dict):
+                  raise SystemExit(f'{path} の形式が不正です。')
+              detail_ids.extend(str(x).strip() for x in payload.keys())
+          if len(detail_ids) != len(set(detail_ids)):
+              raise SystemExit('刊行年別詳細データ内で書籍IDが重複しています。')
+          if set(detail_ids) != set(ids):
+              raise SystemExit('検索用データと刊行年別詳細データの書籍IDが一致しません。')
+
+          search_size = Path('docs/data/books-search.json').stat().st_size
+          if search_size > 8 * 1024 * 1024:
+              raise SystemExit(f'検索用書誌データが8MBを超えています: {search_size:,} bytes')
+          if Path('docs/data/books.js').exists() or Path('docs/data/books.json').exists() or Path('docs/data/admin-books.js').exists():
+              raise SystemExit('旧形式の巨大書誌データが残っています。')
           if not Path('docs/data/admin-news.js').exists():
               raise SystemExit('お知らせ管理用データが生成されていません。')
-          print(f'書籍検証OK: {len(books):,}件／公開お知らせ: {len(news):,}件')
+          print(f'書籍検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／検索用{search_size / 1024 / 1024:.2f}MB／公開お知らせ: {len(news):,}件')
           PY
           node --check docs/books/js/app.js
           node --check docs/js/home.js
@@ -77,7 +99,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/data/books.json docs/data/books.js docs/data/home-books.js docs/data/admin-books.js docs/data/last-updated.txt docs/data/news.json docs/data/news.js docs/data/admin-news.js docs/data/news-last-updated.txt
+          git add -A docs/data
           if git diff --cached --quiet; then
             echo "生成済みデータは最新です。"
           else

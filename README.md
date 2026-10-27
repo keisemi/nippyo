@@ -22,15 +22,19 @@
 
 `data/book_search_master.csv` を書誌の唯一の正本とします。
 
-このCSVから `scripts/build_data.py` が以下を自動生成します。
+このCSVから `scripts/build_data.py` が、用途ごとに軽量化した公開用データを自動生成します。
 
-- `docs/data/books.json`
-- `docs/data/books.js`
-- `docs/data/home-books.js`（トップページの新刊表示用・軽量）
-- `docs/data/admin-books.js`（書誌管理検索用・軽量）
-- `docs/data/last-updated.txt`
+- `docs/data/books-search.json`：書籍検索・一覧表示用の軽量データ
+- `docs/data/book-details/books-detail-YYYY.json`：書籍詳細・管理画面用の刊行年別データ
+- `docs/data/book-details/books-detail-undated.json`：刊行年がない書籍の詳細データ
+- `docs/data/home-books.js`：トップページの新刊表示用・軽量
+- `docs/data/last-updated.txt`：書誌生成データのバージョンキー
 
-トップページの新刊、通常の書籍検索、書誌管理用検索は同じマスターCSVを参照します。
+書籍検索ページは、最初に `books-search.json` だけを読み込みます。内容紹介・目次等の長い詳細情報は、書名をクリックしたときに該当する刊行年の詳細JSONだけを読み込みます。
+
+旧形式の `docs/data/books.js`、`docs/data/books.json`、`docs/data/admin-books.js` は使用しません。
+
+トップページの新刊、通常の書籍検索、書誌管理用検索は、いずれも同じ `data/book_search_master.csv` を正本とします。
 
 ### お知らせ
 
@@ -121,7 +125,3 @@ HTML・画像等をPushした場合は **【自動】臨時サイトを再構築
 ## 配色
 
 旧日本評論社サイトで使われていた緑系（濃緑 `#255e17`、黄緑 `#789c18`、淡緑 `#d9e0d8`）を基調にしています。
-
-## 詳しい運用手順
-
-GitHubやHTMLに詳しくない担当者向けの詳細手順は `MAINTENANCE.md` を参照してください。

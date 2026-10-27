@@ -1,10 +1,6 @@
 (() => {
   "use strict";
 
-  const books = Array.isArray(window.NIPPYO_BOOKS) ? window.NIPPYO_BOOKS : [];
-  const adminBooks = Array.isArray(window.NIPPYO_ADMIN_BOOKS) ? window.NIPPYO_ADMIN_BOOKS : [];
-  const publicById = new Map(books.map((book) => [String(book.id), book]));
-  const adminById = new Map(adminBooks.map((book) => [String(book.id), book]));
   const queryInput = document.getElementById("book-query");
   const searchButton = document.getElementById("search-button");
   const results = document.getElementById("results");
@@ -14,7 +10,11 @@
   const modalContent = document.getElementById("book-modal-content");
   const modalClose = document.getElementById("book-modal-close");
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
+
+  let books = [];
+  let dataVersion = Date.now().toString();
   let lastModalTrigger = null;
+  const detailCache = new Map();
 
   const editFields = [
     ["title", "書名", "input"],
@@ -25,7 +25,7 @@
     ["isbn_old", "旧ISBN", "input"],
     ["isbn_new", "新ISBN", "input"],
     ["amazon_asin", "Amazon ASIN", "input"],
-    ["pub_month", "刊行年月", "input"],
+    ["pub_month_raw", "刊行年月", "input"],
     ["genres", "分野", "textarea"],
     ["series", "シリーズ", "input"],
     ["series_volume", "シリーズ巻数", "input"],
@@ -39,11 +39,13 @@
     ["original_title", "原書名", "textarea"],
   ];
 
+  const issueFieldName = (id) => id === "pub_month_raw" ? "pub_month" : id;
+
   function normalize(value) {
     return String(value ?? "")
       .normalize("NFKC")
       .toLowerCase()
-      .replace(/[\s\-‐‑‒–—―ー]/g, "");
+      .replace(/[\s\-‐-‒–—―ー]/g, "");
   }
 
   function esc(value) {
@@ -113,38 +115,63 @@
     lastModalTrigger = null;
   }
 
-  function currentAdminBook(bookId) {
-    const key = String(bookId);
-    const book = publicById.get(key);
-    const extra = adminById.get(key) || {};
-    if (!book) return null;
-    return {
-      id: key,
-      title: String(book.title || ""),
-      subtitle_before: String(book.subtitle_before || ""),
-      subtitle_after: String(book.subtitle_after || ""),
-      author: String(book.author || ""),
-      author_kana: String(extra.author_kana || ""),
-      title_kana: String(extra.title_kana || ""),
-      search_title: String(extra.search_title || ""),
-      isbn_old: String(book.isbn_old || ""),
-      isbn_new: String(book.isbn_new || ""),
-      amazon_asin: String(book.amazon_asin || ""),
-      pub_month: String(extra.pub_month || book.pub_month || ""),
-      genres: Array.isArray(book.genres) ? book.genres.join("|") : String(book.genres || ""),
-      series: String(book.series || ""),
-      series_volume: String(book.series_volume || ""),
-      price_body: book.price_body === null || book.price_body === undefined ? "" : String(book.price_body),
-      format: String(book.format || ""),
-      pages: book.pages === null || book.pages === undefined ? "" : String(book.pages),
-      hp_keywords: String(extra.hp_keywords || ""),
-      pub_note: String(book.pub_note || ""),
-      description: String(book.description || ""),
-      toc: String(book.toc || ""),
-      original_title: String(book.original_title || ""),
-      has_errata: book.has_errata ? "1" : "0",
-      has_related_info: book.has_related_info ? "1" : "0",
-    };
+  async function readDataVersion() {
+    const stamp = Date.now().toString();
+    try {
+      const response = await fetch(`../../data/last-updated.txt?t=${stamp}`, { cache: "no-store" });
+      if (response.ok) {
+        const value = (await response.text()).trim();
+        if (value) return value;
+      }
+    } catch (_) {
+      // 検索データ取得時に改めてエラーにする。
+    }
+    return stamp;
+  }
+
+  async function loadSearchData() {
+    dataVersion = await readDataVersion();
+    const response = await fetch(`../../data/books-search.json?v=${encodeURIComponent(dataVersion)}`);
+    if (!response.ok) {
+      throw new Error(`books-search.json を取得できませんでした（HTTP ${response.status}）`);
+    }
+    const payload = await response.json();
+    if (!payload || !Array.isArray(payload.books)) {
+      throw new Error("books-search.json の形式が不正です。");
+    }
+    return payload.books;
+  }
+
+  async function loadDetailShard(detailKey) {
+    const key = String(detailKey || "undated");
+    if (!detailCache.has(key)) {
+      const promise = fetch(`../../data/book-details/books-detail-${encodeURIComponent(key)}.json?v=${encodeURIComponent(dataVersion)}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`書籍詳細データを取得できませんでした（${key}: HTTP ${response.status}）`);
+          }
+          return response.json();
+        })
+        .then((payload) => {
+          if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+            throw new Error(`書籍詳細データの形式が不正です（${key}）`);
+          }
+          return payload;
+        })
+        .catch((error) => {
+          detailCache.delete(key);
+          throw error;
+        });
+      detailCache.set(key, promise);
+    }
+    return detailCache.get(key);
+  }
+
+  async function loadBookDetail(book) {
+    const shard = await loadDetailShard(book.detail_key);
+    const detail = shard[String(book.id)];
+    if (!detail) throw new Error(`書籍ID ${book.id} の詳細データが見つかりません。`);
+    return { ...book, ...detail };
   }
 
   function fieldHtml(id, label, kind, value) {
@@ -159,12 +186,38 @@
     return `<label class="edit-field"><span>${esc(label)}</span><input type="text" ${common} value="${esc(value)}">${note}</label>`;
   }
 
-  function openEditForm(book, trigger) {
-    const source = currentAdminBook(book.id);
-    if (!source) {
-      window.alert("管理用書誌データを取得できませんでした。ページを再読み込みしてください。");
-      return;
-    }
+  function adminSource(detail) {
+    return {
+      id: String(detail.id || ""),
+      title: String(detail.title || ""),
+      subtitle_before: String(detail.subtitle_before || ""),
+      subtitle_after: String(detail.subtitle_after || ""),
+      author: String(detail.author || ""),
+      author_kana: String(detail.author_kana || ""),
+      title_kana: String(detail.title_kana || ""),
+      search_title: String(detail.search_title || ""),
+      isbn_old: String(detail.isbn_old || ""),
+      isbn_new: String(detail.isbn_new || ""),
+      amazon_asin: String(detail.amazon_asin || ""),
+      pub_month_raw: String(detail.pub_month_raw || ""),
+      genres: Array.isArray(detail.genres) ? detail.genres.join("|") : String(detail.genres || ""),
+      series: String(detail.series || ""),
+      series_volume: String(detail.series_volume || ""),
+      price_body: detail.price_body === null || detail.price_body === undefined ? "" : String(detail.price_body),
+      format: String(detail.format || ""),
+      pages: detail.pages === null || detail.pages === undefined ? "" : String(detail.pages),
+      hp_keywords: String(detail.hp_keywords || ""),
+      pub_note: String(detail.pub_note || ""),
+      description: String(detail.description || ""),
+      toc: String(detail.toc || ""),
+      original_title: String(detail.original_title || ""),
+      has_errata: detail.has_errata ? "1" : "0",
+      has_related_info: detail.has_related_info ? "1" : "0",
+    };
+  }
+
+  function openEditForm(book, detail, trigger) {
+    const source = adminSource(detail);
     lastModalTrigger = trigger || document.activeElement;
 
     const fields = editFields.map(([id, label, kind]) => fieldHtml(id, label, kind, source[id] || "")).join("");
@@ -209,7 +262,7 @@
         const before = String(source[id] || "");
         const after = String(el.value || "").trim();
         if (after !== before) {
-          params.set(id, after === "" && before !== "" ? "__CLEAR__" : after);
+          params.set(issueFieldName(id), after === "" && before !== "" ? "__CLEAR__" : after);
           changes += 1;
         }
       }
@@ -235,59 +288,74 @@
       }
       window.location.href = targetUrl;
     });
-    document.getElementById("back-to-detail").addEventListener("click", () => openBookModal(book, trigger));
+    document.getElementById("back-to-detail").addEventListener("click", () => renderBookModal(book, detail, trigger));
 
     modal.hidden = false;
     document.body.classList.add("modal-open");
     modalClose?.focus();
   }
 
-  function openBookModal(book, trigger) {
-    if (!book || !modal || !modalContent) return;
-    lastModalTrigger = trigger || document.activeElement;
-
-    const sub = subtitle(book);
-    const series = [book.series, book.series_volume].filter(Boolean).join(" ");
+  function renderBookModal(book, detail, trigger) {
+    const sub = subtitle(detail);
+    const series = [detail.series, detail.series_volume].filter(Boolean).join(" ");
     const isbnRows = [];
-    if (book.isbn_new) isbnRows.push(detailRow("ISBN", book.isbn_new));
-    if (book.isbn_old && book.isbn_old !== book.isbn_new) isbnRows.push(detailRow("旧ISBN", book.isbn_old));
+    if (detail.isbn_new) isbnRows.push(detailRow("ISBN", detail.isbn_new));
+    if (detail.isbn_old && detail.isbn_old !== detail.isbn_new) isbnRows.push(detailRow("旧ISBN", detail.isbn_old));
 
     const metaRows = [
-      detailRow("書籍ID", book.id),
-      book.pub_month ? detailRow("刊行年月", `${formatMonth(book.pub_month)}${book.pub_note ? `（${book.pub_note}）` : ""}`) : "",
+      detailRow("書籍ID", detail.id),
+      detail.pub_month ? detailRow("刊行年月", `${formatMonth(detail.pub_month)}${detail.pub_note ? `（${detail.pub_note}）` : ""}`) : "",
       ...isbnRows,
-      book.format ? detailRow("判型", book.format) : "",
-      book.pages ? detailRow("頁数", `${book.pages}頁`) : "",
-      book.price_body ? detailRow("本体価格", `${Number(book.price_body).toLocaleString("ja-JP")}円`) : "",
+      detail.format ? detailRow("判型", detail.format) : "",
+      detail.pages ? detailRow("頁数", `${detail.pages}頁`) : "",
+      detail.price_body ? detailRow("本体価格", `${Number(detail.price_body).toLocaleString("ja-JP")}円`) : "",
       series ? detailRow("シリーズ", series) : "",
-      book.original_title ? detailRow("原書名", book.original_title) : ""
+      detail.original_title ? detailRow("原書名", detail.original_title) : ""
     ].filter(Boolean).join("");
 
-    const genreTags = (book.genres || []).map((g) => `<span class="tag">${esc(g)}</span>`).join("");
+    const genreTags = (detail.genres || []).map((g) => `<span class="tag">${esc(g)}</span>`).join("");
     const statusItems = [];
-    if (book.has_errata) statusItems.push("正誤表の登録があります");
-    if (book.has_related_info) statusItems.push("関連情報・付属データの登録があります");
+    if (detail.has_errata) statusItems.push("正誤表の登録があります");
+    if (detail.has_related_info) statusItems.push("関連情報・付属データの登録があります");
 
     modalContent.innerHTML = `
       <p class="admin-modal-kicker">現在の登録内容</p>
-      <h2 id="admin-modal-title" class="admin-modal-title">${esc(book.title || "（書名未登録）")}</h2>
+      <h2 id="admin-modal-title" class="admin-modal-title">${esc(detail.title || "（書名未登録）")}</h2>
       ${sub ? `<p class="admin-modal-subtitle">${esc(sub)}</p>` : ""}
-      ${book.author ? `<p class="admin-modal-author">${esc(authorDisplay(book.author))}</p>` : ""}
+      ${detail.author ? `<p class="admin-modal-author">${esc(authorDisplay(detail.author))}</p>` : ""}
       ${genreTags ? `<div class="admin-modal-tags">${genreTags}</div>` : ""}
       ${metaRows ? `<dl class="detail-grid">${metaRows}</dl>` : ""}
       <div class="admin-edit-box">
         <p>この書誌の現在値を入力済みにした編集フォームを開きます。</p>
         <button class="admin-btn" id="open-edit-form" type="button">この書誌を編集</button>
       </div>
-      ${book.description ? `<section class="admin-detail-section"><h3>内容紹介</h3><p class="admin-detail-copy">${richText(book.description)}</p></section>` : ""}
-      ${book.toc ? `<section class="admin-detail-section"><h3>目次</h3><div class="admin-detail-toc">${richText(book.toc)}</div></section>` : ""}
+      ${detail.description ? `<section class="admin-detail-section"><h3>内容紹介</h3><p class="admin-detail-copy">${richText(detail.description)}</p></section>` : ""}
+      ${detail.toc ? `<section class="admin-detail-section"><h3>目次</h3><div class="admin-detail-toc">${richText(detail.toc)}</div></section>` : ""}
       ${statusItems.length ? `<section class="admin-detail-section"><h3>関連資料</h3><ul>${statusItems.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
     `;
-    document.getElementById("open-edit-form").addEventListener("click", (event) => openEditForm(book, event.currentTarget));
+    document.getElementById("open-edit-form").addEventListener("click", (event) => openEditForm(book, detail, event.currentTarget));
 
     modal.hidden = false;
     document.body.classList.add("modal-open");
     modalClose?.focus();
+  }
+
+  async function openBookModal(book, trigger) {
+    if (!book || !modal || !modalContent) return;
+    lastModalTrigger = trigger || document.activeElement;
+
+    modalContent.innerHTML = `<p class="admin-modal-kicker">現在の登録内容</p><h2 id="admin-modal-title" class="admin-modal-title">${esc(book.title || "（書名未登録）")}</h2><p>詳細情報を読み込んでいます…</p>`;
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    modalClose?.focus();
+
+    try {
+      const detail = await loadBookDetail(book);
+      renderBookModal(book, detail, trigger);
+    } catch (error) {
+      console.error("Failed to load admin book detail.", error);
+      modalContent.innerHTML = `<p class="admin-modal-kicker">現在の登録内容</p><h2 id="admin-modal-title" class="admin-modal-title">${esc(book.title || "（書名未登録）")}</h2><p>詳細情報を読み込めませんでした。ページを再読み込みしてください。</p>`;
+    }
   }
 
   function render(items) {
@@ -354,18 +422,17 @@
     }
 
     const matched = books.filter((book) => {
-      const raw = currentAdminBook(book.id);
       const haystack = normalize([
         book.id,
-        book.search,
         book.title,
+        book.subtitle_before,
+        book.subtitle_after,
         book.author,
         book.isbn_old,
         book.isbn_new,
         (book.genres || []).join(" "),
-        raw?.author_kana,
-        raw?.title_kana,
-        raw?.search_title,
+        book.series,
+        book.search_extra,
       ].filter(Boolean).join(" "));
       return terms.every((term) => haystack.includes(term));
     }).slice(0, 50);
@@ -376,16 +443,27 @@
     }
   }
 
-  newBookLink.href = newUrl();
-  searchButton.addEventListener("click", search);
-  queryInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") search();
-  });
-  modalClose?.addEventListener("click", closeBookModal);
-  modal?.addEventListener("click", (event) => {
-    if (event.target.matches("[data-modal-close]")) closeBookModal();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && modal && !modal.hidden) closeBookModal();
-  });
+  async function init() {
+    try {
+      books = await loadSearchData();
+      newBookLink.href = newUrl();
+      searchButton.addEventListener("click", search);
+      queryInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") search();
+      });
+      modalClose?.addEventListener("click", closeBookModal);
+      modal?.addEventListener("click", (event) => {
+        if (event.target.matches("[data-modal-close]")) closeBookModal();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal && !modal.hidden) closeBookModal();
+      });
+      count.textContent = "検索語を入力してください。";
+    } catch (error) {
+      console.error("Failed to load current admin book data.", error);
+      count.textContent = "書誌データを読み込めませんでした。ページを再読み込みしてください。";
+    }
+  }
+
+  init();
 })();

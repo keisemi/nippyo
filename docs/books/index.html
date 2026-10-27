@@ -89,29 +89,9 @@
   </footer>
   <script>
     (() => {
-      const stamp = Date.now().toString();
-      const loadScript = (src) => new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.body.appendChild(script);
-      });
-
-      (async () => {
-        try {
-          const response = await fetch(`../data/last-updated.txt?t=${stamp}`, { cache: "no-store" });
-          const version = response.ok ? (await response.text()).trim() : stamp;
-          await loadScript(`../data/books.js?v=${encodeURIComponent(version || stamp)}`);
-          await loadScript(`js/app.js?v=${stamp}`);
-        } catch (error) {
-          console.error("Failed to load current book data.", error);
-          const loading = document.getElementById("loading");
-          const errorBox = document.getElementById("error");
-          if (loading) loading.hidden = true;
-          if (errorBox) errorBox.hidden = false;
-        }
-      })();
+      const script = document.createElement("script");
+      script.src = `js/app.js?v=${Date.now()}`;
+      document.body.appendChild(script);
     })();
   </script>
 </body>

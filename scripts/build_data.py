@@ -3,6 +3,7 @@ import hashlib
 import html
 import json
 import re
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -11,11 +12,17 @@ INPUT = ROOT / "data" / "book_search_master.csv"
 DOCS = ROOT / "docs"
 OUTPUT_DIR = DOCS / "data"
 COVERS_DIR = DOCS / "assets" / "covers"
-JSON_FILE = OUTPUT_DIR / "books.json"
-JS_FILE = OUTPUT_DIR / "books.js"
+SEARCH_JSON_FILE = OUTPUT_DIR / "books-search.json"
+DETAIL_DIR = OUTPUT_DIR / "book-details"
 UPDATED_FILE = OUTPUT_DIR / "last-updated.txt"
 HOME_JS_FILE = OUTPUT_DIR / "home-books.js"
-ADMIN_JS_FILE = OUTPUT_DIR / "admin-books.js"
+
+# 旧構成の巨大生成物。新構成では使用しないため、ビルド時に削除する。
+LEGACY_FILES = [
+    OUTPUT_DIR / "books.js",
+    OUTPUT_DIR / "books.json",
+    OUTPUT_DIR / "admin-books.js",
+]
 
 
 def clean(value):
@@ -91,10 +98,27 @@ def build_date_jst():
     return datetime.now(timezone(timedelta(hours=9))).strftime("%Y/%m/%d")
 
 
+def normalized_pub_month(value):
+    value = clean(value)
+    if not value:
+        return ""
+    parts = re.split(r"[-./]", value)
+    if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+        return f"{int(parts[0]):04d}.{int(parts[1]):02d}"
+    if len(parts) == 1 and parts[0].isdigit() and len(parts[0]) == 4:
+        return parts[0]
+    return value
+
+
+def detail_key(pub_year):
+    return str(pub_year) if isinstance(pub_year, int) and pub_year > 0 else "undated"
+
+
 if not INPUT.exists():
     raise SystemExit(f"入力CSVがありません: {INPUT}")
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+DETAIL_DIR.mkdir(parents=True, exist_ok=True)
 
 with INPUT.open("r", encoding="utf-8-sig", newline="") as f:
     rows = list(csv.DictReader(f))
@@ -102,70 +126,99 @@ with INPUT.open("r", encoding="utf-8-sig", newline="") as f:
 if not rows:
     raise SystemExit("公開用マスターCSVにレコードがありません。")
 
-books = []
+updated_date = build_date_jst()
+search_books = []
+details_by_year = defaultdict(dict)
+
 for r in rows:
+    book_id = clean(r.get("id"))
+    title = clean(r.get("title"))
     isbn_old = clean(r.get("isbn_old"))
     isbn_new = clean(r.get("isbn_new"))
     amazon_asin = clean(r.get("amazon_asin")).upper()
+    pub_year = number(r.get("pub_year"))
+    pub_month = normalized_pub_month(r.get("pub_month"))
+    year_key = detail_key(pub_year)
+
     if amazon_asin and not re.fullmatch(r"[A-Z0-9]{10}", amazon_asin):
         raise SystemExit(
-            f"Amazon ASINの形式が不正です（書籍ID {clean(r.get('id'))}）: {amazon_asin}"
+            f"Amazon ASINの形式が不正です（書籍ID {book_id}）: {amazon_asin}"
         )
-    search_parts = [
-        r.get("title"),
-        r.get("subtitle_before"),
-        r.get("subtitle_after"),
+
+    # 一覧表示にすでに含まれる書名・著者・ISBN等は重複させず、
+    # よみ・HP検索用キーワードなど検索補助情報だけを別フィールドにする。
+    search_extra_parts = [
         r.get("search_title"),
         r.get("title_kana"),
-        r.get("author"),
         r.get("author_kana"),
-        isbn_old,
-        isbn_new,
-        r.get("genres"),
-        r.get("series"),
         r.get("hp_keywords"),
     ]
-    books.append(
-        {
-            "id": clean(r.get("id")),
-            "cover": cover_path(r.get("id")),
-            "title": clean(r.get("title")),
-            "subtitle_before": clean(r.get("subtitle_before")),
-            "subtitle_after": clean(r.get("subtitle_after")),
-            "author": clean(r.get("author")),
-            "isbn": isbn_new or isbn_old,
-            "isbn_old": isbn_old,
-            "isbn_new": isbn_new,
-            "pub_month": ".".join(clean(r.get("pub_month")).split("-")[:2])
-            if clean(r.get("pub_month"))
-            else "",
-            "pub_year": number(r.get("pub_year")),
-            "pub_note": clean_public_text(r.get("pub_note")),
-            "genres": split_pipe(r.get("genres")),
-            "series": clean(r.get("series")),
-            "series_volume": clean(r.get("series_volume")),
-            "price_body": number(r.get("price_body")),
-            "format": clean(r.get("format")),
-            "pages": number(r.get("pages")),
-            "description": clean_public_text(r.get("description")),
-            "toc": clean_public_text(r.get("toc")),
-            "original_title": clean_public_text(r.get("original_title")),
-            "amazon_asin": amazon_asin,
-            "has_errata": clean(r.get("has_errata")) == "1",
-            "has_related_info": clean(r.get("has_related_info")) == "1",
-            "search": " ".join(clean(x) for x in search_parts if clean(x)),
-        }
-    )
 
-if len(books) != len(rows):
+    search_book = {
+        "id": book_id,
+        "detail_key": year_key,
+        "cover": cover_path(book_id),
+        "title": title,
+        "subtitle_before": clean(r.get("subtitle_before")),
+        "subtitle_after": clean(r.get("subtitle_after")),
+        "author": clean(r.get("author")),
+        "isbn": isbn_new or isbn_old,
+        "isbn_old": isbn_old,
+        "isbn_new": isbn_new,
+        "pub_month": pub_month,
+        "pub_year": pub_year,
+        "genres": split_pipe(r.get("genres")),
+        "series": clean(r.get("series")),
+        "series_volume": clean(r.get("series_volume")),
+        "price_body": number(r.get("price_body")),
+        "format": clean(r.get("format")),
+        "pages": number(r.get("pages")),
+        "has_errata": clean(r.get("has_errata")) == "1",
+        "has_related_info": clean(r.get("has_related_info")) == "1",
+        "search_extra": " ".join(clean(x) for x in search_extra_parts if clean(x)),
+    }
+    search_books.append(search_book)
+
+    # 詳細表示・管理画面で必要になる項目は、刊行年ごとのJSONへ分離する。
+    # 管理画面の編集値はCSVの値を保持し、公開表示用の長文だけ安全に整形する。
+    details_by_year[year_key][book_id] = {
+        "id": book_id,
+        "title": title,
+        "subtitle_before": clean(r.get("subtitle_before")),
+        "subtitle_after": clean(r.get("subtitle_after")),
+        "author": clean(r.get("author")),
+        "author_kana": clean(r.get("author_kana")),
+        "title_kana": clean(r.get("title_kana")),
+        "search_title": clean(r.get("search_title")),
+        "isbn_old": isbn_old,
+        "isbn_new": isbn_new,
+        "amazon_asin": amazon_asin,
+        "pub_month": pub_month,
+        "pub_month_raw": clean(r.get("pub_month")),
+        "pub_year": pub_year,
+        "genres": split_pipe(r.get("genres")),
+        "series": clean(r.get("series")),
+        "series_volume": clean(r.get("series_volume")),
+        "price_body": number(r.get("price_body")),
+        "format": clean(r.get("format")),
+        "pages": number(r.get("pages")),
+        "hp_keywords": clean(r.get("hp_keywords")),
+        "pub_note": clean_public_text(r.get("pub_note")),
+        "description": clean_public_text(r.get("description")),
+        "toc": clean_public_text(r.get("toc")),
+        "original_title": clean_public_text(r.get("original_title")),
+        "has_errata": clean(r.get("has_errata")) == "1",
+        "has_related_info": clean(r.get("has_related_info")) == "1",
+    }
+
+if len(search_books) != len(rows):
     raise SystemExit("CSV行数と生成した書籍件数が一致しません。")
-if any(not b["id"] or not b["title"] for b in books):
+if any(not b["id"] or not b["title"] for b in search_books):
     raise SystemExit("書籍IDまたは書名が空欄の公開レコードがあります。")
-if len({b["id"] for b in books}) != len(books):
+if len({b["id"] for b in search_books}) != len(search_books):
     raise SystemExit("書籍IDが重複しています。")
 
 # Top page only needs a small recent-book dataset.
-# Keep the master CSV as the single source of truth; this file is regenerated every build.
 now_jst = datetime.now(timezone(timedelta(hours=9)))
 min_year = now_jst.year - 2
 max_year = now_jst.year + 1
@@ -179,39 +232,15 @@ home_books = [
         "pub_month": b["pub_month"],
         "price_body": b["price_body"],
     }
-    for b in books
+    for b in search_books
     if b["pub_year"] is not None and min_year <= b["pub_year"] <= max_year
 ]
 
-# Staff-facing supplemental fields for bibliographic maintenance.
-# The admin page reuses the public books dataset for the main record and loads only
-# fields that are not present there, keeping the extra admin payload small.
-admin_books = [
-    {
-        "id": clean(r.get("id")),
-        "author_kana": clean(r.get("author_kana")),
-        "title_kana": clean(r.get("title_kana")),
-        "search_title": clean(r.get("search_title")),
-        "hp_keywords": clean(r.get("hp_keywords")),
-        "pub_month": clean(r.get("pub_month")),
-    }
-    for r in rows
-]
-
-
-with JSON_FILE.open("w", encoding="utf-8") as f:
-    json.dump(books, f, ensure_ascii=False, separators=(",", ":"))
-
-updated_date = build_date_jst()
-
-books_json = json.dumps(books, ensure_ascii=False, separators=(",", ":"))
-books_js = (
-    "window.NIPPYO_BOOKS=" + books_json + ";\n"
-    + "window.NIPPYO_LAST_UPDATED="
-    + json.dumps(updated_date, ensure_ascii=False)
-    + ";\n"
-)
-
+search_payload = {
+    "updated": updated_date,
+    "books": search_books,
+}
+search_json = json.dumps(search_payload, ensure_ascii=False, separators=(",", ":"))
 home_books_js = (
     "window.NIPPYO_HOME_BOOKS="
     + json.dumps(home_books, ensure_ascii=False, separators=(",", ":"))
@@ -220,30 +249,39 @@ home_books_js = (
     + ";\n"
 )
 
-admin_books_js = (
-    "window.NIPPYO_ADMIN_BOOKS="
-    + json.dumps(admin_books, ensure_ascii=False, separators=(",", ":"))
-    + ";\nwindow.NIPPYO_LAST_UPDATED="
-    + json.dumps(updated_date, ensure_ascii=False)
-    + ";\n"
-)
+# 前回生成した年別詳細だけを削除し、現在の正本から再生成する。
+for old_detail in DETAIL_DIR.glob("books-detail-*.json"):
+    old_detail.unlink()
 
-# Large generated files are cacheable, but the browser must switch to a new URL
-# whenever any book-data payload changes.  Use one stable content hash as the
-# version key for books.js / home-books.js / admin-books.js.
-data_version = hashlib.sha256(
-    (books_js + "\n" + home_books_js + "\n" + admin_books_js).encode("utf-8")
-).hexdigest()[:16]
+DETAIL_DIR.mkdir(parents=True, exist_ok=True)
+detail_contents = []
+for year_key in sorted(details_by_year, key=lambda x: (x == "undated", x)):
+    detail_payload = details_by_year[year_key]
+    detail_json = json.dumps(detail_payload, ensure_ascii=False, separators=(",", ":"))
+    detail_path = DETAIL_DIR / f"books-detail-{year_key}.json"
+    detail_path.write_text(detail_json + "\n", encoding="utf-8")
+    detail_contents.append(f"{year_key}\n{detail_json}")
 
-UPDATED_FILE.write_text(data_version + "\n", encoding="utf-8")
-JS_FILE.write_text(books_js, encoding="utf-8")
+SEARCH_JSON_FILE.write_text(search_json + "\n", encoding="utf-8")
 HOME_JS_FILE.write_text(home_books_js, encoding="utf-8")
-ADMIN_JS_FILE.write_text(admin_books_js, encoding="utf-8")
+
+# 検索用・詳細用・トップ用のどれかが変わればURLも切り替わるよう、
+# 生成データ全体から一つのバージョンキーを作る。
+data_version = hashlib.sha256(
+    (search_json + "\n" + home_books_js + "\n" + "\n".join(detail_contents)).encode("utf-8")
+).hexdigest()[:16]
+UPDATED_FILE.write_text(data_version + "\n", encoding="utf-8")
+
+# 新構成では不要。残っていると巨大ファイルを誤って再利用する恐れがあるため削除する。
+for legacy_file in LEGACY_FILES:
+    if legacy_file.exists():
+        legacy_file.unlink()
 
 print("生成完了")
-print(f" - {JSON_FILE}")
-print(f" - {JS_FILE}（検索画面用）")
+print(f" - {SEARCH_JSON_FILE}（検索一覧用・軽量）")
+print(f" - {DETAIL_DIR}（書籍詳細・刊行年別）")
 print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
-print(f" - {ADMIN_JS_FILE}（書誌管理補助用・軽量）")
 print(f" - {UPDATED_FILE}")
-print(f" - 書籍数: {len(books):,}")
+print(f" - 書籍数: {len(search_books):,}")
+print(f" - 詳細ファイル数: {len(details_by_year):,}")
+print(f" - 検索用データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
