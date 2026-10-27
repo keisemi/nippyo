@@ -7,6 +7,7 @@ on:
     paths:
       - "data/book_search_master.csv"
       - "data/news.csv"
+      - "data/magazines/**"
       - "scripts/**"
       - "docs/**"
       - ".github/workflows/build-site.yml"
@@ -37,6 +38,9 @@ jobs:
 
       - name: Generate public book data
         run: python scripts/build_data.py
+
+      - name: Generate public magazine issue data
+        run: python scripts/build_magazine_data.py
 
       - name: Generate public news data
         run: python scripts/build_news.py
@@ -82,9 +86,49 @@ jobs:
               raise SystemExit(f'検索用書誌データが8MBを超えています: {search_size:,} bytes')
           if Path('docs/data/books.js').exists() or Path('docs/data/books.json').exists() or Path('docs/data/admin-books.js').exists():
               raise SystemExit('旧形式の巨大書誌データが残っています。')
+
+          magazine_search_path = Path('docs/data/magazine-issues-search.json')
+          magazine_payload = json.loads(magazine_search_path.read_text(encoding='utf-8'))
+          issues = magazine_payload.get('issues') if isinstance(magazine_payload, dict) else None
+          if not isinstance(issues, list) or not issues:
+              raise SystemExit('magazine-issues-search.json が空です。')
+          magazine_ids = [str(x.get('id', '')).strip() for x in issues]
+          if any(not x for x in magazine_ids):
+              raise SystemExit('空の雑誌号IDがあります。')
+          if len(magazine_ids) != len(set(magazine_ids)):
+              raise SystemExit('雑誌号IDが重複しています。')
+          if {str(x.get('magazine_id', '')).strip() for x in issues} != {'1', '2', '3', '4', '6', '7'}:
+              raise SystemExit('定期雑誌6誌の雑誌ID構成が想定と一致しません。')
+          if any('toc' in x or 'description' in x or 'description2' in x for x in issues):
+              raise SystemExit('雑誌検索用データに目次または長文詳細が混入しています。')
+
+          magazine_detail_ids = []
+          magazine_detail_dir = Path('docs/data/magazine-details')
+          magazine_detail_files = sorted(magazine_detail_dir.glob('magazine-details-*.json'))
+          if not magazine_detail_files:
+              raise SystemExit('刊行年別の雑誌号詳細データが生成されていません。')
+          for path in magazine_detail_files:
+              payload = json.loads(path.read_text(encoding='utf-8'))
+              if not isinstance(payload, dict):
+                  raise SystemExit(f'{path} の形式が不正です。')
+              magazine_detail_ids.extend(str(x).strip() for x in payload.keys())
+          if len(magazine_detail_ids) != len(set(magazine_detail_ids)):
+              raise SystemExit('刊行年別雑誌詳細データ内で雑誌号IDが重複しています。')
+          if set(magazine_detail_ids) != set(magazine_ids):
+              raise SystemExit('雑誌検索用データと刊行年別詳細データのIDが一致しません。')
+
+          magazine_search_size = magazine_search_path.stat().st_size
+          if magazine_search_size > 4 * 1024 * 1024:
+              raise SystemExit(f'雑誌検索用データが4MBを超えています: {magazine_search_size:,} bytes')
+
           if not Path('docs/data/admin-news.js').exists():
               raise SystemExit('お知らせ管理用データが生成されていません。')
-          print(f'書籍検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／検索用{search_size / 1024 / 1024:.2f}MB／公開お知らせ: {len(news):,}件')
+          print(
+              f'書籍検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／'
+              f'検索用{search_size / 1024 / 1024:.2f}MB／'
+              f'雑誌号: {len(issues):,}件／詳細{len(magazine_detail_files):,}ファイル／'
+              f'検索用{magazine_search_size / 1024 / 1024:.2f}MB／公開お知らせ: {len(news):,}件'
+          )
           PY
           node --check docs/books/js/app.js
           node --check docs/js/home.js

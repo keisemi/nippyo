@@ -14,6 +14,7 @@
 - お知らせ追加・修正・削除用 GitHub Issue Form
 - お知らせ管理ページ（現在値を確認・編集してIssueへ引き継ぐ）
 - 雑誌ページ（定期雑誌6誌のカード表示。『経済セミナー』note／全記事データベースへのリンクを含む）
+- 定期雑誌6誌の号データ生成基盤（検索用軽量JSON＋刊行年別詳細JSON）
 - 会社概要・各部署連絡先・アクセス
 
 ## データ構造
@@ -35,6 +36,28 @@
 旧形式の `docs/data/books.js`、`docs/data/books.json`、`docs/data/admin-books.js` は使用しません。
 
 トップページの新刊、通常の書籍検索、書誌管理用検索は、いずれも同じ `data/book_search_master.csv` を正本とします。
+
+### 定期雑誌6誌の号データ
+
+会社から提供された定期雑誌6誌のCSVを `data/magazines/` に置き、号データの正本とします。
+
+- `01_horitsu_jiho.csv`：法律時報
+- `02_hogaku_seminar.csv`：法学セミナー
+- `03_keizai_seminar.csv`：経済セミナー
+- `04_sugaku_seminar.csv`：数学セミナー
+- `05_kokoro_no_kagaku.csv`：こころの科学
+- `06_sodachi_no_kagaku.csv`：そだちの科学
+
+`scripts/build_magazine_data.py` が以下を自動生成します。
+
+- `docs/data/magazine-issues-search.json`：6誌全号の検索・一覧表示用の軽量データ
+- `docs/data/magazine-details/magazine-details-YYYY.json`：雑誌号詳細用の刊行年別データ
+- `docs/data/magazine-details/magazine-details-undated.json`：発刊年が取れない号がある場合の詳細データ
+- `docs/data/magazine-last-updated.txt`：雑誌号生成データのバージョンキー
+
+検索用JSONには目次全文・記事タイトル・長い内容紹介を入れません。雑誌名、月号、通巻番号、特集、ISBN・雑誌コード等に加え、目次から明確に判定できる執筆者・評者等の人名だけを検索補助情報として保持します。古い号などで人名を安全に判定できない場合は無理に補完しません。
+
+現段階では、この雑誌号データを既存の書籍検索画面にはまだ接続していません。
 
 ### お知らせ
 
