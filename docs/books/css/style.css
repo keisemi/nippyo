@@ -76,7 +76,34 @@ main { max-width: var(--max); margin: 0 auto; padding: 34px 24px 72px; }
 
 .results { list-style: none; padding: 0; margin: 0; }
 .book { display: grid; grid-template-columns: 1fr auto; gap: 20px; padding: 22px 2px; border-bottom: 1px solid var(--line); }
+.book-entry { min-width: 0; }
+.book.has-cover .book-entry {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
 .book-main { min-width: 0; }
+.book-cover-button {
+  display: block;
+  width: 88px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.book-result-cover {
+  display: block;
+  width: 88px;
+  height: auto;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.book-cover-button:focus-visible {
+  outline: 2px solid rgba(37, 94, 23, .35);
+  outline-offset: 3px;
+}
 .book-title {
   margin: 0 0 5px;
   font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
@@ -113,6 +140,8 @@ main { max-width: var(--max); margin: 0 auto; padding: 34px 24px 72px; }
   .filters { grid-template-columns: 1fr; gap: 10px; }
   .toolbar { align-items: center; }
   .book { grid-template-columns: 1fr; gap: 8px; }
+  .book.has-cover .book-entry { grid-template-columns: 72px minmax(0, 1fr); gap: 14px; }
+  .book-cover-button, .book-result-cover { width: 72px; }
   .book-side { text-align: left; min-width: 0; }
 }
 
@@ -202,6 +231,19 @@ body.modal-open { overflow: hidden; }
   font-weight: 600;
 }
 .book-modal-subtitle { margin: 7px 0 0; color: #555; font-size: 15px; }
+.book-modal-summary.has-cover {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+.book-modal-cover {
+  display: block;
+  width: 180px;
+  height: auto;
+  border: 1px solid var(--line);
+  background: #fff;
+}
 .magazine-modal-summary.has-cover {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
@@ -307,6 +349,8 @@ body.modal-open { overflow: hidden; }
   .book-modal-panel { max-height: 92vh; }
   .book-modal-content { padding: 28px 20px 32px; }
   .book-modal-title { padding-right: 42px; font-size: 24px; }
+  .book-modal-summary.has-cover { grid-template-columns: 110px minmax(0, 1fr); gap: 18px; }
+  .book-modal-cover { width: 110px; }
   .magazine-modal-summary.has-cover { grid-template-columns: 100px minmax(0, 1fr); gap: 16px; }
   .magazine-modal-cover { width: 100px; }
   .detail-grid { grid-template-columns: 90px 1fr; }

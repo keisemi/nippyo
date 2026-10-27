@@ -31,6 +31,7 @@ LEGACY_FILES = [
 # 検索専用の補助文字列は別索引へ分離し、初期表示の転送量と処理負荷を下げる。
 SEARCH_COLUMNS = [
     "id",
+    "cover",
     "pub_year",
     "title",
     "subtitle_before",
@@ -296,6 +297,7 @@ for book in search_books:
     status_flags = (1 if book.get("has_errata") else 0) | (2 if book.get("has_related_info") else 0)
     search_rows.append([
         book.get("id", ""),
+        book.get("cover", ""),
         book.get("pub_year"),
         book.get("title", ""),
         book.get("subtitle_before", ""),

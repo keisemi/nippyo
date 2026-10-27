@@ -476,12 +476,22 @@
     if (detail.has_errata) statusItems.push("正誤表の登録があります");
     if (detail.has_related_info) statusItems.push("関連情報・付属データの登録があります");
 
+    const coverAlt = detail.title || "書籍書影";
+    const cover = detail.cover
+      ? `<img class="book-modal-cover" src="../${esc(detail.cover)}" alt="${esc(coverAlt)}">`
+      : "";
+
     return `
-      <p class="book-modal-kicker">書籍詳細</p>
-      <h2 id="bookModalTitle" class="book-modal-title">${esc(detail.title || "（書名未登録）")}</h2>
-      ${sub ? `<p class="book-modal-subtitle">${esc(sub)}</p>` : ""}
-      ${detail.author ? `<p class="book-modal-author">${esc(authorDisplay(detail.author))}</p>` : ""}
-      ${genreTags ? `<div class="tags book-modal-tags">${genreTags}</div>` : ""}
+      <div class="book-modal-summary${detail.cover ? " has-cover" : ""}">
+        ${cover}
+        <div>
+          <p class="book-modal-kicker">書籍詳細</p>
+          <h2 id="bookModalTitle" class="book-modal-title">${esc(detail.title || "（書名未登録）")}</h2>
+          ${sub ? `<p class="book-modal-subtitle">${esc(sub)}</p>` : ""}
+          ${detail.author ? `<p class="book-modal-author">${esc(authorDisplay(detail.author))}</p>` : ""}
+          ${genreTags ? `<div class="tags book-modal-tags">${genreTags}</div>` : ""}
+        </div>
+      </div>
       ${metaRows ? `<dl class="detail-grid">${metaRows}</dl>` : ""}
       ${amazonButton(detail)}
       ${detail.description ? `<section class="book-detail-section"><h3>内容紹介</h3><p class="book-detail-copy">${detailText(detail.description)}</p></section>` : ""}
@@ -841,14 +851,20 @@
 
     const sub = subtitle(book);
     const price = formatPrice(book.price_body);
+    const cover = book.cover
+      ? `<button class="book-cover-button" type="button" data-item-type="book" data-item-id="${esc(book.id)}" aria-label="${esc(book.title || "書籍")}の詳細を開く"><img class="book-result-cover" src="../${esc(book.cover)}" alt="" loading="lazy"></button>`
+      : "";
 
-    return `<li class="book">
-      <div class="book-main">
-        <h2 class="book-title"><button class="book-title-button" type="button" data-item-type="book" data-item-id="${esc(book.id)}">${esc(book.title || "（書名未登録）")}</button></h2>
-        ${sub ? `<p class="book-subtitle">${esc(sub)}</p>` : ""}
-        ${book.author ? `<p class="book-author">${esc(authorDisplay(book.author))}</p>` : ""}
-        <p class="meta">${meta}</p>
-        <div class="tags">${tags.join("")}</div>
+    return `<li class="book${book.cover ? " has-cover" : ""}">
+      <div class="book-entry">
+        ${cover}
+        <div class="book-main">
+          <h2 class="book-title"><button class="book-title-button" type="button" data-item-type="book" data-item-id="${esc(book.id)}">${esc(book.title || "（書名未登録）")}</button></h2>
+          ${sub ? `<p class="book-subtitle">${esc(sub)}</p>` : ""}
+          ${book.author ? `<p class="book-author">${esc(authorDisplay(book.author))}</p>` : ""}
+          <p class="meta">${meta}</p>
+          <div class="tags">${tags.join("")}</div>
+        </div>
       </div>
       <div class="book-side">${price ? `<p class="price">${price}</p>` : ""}</div>
     </li>`;
@@ -936,7 +952,7 @@
     els.year.addEventListener("change", () => { page = 1; void apply(); });
     els.sort.addEventListener("change", () => { page = 1; void apply(); });
     els.results.addEventListener("click", (event) => {
-      const button = event.target.closest(".book-title-button");
+      const button = event.target.closest(".book-title-button, .book-cover-button");
       if (!button) return;
       openItemModal(button.dataset.itemType, button.dataset.itemId, button);
     });
