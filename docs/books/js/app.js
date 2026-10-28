@@ -882,14 +882,20 @@
     const feature = magazineFeature(issue);
     const contributors = contributorDisplay(issue.contributors, els.q.value);
     const price = formatPrice(issue.price_body);
+    const cover = issue.cover
+      ? `<button class="book-cover-button" type="button" data-item-type="magazine_issue" data-item-id="${esc(issue.id)}" aria-label="${esc(magazineTitle(issue) || "雑誌号")}の詳細を開く"><img class="book-result-cover" src="../${esc(issue.cover)}" alt="" loading="lazy"></button>`
+      : "";
 
-    return `<li class="book">
-      <div class="book-main">
-        <h2 class="book-title"><button class="book-title-button" type="button" data-item-type="magazine_issue" data-item-id="${esc(issue.id)}">${esc(magazineTitle(issue) || "（雑誌号未登録）")}</button></h2>
-        ${feature ? `<p class="book-subtitle">特集：${esc(feature)}</p>` : ""}
-        ${contributors ? `<p class="book-author">執筆者等：${esc(contributors)}</p>` : ""}
-        <p class="meta">${meta}</p>
-        <div class="tags">${tags.join("")}</div>
+    return `<li class="book${issue.cover ? " has-cover" : ""}">
+      <div class="book-entry">
+        ${cover}
+        <div class="book-main">
+          <h2 class="book-title"><button class="book-title-button" type="button" data-item-type="magazine_issue" data-item-id="${esc(issue.id)}">${esc(magazineTitle(issue) || "（雑誌号未登録）")}</button></h2>
+          ${feature ? `<p class="book-subtitle">特集：${esc(feature)}</p>` : ""}
+          ${contributors ? `<p class="book-author">執筆者等：${esc(contributors)}</p>` : ""}
+          <p class="meta">${meta}</p>
+          <div class="tags">${tags.join("")}</div>
+        </div>
       </div>
       <div class="book-side">${price ? `<p class="price">${price}</p>` : ""}</div>
     </li>`;
