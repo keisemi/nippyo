@@ -7,6 +7,7 @@
     q: document.getElementById("q"),
     genre: document.getElementById("genre"),
     year: document.getElementById("year"),
+    resource: document.getElementById("resource"),
     sort: document.getElementById("sort"),
     results: document.getElementById("results"),
     pagination: document.getElementById("pagination"),
@@ -849,6 +850,7 @@
     if (els.q.value.trim()) p.set("q", els.q.value.trim());
     if (els.genre.value) p.set("genre", els.genre.value);
     if (els.year.value) p.set("year", els.year.value);
+    if (els.resource.value) p.set("resource", els.resource.value);
     if (els.sort.value !== "relevance") p.set("sort", els.sort.value);
     if (page > 1) p.set("page", String(page));
 
@@ -864,6 +866,7 @@
     els.q.value = p.get("q") || "";
     if (p.get("genre")) els.genre.value = p.get("genre");
     if (p.get("year")) els.year.value = p.get("year");
+    if (["errata", "related", "any", "both"].includes(p.get("resource"))) els.resource.value = p.get("resource");
     if (["relevance", "newest", "oldest", "title"].includes(p.get("sort"))) els.sort.value = p.get("sort");
     page = Math.max(1, Number(p.get("page")) || 1);
   }
@@ -939,12 +942,22 @@
     const looksLikeIdentifier = identifierQuery.length >= 9 && /^[0-9x]+$/.test(identifierQuery);
     const genre = els.genre.value;
     const year = Number(els.year.value || 0);
+    const resource = els.resource.value;
 
     filtered = items.filter((item) => {
       if (genre) {
         if (item.__type !== "book" || !(item.genres || []).includes(genre)) return false;
       }
       if (year && Number(item.pub_year) !== year) return false;
+      if (resource) {
+        if (item.__type !== "book") return false;
+        const hasErrata = Boolean(item.has_errata);
+        const hasRelated = Boolean(item.has_related_info);
+        if (resource === "errata" && !hasErrata) return false;
+        if (resource === "related" && !hasRelated) return false;
+        if (resource === "any" && !(hasErrata || hasRelated)) return false;
+        if (resource === "both" && !(hasErrata && hasRelated)) return false;
+      }
       if (looksLikeIdentifier && !itemIdentifiers(item).some((value) => value.includes(identifierQuery))) return false;
       if (!looksLikeIdentifier && tokens.length && !tokens.every((token) => item.__n.includes(token))) return false;
       return true;
@@ -1089,6 +1102,7 @@
     els.searchButton.addEventListener("click", () => { clearTimeout(timer); page = 1; void apply(); });
     els.genre.addEventListener("change", () => { page = 1; void apply(); });
     els.year.addEventListener("change", () => { page = 1; void apply(); });
+    els.resource.addEventListener("change", () => { page = 1; void apply(); });
     els.sort.addEventListener("change", () => { page = 1; void apply(); });
     els.results.addEventListener("click", (event) => {
       const button = event.target.closest(".book-title-button, .book-cover-button");
@@ -1116,6 +1130,7 @@
       els.q.value = "";
       els.genre.value = "";
       els.year.value = "";
+      els.resource.value = "";
       els.sort.value = "relevance";
       page = 1;
       void apply();
