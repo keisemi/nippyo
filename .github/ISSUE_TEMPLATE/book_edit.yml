@@ -136,26 +136,9 @@ body:
     attributes:
       label: 原書名
 
-  - type: dropdown
-    id: has_errata
+  - type: markdown
     attributes:
-      label: 正誤表
-      options:
-        - 変更しない
-        - なし
-        - あり
-      default: 0
-    validations:
-      required: true
-
-  - type: dropdown
-    id: has_related_info
-    attributes:
-      label: 関連情報・付属データ
-      options:
-        - 変更しない
-        - なし
-        - あり
-      default: 0
-    validations:
-      required: true
+      value: |
+        ### 正誤表・関連情報・付属データについて
+        これらは書誌フォームでは変更しません。
+        ファイルを所定の場所に配置・差し替えすると、臨時HPへ自動反映されます。

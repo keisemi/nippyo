@@ -263,8 +263,6 @@
       description: String(detail.description || ""),
       toc: String(detail.toc || ""),
       original_title: String(detail.original_title || ""),
-      has_errata: detail.has_errata ? "1" : "0",
-      has_related_info: detail.has_related_info ? "1" : "0",
     };
   }
 
@@ -273,8 +271,6 @@
     lastModalTrigger = trigger || document.activeElement;
 
     const fields = editFields.map(([id, label, kind]) => fieldHtml(id, label, kind, source[id] || "")).join("");
-    const errata = String(source.has_errata || "0");
-    const related = String(source.has_related_info || "0");
 
     modalContent.innerHTML = `
       <p class="admin-modal-kicker">書誌編集</p>
@@ -286,9 +282,8 @@
           <div><strong>現在の書名</strong><br>${esc(source.title)}</div>
         </div>
         <div class="edit-grid">${fields}</div>
-        <div class="edit-grid two-col">
-          <label class="edit-field"><span>正誤表</span><select id="edit-has_errata" data-field="has_errata"><option value="0"${errata === "0" ? " selected" : ""}>なし</option><option value="1"${errata === "1" ? " selected" : ""}>あり</option></select></label>
-          <label class="edit-field"><span>関連情報・付属データ</span><select id="edit-has_related_info" data-field="has_related_info"><option value="0"${related === "0" ? " selected" : ""}>なし</option><option value="1"${related === "1" ? " selected" : ""}>あり</option></select></label>
+        <div class="admin-note">
+          正誤表・関連情報・付属データはこの書誌フォームでは変更しません。ファイルを所定の場所に配置・差し替えすると自動反映されます。
         </div>
         <div class="edit-submit-box">
           <p>「GitHubで変更を確定」を押すと、<strong>変更した項目だけ</strong>を入れた確認用Issueが開きます。現在値の確認・編集はこの画面で行います。</p>
@@ -315,15 +310,6 @@
         const after = String(el.value || "").trim();
         if (after !== before) {
           params.set(issueFieldName(id), after === "" && before !== "" ? "__CLEAR__" : after);
-          changes += 1;
-        }
-      }
-      for (const id of ["has_errata", "has_related_info"]) {
-        const el = document.getElementById(`edit-${id}`);
-        const before = String(source[id] || "0");
-        const after = String(el.value || "0");
-        if (after !== before) {
-          params.set(id, after === "1" ? "あり" : "なし");
           changes += 1;
         }
       }
@@ -367,8 +353,8 @@
 
     const genreTags = (detail.genres || []).map((g) => `<span class="tag">${esc(g)}</span>`).join("");
     const statusItems = [];
-    if (detail.has_errata) statusItems.push("正誤表の登録があります");
-    if (detail.has_related_info) statusItems.push("関連情報・付属データの登録があります");
+    if (detail.errata_pdf) statusItems.push("正誤表ファイルが登録されています");
+    if (detail.related_file) statusItems.push("関連情報・付属データのファイルが登録されています");
 
     modalContent.innerHTML = `
       <p class="admin-modal-kicker">現在の登録内容</p>
