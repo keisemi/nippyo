@@ -1,0 +1,197 @@
+/* --------------------------------------------------
+   Home service links / service pages
+-------------------------------------------------- */
+.hero-service-panel {
+  max-width: 820px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.hero-service-heading {
+  margin: 0 0 12px;
+  color: var(--green-dark);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.hero-service-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.hero-service-button {
+  display: flex;
+  min-height: 92px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 20px;
+  border: 1px solid var(--green);
+  background: var(--green-pale);
+  color: var(--green-dark);
+  text-decoration: none;
+  transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.hero-service-button:hover {
+  background: #e8f0e5;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37,94,23,.08);
+}
+
+.hero-service-title {
+  font-size: 1.04rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.hero-service-title::after {
+  content: " →";
+}
+
+.hero-service-note {
+  margin-top: 4px;
+  color: #586454;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.service-page-main {
+  padding: 64px 0 82px;
+}
+
+.service-page-header {
+  margin-bottom: 42px;
+}
+
+.service-page-header h1 {
+  margin: 0;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: clamp(2.25rem, 4vw, 3.35rem);
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+
+.service-page-lead {
+  max-width: 830px;
+  margin: 18px 0 0;
+  color: #4d4d4d;
+  font-size: 1.06rem;
+}
+
+.service-section {
+  margin-top: 50px;
+}
+
+.service-section h2 {
+  margin: 0 0 22px;
+  padding-left: 14px;
+  border-left: 5px solid var(--green);
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  font-weight: 500;
+}
+
+.service-callout {
+  padding: 28px 30px;
+  border-top: 4px solid var(--green-light);
+  background: var(--green-pale);
+}
+
+.service-callout h2,
+.service-callout h3 {
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+  font-family: inherit;
+  color: var(--green-dark);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.service-callout p {
+  margin: 8px 0 0;
+}
+
+.service-callout .button {
+  margin-top: 18px;
+}
+
+.service-email {
+  font-weight: 700;
+}
+
+.service-email a,
+.service-body-link {
+  color: var(--green-dark);
+  text-underline-offset: 3px;
+}
+
+.service-numbered-list,
+.service-bullet-list {
+  margin: 0;
+  padding-left: 1.6em;
+}
+
+.service-numbered-list li,
+.service-bullet-list li {
+  padding-left: .25em;
+}
+
+.service-numbered-list li + li,
+.service-bullet-list li + li {
+  margin-top: 9px;
+}
+
+.service-note-box {
+  padding: 24px 28px;
+  border-left: 4px solid var(--green);
+  background: #fbfdf8;
+}
+
+.service-note-box p {
+  margin: 0;
+}
+
+.service-note-box p + p {
+  margin-top: 10px;
+}
+
+.service-back {
+  margin-top: 48px;
+}
+
+.service-back a {
+  color: var(--green);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.service-back a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 700px) {
+  .hero-service-panel {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  .hero-service-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-service-button {
+    min-height: 82px;
+  }
+
+  .service-page-main {
+    padding: 48px 0 64px;
+  }
+
+  .service-callout,
+  .service-note-box {
+    padding: 22px 20px;
+  }
+}
