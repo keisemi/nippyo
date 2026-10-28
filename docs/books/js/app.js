@@ -32,6 +32,7 @@
   let magazineDataVersion = Date.now().toString();
   let searchIndexPayloadPromise = null;
   let searchIndexReady = false;
+  let coverLightboxTrigger = null;
   const bookDetailCache = new Map();
   const magazineDetailCache = new Map();
 
@@ -454,6 +455,115 @@
     return { ...issue, ...detail };
   }
 
+  function ensureCoverLightbox() {
+    let lightbox = document.getElementById("coverLightbox");
+    if (lightbox) return lightbox;
+
+    const style = document.createElement("style");
+    style.id = "coverLightboxStyles";
+    style.textContent = `
+      .cover-zoom-button {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: zoom-in;
+      }
+      .cover-zoom-button:focus-visible {
+        outline: 3px solid #527a20;
+        outline-offset: 4px;
+      }
+      .cover-lightbox[hidden] { display: none; }
+      .cover-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 4000;
+        display: grid;
+        place-items: center;
+        padding: 38px;
+        background: rgba(0, 0, 0, 0.82);
+      }
+      .cover-lightbox-image {
+        display: block;
+        max-width: min(92vw, 1200px);
+        max-height: 90vh;
+        width: auto;
+        height: auto;
+        background: #fff;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.42);
+      }
+      .cover-lightbox-close {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        font-size: 32px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .cover-lightbox-close:hover,
+      .cover-lightbox-close:focus-visible {
+        background: rgba(0, 0, 0, 0.7);
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+      }
+      @media (max-width: 720px) {
+        .cover-lightbox { padding: 24px 14px; }
+        .cover-lightbox-close { top: 12px; right: 12px; width: 44px; height: 44px; }
+        .cover-lightbox-image { max-width: 94vw; max-height: 88vh; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    lightbox = document.createElement("div");
+    lightbox.id = "coverLightbox";
+    lightbox.className = "cover-lightbox";
+    lightbox.hidden = true;
+    lightbox.setAttribute("role", "dialog");
+    lightbox.setAttribute("aria-modal", "true");
+    lightbox.setAttribute("aria-label", "書影拡大表示");
+    lightbox.innerHTML = `
+      <button class="cover-lightbox-close" type="button" aria-label="拡大表示を閉じる">×</button>
+      <img class="cover-lightbox-image" src="" alt="">
+    `;
+    document.body.appendChild(lightbox);
+
+    lightbox.querySelector(".cover-lightbox-close").addEventListener("click", closeCoverLightbox);
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) closeCoverLightbox();
+    });
+    return lightbox;
+  }
+
+  function openCoverLightbox(src, alt, trigger) {
+    if (!src) return;
+    const lightbox = ensureCoverLightbox();
+    const image = lightbox.querySelector(".cover-lightbox-image");
+    image.src = src;
+    image.alt = alt || "書影";
+    coverLightboxTrigger = trigger || null;
+    lightbox.hidden = false;
+    lightbox.querySelector(".cover-lightbox-close").focus();
+  }
+
+  function closeCoverLightbox() {
+    const lightbox = document.getElementById("coverLightbox");
+    if (!lightbox || lightbox.hidden) return false;
+    lightbox.hidden = true;
+    const image = lightbox.querySelector(".cover-lightbox-image");
+    if (image) image.src = "";
+    if (coverLightboxTrigger && typeof coverLightboxTrigger.focus === "function") {
+      coverLightboxTrigger.focus();
+    }
+    coverLightboxTrigger = null;
+    return true;
+  }
+
   function renderBookDetail(detail) {
     const sub = subtitle(detail);
     const series = [detail.series, detail.series_volume].filter(Boolean).join(" ");
@@ -477,8 +587,9 @@
     if (detail.has_related_info) statusItems.push("関連情報・付属データの登録があります");
 
     const coverAlt = detail.title || "書籍書影";
-    const cover = detail.cover
-      ? `<img class="book-modal-cover" src="../${esc(detail.cover)}" alt="${esc(coverAlt)}">`
+    const coverSrc = detail.cover ? `../${detail.cover}` : "";
+    const cover = coverSrc
+      ? `<button class="cover-zoom-button" type="button" data-cover-src="${esc(coverSrc)}" data-cover-alt="${esc(coverAlt)}" aria-label="${esc(coverAlt)}を拡大表示"><img class="book-modal-cover" src="${esc(coverSrc)}" alt="${esc(coverAlt)}"></button>`
       : "";
 
     return `
@@ -523,8 +634,9 @@
     const descriptionHeading2 = detail.description_heading2 || "第2特集 内容紹介";
 
     const coverAlt = magazineTitle(detail) || "雑誌書影";
-    const cover = detail.cover
-      ? `<img class="magazine-modal-cover" src="../${esc(detail.cover)}" alt="${esc(coverAlt)}">`
+    const coverSrc = detail.cover ? `../${detail.cover}` : "";
+    const cover = coverSrc
+      ? `<button class="cover-zoom-button" type="button" data-cover-src="${esc(coverSrc)}" data-cover-alt="${esc(coverAlt)}" aria-label="${esc(coverAlt)}を拡大表示"><img class="magazine-modal-cover" src="${esc(coverSrc)}" alt="${esc(coverAlt)}"></button>`
       : "";
 
     return `
@@ -962,12 +1074,19 @@
       if (!button) return;
       openItemModal(button.dataset.itemType, button.dataset.itemId, button);
     });
+    els.bookModalContent?.addEventListener("click", (event) => {
+      const button = event.target.closest(".cover-zoom-button");
+      if (!button) return;
+      openCoverLightbox(button.dataset.coverSrc, button.dataset.coverAlt, button);
+    });
     els.bookModalClose?.addEventListener("click", closeBookModal);
     els.bookModal?.addEventListener("click", (event) => {
       if (event.target.matches("[data-modal-close]")) closeBookModal();
     });
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && els.bookModal && !els.bookModal.hidden) closeBookModal();
+      if (event.key !== "Escape") return;
+      if (closeCoverLightbox()) return;
+      if (els.bookModal && !els.bookModal.hidden) closeBookModal();
     });
     window.addEventListener("popstate", () => {
       syncModalFromUrl();
