@@ -13,6 +13,8 @@ INPUT = ROOT / "data" / "book_search_master.csv"
 DOCS = ROOT / "docs"
 OUTPUT_DIR = DOCS / "data"
 COVERS_DIR = DOCS / "assets" / "covers"
+ERRATA_DIR = DOCS / "assets" / "errata"
+ERRATA_FILENAME_RE = re.compile(r"^errata(?P<book_id>(?:\d{5}|N\d{5}))\.pdf$")
 SEARCH_JSON_FILE = OUTPUT_DIR / "books-search.json"
 SEARCH_INDEX_FILE = OUTPUT_DIR / "books-search-index.json"
 ADMIN_SEARCH_INDEX_FILE = OUTPUT_DIR / "books-admin-search-index.json"
@@ -119,6 +121,55 @@ def cover_path(book_id):
     return ""
 
 
+def collect_errata_files(book_ids):
+    if not ERRATA_DIR.exists():
+        return {}
+
+    errata_files = {}
+    invalid_names = []
+    invalid_pdfs = []
+
+    for path in sorted(ERRATA_DIR.iterdir()):
+        if not path.is_file() or path.name.startswith("."):
+            continue
+        if path.suffix.lower() != ".pdf":
+            continue
+
+        match = ERRATA_FILENAME_RE.fullmatch(path.name)
+        if not match:
+            invalid_names.append(path.name)
+            continue
+
+        content = path.read_bytes()
+        if not content.startswith(b"%PDF-"):
+            invalid_pdfs.append(path.name)
+            continue
+
+        book_id = match.group("book_id")
+        digest = hashlib.sha256(content).hexdigest()[:12]
+        errata_files[book_id] = f"assets/errata/{path.name}?v={digest}"
+
+    if invalid_names:
+        raise SystemExit(
+            "正誤表PDFのファイル名が不正です。errata<書籍ID>.pdf にしてください: "
+            + ", ".join(invalid_names)
+        )
+    if invalid_pdfs:
+        raise SystemExit(
+            "正誤表PDFとして読み込めないファイルがあります: "
+            + ", ".join(invalid_pdfs)
+        )
+
+    unknown_ids = sorted(set(errata_files) - set(book_ids))
+    if unknown_ids:
+        raise SystemExit(
+            "正誤表PDFに対応する書籍IDが書誌にありません: "
+            + ", ".join(unknown_ids)
+        )
+
+    return errata_files
+
+
 def build_date_jst():
     return datetime.now(timezone(timedelta(hours=9))).strftime("%Y/%m/%d")
 
@@ -169,6 +220,9 @@ with INPUT.open("r", encoding="utf-8-sig", newline="") as f:
 if not rows:
     raise SystemExit("公開用マスターCSVにレコードがありません。")
 
+book_ids_from_rows = [clean(r.get("id")) for r in rows]
+errata_files = collect_errata_files(book_ids_from_rows)
+
 updated_date = build_date_jst()
 search_books = []
 details_by_year = defaultdict(dict)
@@ -182,6 +236,8 @@ for r in rows:
     pub_year = number(r.get("pub_year"))
     pub_month = normalized_pub_month(r.get("pub_month"))
     year_key = detail_key(pub_year)
+    errata_pdf = errata_files.get(book_id, "")
+    has_errata = clean(r.get("has_errata")) == "1" or bool(errata_pdf)
 
     if amazon_asin and not re.fullmatch(r"[A-Z0-9]{10}", amazon_asin):
         raise SystemExit(
@@ -216,7 +272,7 @@ for r in rows:
         "price_body": number(r.get("price_body")),
         "format": clean(r.get("format")),
         "pages": number(r.get("pages")),
-        "has_errata": clean(r.get("has_errata")) == "1",
+        "has_errata": has_errata,
         "has_related_info": clean(r.get("has_related_info")) == "1",
         "search_extra": " ".join(clean(x) for x in search_extra_parts if clean(x)),
     }
@@ -250,7 +306,8 @@ for r in rows:
         "description": clean_public_text(r.get("description")),
         "toc": clean_public_text(r.get("toc")),
         "original_title": clean_public_text(r.get("original_title")),
-        "has_errata": clean(r.get("has_errata")) == "1",
+        "has_errata": has_errata,
+        "errata_pdf": errata_pdf,
         "has_related_info": clean(r.get("has_related_info")) == "1",
     }
 
@@ -413,6 +470,7 @@ print(f" - {DETAIL_DIR}（書籍詳細・刊行年別）")
 print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
 print(f" - {UPDATED_FILE}")
 print(f" - 書籍数: {len(search_books):,}")
+print(f" - 正誤表PDF: {len(errata_files):,}")
 print(f" - 詳細ファイル数: {len(details_by_year):,}")
 print(f" - 初期表示データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
 print(f" - 公開検索索引: {SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")

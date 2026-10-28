@@ -582,9 +582,17 @@
     ].filter(Boolean).join("");
 
     const genreTags = (detail.genres || []).map((g) => `<span class="tag">${esc(g)}</span>`).join("");
-    const statusItems = [];
-    if (detail.has_errata) statusItems.push("正誤表の登録があります");
-    if (detail.has_related_info) statusItems.push("関連情報・付属データの登録があります");
+    const resourceItems = [];
+    const errataHref = detail.errata_pdf ? `../${detail.errata_pdf}` : "";
+    if (errataHref) {
+      resourceItems.push(`<a href="${esc(errataHref)}" target="_blank" rel="noopener noreferrer">正誤表を開く（PDF）</a>`);
+    } else if (detail.has_errata) {
+      resourceItems.push(esc("正誤表の登録があります"));
+    }
+    if (detail.has_related_info) {
+      resourceItems.push(esc("関連情報・付属データの登録があります"));
+    }
+    const hasPendingResources = (!errataHref && detail.has_errata) || detail.has_related_info;
 
     const coverAlt = detail.title || "書籍書影";
     const coverSrc = detail.cover ? `../${detail.cover}` : "";
@@ -607,7 +615,7 @@
       ${amazonButton(detail)}
       ${detail.description ? `<section class="book-detail-section"><h3>内容紹介</h3><p class="book-detail-copy">${detailText(detail.description)}</p></section>` : ""}
       ${detail.toc ? `<section class="book-detail-section"><h3>目次</h3><div class="book-detail-toc">${detailText(detail.toc)}</div></section>` : ""}
-      ${statusItems.length ? `<section class="book-detail-section related-status"><h3>関連資料</h3><ul>${statusItems.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><p>ダウンロード先は現在準備中です。</p></section>` : ""}
+      ${resourceItems.length ? `<section class="book-detail-section related-status"><h3>関連資料</h3><ul class="book-detail-copy">${resourceItems.map((x) => `<li>${x}</li>`).join("")}</ul>${hasPendingResources ? `<p>リンクのない関連資料は現在準備中です。</p>` : ""}</section>` : ""}
     `;
   }
 
