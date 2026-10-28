@@ -22,6 +22,32 @@
     return "";
   };
 
+  const renderNewsText = (value) => {
+    const text = String(value ?? "");
+    const linkPattern = /\[([^\]\r\n]+)\]\(([^)\r\n]+)\)/g;
+    let html = "";
+    let lastIndex = 0;
+
+    for (const match of text.matchAll(linkPattern)) {
+      const full = match[0];
+      const label = match[1];
+      const url = safeUrl(match[2]);
+      const index = match.index ?? 0;
+
+      html += esc(text.slice(lastIndex, index));
+      if (!url) {
+        html += esc(full);
+      } else {
+        const external = /^https?:\/\//i.test(url);
+        html += `<a href="${esc(url)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${esc(label)}</a>`;
+      }
+      lastIndex = index + full.length;
+    }
+
+    html += esc(text.slice(lastIndex));
+    return html;
+  };
+
   document.querySelectorAll("[data-news-list]").forEach((container) => {
     const limit = Number(container.dataset.limit || 0);
     const items = limit > 0 ? news.slice(0, limit) : news;
@@ -45,7 +71,7 @@
             ${item.pinned ? '<span class="news-pin">重要</span>' : ""}
           </div>
           <h3 class="news-title">${title}</h3>
-          ${item.text ? `<p class="news-text">${esc(item.text)}</p>` : ""}
+          ${item.text ? `<p class="news-text">${renderNewsText(item.text)}</p>` : ""}
         </article>`;
     }).join("");
   });
