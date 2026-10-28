@@ -11,7 +11,6 @@
   const modalContent = document.getElementById("news-modal-content");
   const modalClose = document.getElementById("news-modal-close");
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
-  const targetPlaceholder = "（新規登録では選択不要）";
   let lastModalTrigger = null;
 
   function esc(value) {
@@ -34,7 +33,6 @@
     params.set("template", "news_manage.yml");
     params.set("title", "[お知らせ管理] 新規登録");
     params.set("operation", "新規登録");
-    params.set("target_title", targetPlaceholder);
     return `${issueBase}?${params.toString()}`;
   }
 
@@ -81,8 +79,7 @@
     document.getElementById("news-edit-form").addEventListener("submit", (event) => {
       event.preventDefault();
       const params = new URLSearchParams();
-      const nextTitle = document.getElementById("edit-title").value.trim() || item.title;
-      params.set("title", `[お知らせ管理] 修正: ${nextTitle}`);
+      params.set("title", `[お知らせ管理] 修正: ${item.title}`);
       params.set("operation", "既存データ修正");
       params.set("target_title", item.title);
 

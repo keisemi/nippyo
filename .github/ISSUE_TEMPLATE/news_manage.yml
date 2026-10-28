@@ -23,17 +23,12 @@ body:
     validations:
       required: true
 
-  - type: dropdown
+  - type: input
     id: target_title
     attributes:
       label: 修正・削除するお知らせ
-      description: "修正・削除では管理ページから自動入力されます。新規登録では選択不要で、空欄のままで構いません。"
-      options:
-        # NEWS_TITLES_START
-        - "（新規登録では選択不要）"
-        - "正誤表・書籍の付属データ等の移行アップロードを進めています"
-        - "臨時サイトオープン"
-        # NEWS_TITLES_END
+      description: "修正・削除では管理ページから自動入力されます。手入力する場合は現在のタイトルを正確に入力してください。新規登録では空欄のままで構いません。"
+      placeholder: "新規登録では空欄"
 
   - type: input
     id: date

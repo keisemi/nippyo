@@ -100,7 +100,7 @@ def find_target(rows, target_title):
     if not matches:
         raise SystemExit(
             f"対象のお知らせが見つかりません: {target_title}\n"
-            "プルダウン候補が古い可能性があります。最新のWorkflow画面を開き直してください。"
+            "お知らせ管理ページを再読み込みし、対象を選び直してください。"
         )
     if len(matches) > 1:
         raise SystemExit("同じタイトルのお知らせが複数あります。タイトルを一時的に変更するなどして一意にしてください。")
@@ -128,7 +128,7 @@ def main():
 
     if operation == "削除":
         if not target_title or target_title == TARGET_PLACEHOLDER:
-            raise SystemExit("削除時は、登録済みのお知らせタイトルをプルダウンから選んでください。")
+            raise SystemExit("削除時は、お知らせ管理ページから対象を選んでください。")
         idx = find_target(rows, target_title)
         removed = rows.pop(idx)
         save_rows(rows)
@@ -142,7 +142,7 @@ def main():
         idx = None
     else:
         if not target_title or target_title == TARGET_PLACEHOLDER:
-            raise SystemExit("修正時は、登録済みのお知らせタイトルをプルダウンから選んでください。")
+            raise SystemExit("修正時は、お知らせ管理ページから対象を選んでください。")
         idx = find_target(rows, target_title)
         existing = rows[idx].copy()
 

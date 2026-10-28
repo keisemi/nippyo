@@ -126,8 +126,6 @@
       </div>
     </div>
   </footer>
-  <script src="data/news.js"></script>
-  <script src="js/news.js" defer></script>
   <script>
     (() => {
       const stamp = Date.now().toString();
@@ -140,6 +138,15 @@
       });
 
       (async () => {
+        try {
+          await loadScript(`data/news.js?v=${stamp}`);
+          await loadScript(`js/news.js?v=${stamp}`);
+        } catch (error) {
+          console.error("Failed to load current news data.", error);
+          const container = document.querySelector("[data-news-list]");
+          if (container) container.innerHTML = '<p class="news-empty">お知らせを読み込めませんでした。ページを再読み込みしてください。</p>';
+        }
+
         try {
           const response = await fetch(`data/last-updated.txt?t=${stamp}`, { cache: "no-store" });
           const version = response.ok ? (await response.text()).trim() : stamp;

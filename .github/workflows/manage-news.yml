@@ -50,9 +50,6 @@ jobs:
       - name: Generate public news data
         run: python scripts/build_news.py
 
-      - name: Refresh registered-title dropdown
-        run: python scripts/sync_news_workflow.py
-
       - name: Validate news data
         shell: bash
         run: |
@@ -89,7 +86,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/admin-news.js docs/data/news-last-updated.txt .github/ISSUE_TEMPLATE/news_manage.yml
+          git add data/news.csv docs/data/news.json docs/data/news.js docs/data/admin-news.js docs/data/news-last-updated.txt
           if git diff --cached --quiet; then
             echo "変更はありません。"
           else

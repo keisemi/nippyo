@@ -46,6 +46,17 @@ def parse_issue_form(body: str) -> dict[str, str]:
     return values
 
 
+def fallback_target_from_issue_title(issue_title: str, operation: str) -> str:
+    prefixes = {
+        "既存データ修正": "[お知らせ管理] 修正: ",
+        "削除": "[お知らせ管理] 削除: ",
+    }
+    prefix = prefixes.get(operation, "")
+    if prefix and issue_title.startswith(prefix):
+        return issue_title[len(prefix):].strip()
+    return ""
+
+
 def main():
     event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
     if not event_path:
@@ -61,6 +72,12 @@ def main():
         raise SystemExit(
             "お知らせ更新フォームを正しく読み取れませんでした。未検出項目: "
             + "、".join(missing)
+        )
+
+    operation = values.get("操作", "")
+    if not values.get("修正・削除するお知らせ", "") and operation in {"既存データ修正", "削除"}:
+        values["修正・削除するお知らせ"] = fallback_target_from_issue_title(
+            (issue.get("title") or "").strip(), operation
         )
 
     for heading, env_name in ENV_MAP.items():
