@@ -15,6 +15,20 @@ OUTPUT_DIR = DOCS / "data"
 COVERS_DIR = DOCS / "assets" / "covers"
 ERRATA_DIR = DOCS / "assets" / "errata"
 ERRATA_FILENAME_RE = re.compile(r"^errata(?P<book_id>(?:\d{5}|N\d{5}))\.pdf$")
+RELATED_DIR = DOCS / "assets" / "related"
+RELATED_FILENAME_RE = re.compile(r"^(?P<book_id>(?:\d{5}|N\d{5}))(?P<ext>\.[A-Za-z0-9]+)$")
+RELATED_ALLOWED_EXTENSIONS = {
+    ".pdf",
+    ".zip",
+    ".xlsx",
+    ".xls",
+    ".xlsm",
+    ".csv",
+    ".docx",
+    ".pptx",
+    ".ppt",
+    ".txt",
+}
 SEARCH_JSON_FILE = OUTPUT_DIR / "books-search.json"
 SEARCH_INDEX_FILE = OUTPUT_DIR / "books-search-index.json"
 ADMIN_SEARCH_INDEX_FILE = OUTPUT_DIR / "books-admin-search-index.json"
@@ -170,6 +184,80 @@ def collect_errata_files(book_ids):
     return errata_files
 
 
+def collect_related_files(book_ids):
+    if not RELATED_DIR.exists():
+        return {}
+
+    related_files = {}
+    invalid_names = []
+    invalid_types = []
+    invalid_files = []
+    duplicates = []
+
+    for path in sorted(RELATED_DIR.iterdir()):
+        if not path.is_file() or path.name.startswith("."):
+            continue
+
+        match = RELATED_FILENAME_RE.fullmatch(path.name)
+        if not match:
+            invalid_names.append(path.name)
+            continue
+
+        book_id = match.group("book_id")
+        ext = match.group("ext").lower()
+        if ext not in RELATED_ALLOWED_EXTENSIONS:
+            invalid_types.append(path.name)
+            continue
+
+        if book_id in related_files:
+            duplicates.append(book_id)
+            continue
+
+        content = path.read_bytes()
+        if not content:
+            invalid_files.append(path.name)
+            continue
+        if ext == ".pdf" and not content.startswith(b"%PDF-"):
+            invalid_files.append(path.name)
+            continue
+        if ext in {".zip", ".xlsx", ".xlsm", ".docx", ".pptx"} and not content.startswith(b"PK"):
+            invalid_files.append(path.name)
+            continue
+
+        digest = hashlib.sha256(content).hexdigest()[:12]
+        related_files[book_id] = f"assets/related/{path.name}?v={digest}"
+
+    if invalid_names:
+        raise SystemExit(
+            "関連情報・付属データのファイル名が不正です。<書籍ID>.<拡張子> にしてください: "
+            + ", ".join(invalid_names)
+        )
+    if invalid_types:
+        raise SystemExit(
+            "関連情報・付属データで未対応のファイル形式があります。複数資料や特殊形式はZIPにまとめてください: "
+            + ", ".join(invalid_types)
+        )
+    if invalid_files:
+        raise SystemExit(
+            "関連情報・付属データとして読み込めないファイルがあります: "
+            + ", ".join(invalid_files)
+        )
+    if duplicates:
+        raise SystemExit(
+            "同じ書籍IDの関連情報・付属データが複数あります。1冊につき1ファイルにし、複数資料はZIPにまとめてください: "
+            + ", ".join(sorted(set(duplicates)))
+        )
+
+    unknown_ids = sorted(set(related_files) - set(book_ids))
+    if unknown_ids:
+        raise SystemExit(
+            "関連情報・付属データに対応する書籍IDが書誌にありません: "
+            + ", ".join(unknown_ids)
+        )
+
+    return related_files
+
+
 def build_date_jst():
     return datetime.now(timezone(timedelta(hours=9))).strftime("%Y/%m/%d")
 
@@ -222,6 +310,7 @@ if not rows:
 
 book_ids_from_rows = [clean(r.get("id")) for r in rows]
 errata_files = collect_errata_files(book_ids_from_rows)
+related_files = collect_related_files(book_ids_from_rows)
 
 updated_date = build_date_jst()
 search_books = []
@@ -237,7 +326,9 @@ for r in rows:
     pub_month = normalized_pub_month(r.get("pub_month"))
     year_key = detail_key(pub_year)
     errata_pdf = errata_files.get(book_id, "")
+    related_file = related_files.get(book_id, "")
     has_errata = clean(r.get("has_errata")) == "1" or bool(errata_pdf)
+    has_related_info = clean(r.get("has_related_info")) == "1" or bool(related_file)
 
     if amazon_asin and not re.fullmatch(r"[A-Z0-9]{10}", amazon_asin):
         raise SystemExit(
@@ -273,7 +364,7 @@ for r in rows:
         "format": clean(r.get("format")),
         "pages": number(r.get("pages")),
         "has_errata": has_errata,
-        "has_related_info": clean(r.get("has_related_info")) == "1",
+        "has_related_info": has_related_info,
         "search_extra": " ".join(clean(x) for x in search_extra_parts if clean(x)),
     }
     search_books.append(search_book)
@@ -308,7 +399,8 @@ for r in rows:
         "original_title": clean_public_text(r.get("original_title")),
         "has_errata": has_errata,
         "errata_pdf": errata_pdf,
-        "has_related_info": clean(r.get("has_related_info")) == "1",
+        "has_related_info": has_related_info,
+        "related_file": related_file,
     }
 
 if len(search_books) != len(rows):
@@ -471,6 +563,7 @@ print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
 print(f" - {UPDATED_FILE}")
 print(f" - 書籍数: {len(search_books):,}")
 print(f" - 正誤表PDF: {len(errata_files):,}")
+print(f" - 関連情報・付属データ: {len(related_files):,}")
 print(f" - 詳細ファイル数: {len(details_by_year):,}")
 print(f" - 初期表示データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
 print(f" - 公開検索索引: {SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")

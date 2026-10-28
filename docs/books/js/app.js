@@ -589,10 +589,23 @@
     } else if (detail.has_errata) {
       resourceItems.push(esc("正誤表の登録があります"));
     }
-    if (detail.has_related_info) {
+
+    const relatedHref = detail.related_file ? `../${detail.related_file}` : "";
+    if (relatedHref) {
+      const relatedPath = String(detail.related_file).split("?")[0];
+      const ext = relatedPath.includes(".") ? relatedPath.split(".").pop().toLowerCase() : "";
+      let label = "関連情報・付属データをダウンロード";
+      if (ext === "pdf") label = "関連資料を開く（PDF）";
+      else if (ext === "zip") label = "付属データをダウンロード（ZIP）";
+      else if (["xlsx", "xls", "xlsm"].includes(ext)) label = "付属データをダウンロード（Excel）";
+      else if (ext === "csv") label = "付属データをダウンロード（CSV）";
+      else if (ext) label = `関連情報・付属データをダウンロード（${ext.toUpperCase()}）`;
+      const linkAttrs = ext === "pdf" ? ' target="_blank" rel="noopener noreferrer"' : " download";
+      resourceItems.push(`<a href="${esc(relatedHref)}"${linkAttrs}>${esc(label)}</a>`);
+    } else if (detail.has_related_info) {
       resourceItems.push(esc("関連情報・付属データの登録があります"));
     }
-    const hasPendingResources = (!errataHref && detail.has_errata) || detail.has_related_info;
+    const hasPendingResources = (!errataHref && detail.has_errata) || (!relatedHref && detail.has_related_info);
 
     const coverAlt = detail.title || "書籍書影";
     const coverSrc = detail.cover ? `../${detail.cover}` : "";

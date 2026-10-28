@@ -168,6 +168,40 @@ docs/assets/magazine-covers/9792.jpg
 
 書籍・雑誌とも、使用できる形式は `.jpg`、`.jpeg`、`.png`、`.webp` です。画像をPushすると再構築Workflowが動き、次回ビルド時に自動認識されます。
 
+## 正誤表・関連情報（付属データ）
+
+### 正誤表
+
+`docs/assets/errata/` に、`errata` + 書籍IDをファイル名にしたPDFを置きます。
+
+例：書籍ID `52107`
+
+```text
+docs/assets/errata/errata52107.pdf
+```
+
+PDFをPushすると次回ビルド時に自動認識され、書籍詳細の「関連資料」に正誤表へのリンクが表示されます。書誌CSVの `has_errata` を手動で変更する必要はありません。
+
+### 関連情報・付属データ
+
+`docs/assets/related/` に、書籍IDそのものをファイル名にした配布ファイルを置きます。
+
+例：
+
+```text
+docs/assets/related/52333.pdf
+docs/assets/related/54142.zip
+docs/assets/related/55924.xlsx
+```
+
+運用ルールは **1冊につき1ファイル** です。複数のPDF・Excel・PowerPoint・データ等を配布する場合は、1つのZIPにまとめて `書籍ID.zip` としてください。
+
+そのまま置ける形式は `.pdf`、`.zip`、`.xlsx`、`.xls`、`.xlsm`、`.csv`、`.docx`、`.pptx`、`.ppt`、`.txt` です。これ以外の形式を配布する場合はZIPにまとめます。ISBNのない書籍の管理用ID（`N` + 5桁）も同じルールで使用できます。
+
+ファイルをPushすると次回ビルド時に自動認識され、検索結果には「関連情報あり」、書籍詳細の「関連資料」には実ファイルへのリンクが表示されます。書誌CSVの `has_related_info` を手動で変更する必要はありません。
+
+同じ書籍IDのファイルが複数ある場合、ファイル名の書籍IDが書誌に存在しない場合、命名規則や対応形式に合わない場合は、誤公開を防ぐためビルドをエラーにして停止します。
+
 ## 公開
 
 GitHub Pages は GitHub Actions から `docs/` を公開します。
