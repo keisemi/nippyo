@@ -50,7 +50,7 @@
       font-size: .9rem;
     }
     .search-site-footer a { color: inherit; }
-    .filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     @media (max-width: 1100px) {
       .search-global-nav {
         justify-content: flex-start;
@@ -115,9 +115,14 @@
 
       <div class="filters">
         <div class="filter">
-          <label for="genre">分野</label>
-          <select id="genre"><option value="">すべて</option></select>
+          <label for="genreMajor">大分類</label>
+          <select id="genreMajor"><option value="">すべて</option></select>
         </div>
+        <div class="filter">
+          <label for="genreMinor">小分類</label>
+          <select id="genreMinor" disabled><option value="">大分類を選択</option></select>
+        </div>
+        <select id="genre" hidden aria-hidden="true" tabindex="-1"><option value="">すべて</option></select>
         <div class="filter">
           <label for="year">刊行年</label>
           <select id="year"><option value="">すべて</option></select>
@@ -177,9 +182,15 @@
   </footer>
   <script>
     (() => {
-      const script = document.createElement("script");
-      script.src = `js/app.js?v=${Date.now()}`;
-      document.body.appendChild(script);
+      const loadApp = () => {
+        const script = document.createElement("script");
+        script.src = `js/app.js?v=${Date.now()}`;
+        document.body.appendChild(script);
+      };
+      const genreScript = document.createElement("script");
+      genreScript.src = `js/genre-filter.js?v=${Date.now()}`;
+      genreScript.onload = loadApp;
+      document.body.appendChild(genreScript);
     })();
   </script>
 </body>
