@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="日本評論社の法律基本シリーズを使った効果的な学習方法をご案内します。">
+  <title>しっかり身につく「基本シリーズ」の使い方｜日本評論社</title>
+  <link rel="stylesheet" href="../css/site.css">
+  <style>
+    .kihon-main { padding: 64px 0 80px; }
+    .kihon-header { margin-bottom: 34px; }
+    .kihon-header h1 {
+      margin: 0;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: clamp(2.05rem, 4vw, 3.15rem);
+      font-weight: 500;
+      line-height: 1.45;
+    }
+    .kihon-lead {
+      max-width: 850px;
+      margin: 18px 0 0;
+      color: #4b4b4b;
+      font-size: 1.05rem;
+    }
+    .kihon-lead p { margin: 8px 0 0; }
+    .kihon-section { margin-top: 48px; }
+    .kihon-section h2 {
+      margin: 0 0 20px;
+      padding-left: 14px;
+      border-left: 5px solid var(--green);
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: clamp(1.55rem, 3vw, 2.1rem);
+      font-weight: 500;
+    }
+    .chart-panel {
+      padding: 26px;
+      border-top: 4px solid var(--green-light);
+      background: var(--green-pale);
+    }
+    .chart-open {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: zoom-in;
+    }
+    .chart-open img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .chart-caption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+    }
+    .download-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .download-row .button { min-width: 220px; text-align: center; }
+    .books-intro { margin: 0 0 22px; color: #555; }
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+    .subject-card {
+      padding: 25px 26px;
+      border-top: 4px solid var(--green-light);
+      background: var(--green-pale);
+    }
+    .subject-card h3 {
+      margin: 0 0 15px;
+      color: var(--green-dark);
+      font-size: 1.24rem;
+    }
+    .book-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .book-list li {
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+    .book-list li:first-child { border-top: 0; padding-top: 0; }
+    .book-list a {
+      color: var(--green-dark);
+      font-weight: 700;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    .book-author {
+      display: block;
+      margin-top: 3px;
+      color: #555;
+      font-size: .9rem;
+    }
+    .image-modal[hidden] { display: none; }
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .image-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .76);
+    }
+    .image-modal-dialog {
+      position: relative;
+      z-index: 1;
+      width: min(96vw, 1680px);
+      max-height: 94vh;
+      overflow: auto;
+      padding: 44px 18px 18px;
+      background: #fff;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+    }
+    .image-modal-dialog img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .image-modal-close {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      background: transparent;
+      color: #222;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    body.modal-open { overflow: hidden; }
+    @media (max-width: 760px) {
+      .kihon-main { padding: 48px 0 64px; }
+      .chart-panel { padding: 16px; }
+      .subject-grid { grid-template-columns: 1fr; }
+      .subject-card { padding: 22px 20px; }
+      .image-modal { padding: 10px; }
+      .image-modal-dialog { width: 100%; max-height: 96vh; padding: 42px 8px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../" aria-label="日本評論社 臨時ホームページ トップ">
+        <img src="../assets/logo.png" alt="日本評論社">
+      </a>
+      <p class="site-label">臨時ホームページ</p>
+    </div>
+    <nav class="global-nav" aria-label="主要メニュー">
+      <a href="../">ホーム</a>
+      <a href="../news/">お知らせ</a>
+      <a href="../books/">書籍・雑誌を探す</a>
+      <a href="../#new-books">新刊</a>
+      <a href="../magazines/">雑誌</a>
+      <a href="../sns/">SNS</a>
+      <a href="../company/">会社概要・お問合せ</a>
+    </nav>
+  </header>
+
+  <main class="kihon-main content-width">
+    <header class="kihon-header">
+      <p class="section-kicker">LAW TEXTBOOK GUIDE</p>
+      <h1>しっかり身につく「基本シリーズ」の使い方</h1>
+      <div class="kihon-lead">
+        <p>日本評論社・基本シリーズをいつもご愛顧いただきありがとうございます。</p>
+        <p>法律を学び始めの人や、司法試験・予備試験の合格を目指す人のために、基本シリーズを用いた効果的な勉強方法について、わかりやすくまとめました。</p>
+        <p>どこから手に取ればいいか悩んでいる方も、図を見ながら自分のレベルにあった1冊を選んで、そこから始めてみましょう。</p>
+      </div>
+    </header>
+
+    <section class="kihon-section" aria-labelledby="chart-heading">
+      <h2 id="chart-heading">基本シリーズの使い方</h2>
+      <div class="chart-panel">
+        <button class="chart-open" id="chartOpen" type="button" aria-label="基本シリーズの使い方の図を拡大表示">
+          <img src="assets/nippyo-kihonS_2508.jpg" alt="日本評論社・基本シリーズの使い方を示す学習チャート">
+        </button>
+        <p class="chart-caption">画像をクリックすると拡大表示します。</p>
+        <div class="download-row">
+          <a class="button button-primary" href="assets/nippyo-kihonS_2508.pdf" target="_blank" rel="noopener noreferrer">PDF版を開く</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="kihon-section" aria-labelledby="books-heading">
+      <h2 id="books-heading">掲載書籍</h2>
+      <p class="books-intro">保存されていた案内ページの掲載内容をもとに、現在の臨時ホームページ上の書籍詳細へリンクしています。</p>
+      <div class="subject-grid">
+        <section class="subject-card" aria-labelledby="constitutional-law">
+          <h3 id="constitutional-law">憲法</h3>
+          <ul class="book-list">
+            <li><a href="../books/?book=52137">基本憲法Ⅰ──基本的人権</a><span class="book-author">木下智史・伊藤 建／著</span></li>
+            <li><a href="../books/?book=52523">基本憲法Ⅱ──総論・統治</a><span class="book-author">木下智史・伊藤 建／著</span></li>
+          </ul>
+        </section>
+
+        <section class="subject-card" aria-labelledby="administrative-law">
+          <h3 id="administrative-law">行政法</h3>
+          <ul class="book-list">
+            <li><a href="../books/?book=52756">基本行政法［第4版］</a><span class="book-author">中原茂樹／著</span></li>
+            <li><a href="../books/?book=52180">基礎演習 行政法［第2版］</a><span class="book-author">土田伸也／著</span></li>
+            <li><a href="../books/?book=52512">事例研究 行政法［第4版］</a><span class="book-author">曽和俊文・野呂 充・北村和生／編著</span></li>
+            <li><a href="../books/?book=52386">基本行政法判例演習</a><span class="book-author">中原茂樹／著</span></li>
+          </ul>
+        </section>
+
+        <section class="subject-card" aria-labelledby="criminal-law">
+          <h3 id="criminal-law">刑法</h3>
+          <ul class="book-list">
+            <li><a href="../books/?book=52899">入門刑法Ⅰ──総論</a><span class="book-author">大塚裕史／著</span></li>
+            <li><a href="../books/?book=52383">基本刑法Ⅰ──総論［第3版］</a><span class="book-author">大塚裕史・十河太朗・塩谷 毅・豊田兼彦／著</span></li>
+            <li><a href="../books/?book=52818">基本刑法Ⅱ──各論［第4版］</a><span class="book-author">大塚裕史・十河太朗・塩谷 毅・豊田兼彦／著</span></li>
+            <li><a href="../books/?book=52385">応用刑法Ⅰ──総論</a><span class="book-author">大塚裕史／著</span></li>
+            <li><a href="../books/?book=52769">応用刑法Ⅱ──各論</a><span class="book-author">大塚裕史／著</span></li>
+          </ul>
+        </section>
+
+        <section class="subject-card" aria-labelledby="criminal-procedure-law">
+          <h3 id="criminal-procedure-law">刑事訴訟法</h3>
+          <ul class="book-list">
+            <li><a href="../books/?book=52419">基本刑事訴訟法Ⅰ──手続理解編</a><span class="book-author">吉開多一・緑 大輔・設楽あづさ・國井恒志／著</span></li>
+            <li><a href="../books/?book=52836">基本刑事訴訟法Ⅱ──論点理解編［第2版］</a><span class="book-author">吉開多一・緑 大輔・設楽あづさ・國井恒志／著</span></li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="image-modal" id="imageModal" hidden role="dialog" aria-modal="true" aria-label="基本シリーズの使い方 拡大画像">
+    <div class="image-modal-backdrop" data-modal-close></div>
+    <div class="image-modal-dialog" role="document">
+      <button class="image-modal-close" id="imageModalClose" type="button" aria-label="拡大画像を閉じる">×</button>
+      <img src="assets/nippyo-kihonS_2508.jpg" alt="日本評論社・基本シリーズの使い方を示す学習チャート">
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="content-width footer-inner">
+      <div>
+        <img class="footer-logo" src="../assets/logo.png" alt="日本評論社">
+        <p>株式会社日本評論社</p>
+        <p>〒170-8474　東京都豊島区南大塚3-12-4<br>
+          TEL <a href="tel:0339878611">03-3987-8611</a>（代表）　FAX 03-3987-8593<br>
+          e-mail: <a href="mailto:infom@nippyo.co.jp">infom@nippyo.co.jp</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const openButton = document.getElementById("chartOpen");
+      const modal = document.getElementById("imageModal");
+      const closeButton = document.getElementById("imageModalClose");
+      if (!openButton || !modal || !closeButton) return;
+
+      const openModal = () => {
+        modal.hidden = false;
+        document.body.classList.add("modal-open");
+        closeButton.focus();
+      };
+      const closeModal = () => {
+        modal.hidden = true;
+        document.body.classList.remove("modal-open");
+        openButton.focus();
+      };
+
+      openButton.addEventListener("click", openModal);
+      closeButton.addEventListener("click", closeModal);
+      modal.querySelector("[data-modal-close]").addEventListener("click", closeModal);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.hidden) closeModal();
+      });
+    })();
+  </script>
+</body>
+</html>
