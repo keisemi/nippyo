@@ -187,6 +187,10 @@
         script.src = `js/app.js?v=${Date.now()}`;
         document.body.appendChild(script);
       };
+      const externalLinksScript = document.createElement("script");
+      externalLinksScript.src = `js/external-links.js?v=${Date.now()}`;
+      document.body.appendChild(externalLinksScript);
+
       const genreScript = document.createElement("script");
       genreScript.src = `js/genre-filter.js?v=${Date.now()}`;
       genreScript.onload = loadApp;
