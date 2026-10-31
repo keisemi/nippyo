@@ -286,8 +286,8 @@
           正誤表・関連情報・付属データはこの書誌フォームでは変更しません。ファイルを所定の場所に配置・差し替えすると自動反映されます。
         </div>
         <div class="edit-submit-box">
-          <p>「GitHubで変更を確定」を押すと、<strong>変更した項目だけ</strong>を入れた確認用Issueが開きます。現在値の確認・編集はこの画面で行います。</p>
-          <button class="admin-btn" type="submit">GitHubで変更を確定</button>
+          <p>「変更内容を確認する」を押すと、<strong>変更した項目だけ</strong>が入った確認画面が開きます。内容を確認して、最後に更新を送信してください。</p>
+          <button class="admin-btn" type="submit">変更内容を確認する</button>
           <button class="admin-btn secondary" id="back-to-detail" type="button">詳細表示へ戻る</button>
         </div>
       </form>
@@ -321,7 +321,7 @@
 
       const targetUrl = `${issueBase}?${params.toString()}`;
       if (targetUrl.length > 7000) {
-        window.alert("変更内容が長いため、一度にGitHubへ渡せません。内容紹介・目次などの長文は1項目ずつ更新してください。");
+        window.alert("変更内容が長いため、一度に確認画面へ送れません。内容紹介・目次などの長文は1項目ずつ更新してください。");
         return;
       }
       window.location.href = targetUrl;

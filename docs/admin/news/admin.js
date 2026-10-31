@@ -60,7 +60,7 @@
         </div>
         <div class="edit-grid">
           <label class="edit-field"><span>タイトル</span><input id="edit-title" type="text" value="${esc(item.title)}"></label>
-          <label class="edit-field"><span>本文</span><textarea id="edit-text">${esc(item.text)}</textarea><p class="field-help">現在値を空にする場合は、この編集画面では空欄にしてください。Issueには自動で <code>__CLEAR__</code> として渡します。</p></label>
+          <label class="edit-field"><span>本文</span><textarea id="edit-text">${esc(item.text)}</textarea><p class="field-help">現在の本文を削除する場合は、この欄を空欄にしてください。</p></label>
           <label class="edit-field"><span>リンク先</span><input id="edit-url" type="text" value="${esc(item.url)}"><p class="field-help">https:// で始まるURL、またはサイト内の相対パスを入力できます。</p></label>
         </div>
         <div class="edit-grid two-col">
@@ -68,8 +68,8 @@
           <label class="edit-field"><span>公開する</span><select id="edit-published"><option value="1"${item.published ? " selected" : ""}>はい</option><option value="0"${item.published ? "" : " selected"}>いいえ</option></select></label>
         </div>
         <div class="edit-submit-box">
-          <p>「GitHubで変更を確定」を押すと、<strong>変更した項目だけ</strong>を入れた確認用Issueが開きます。</p>
-          <button class="admin-btn" type="submit">GitHubで変更を確定</button>
+          <p>「変更内容を確認する」を押すと、<strong>変更した項目だけ</strong>が入った確認画面が開きます。内容を確認して、最後に更新を送信してください。</p>
+          <button class="admin-btn" type="submit">変更内容を確認する</button>
           <button class="admin-btn secondary" id="cancel-edit" type="button">閉じる</button>
         </div>
       </form>
@@ -119,7 +119,7 @@
 
       const url = issueUrl(params);
       if (url.length > 7000) {
-        window.alert("変更内容が長いため、一度にGitHubへ渡せません。長い本文は短く分けて更新してください。");
+        window.alert("変更内容が長いため、一度に確認画面へ送れません。長い本文は短く分けて更新してください。");
         return;
       }
       window.location.href = url;
@@ -131,7 +131,7 @@
   }
 
   function openDelete(item) {
-    if (!window.confirm(`「${item.title}」を削除対象としてGitHub Issueを開きます。よろしいですか？`)) return;
+    if (!window.confirm(`「${item.title}」の削除内容を確認します。次の画面へ進んでよろしいですか？`)) return;
     const params = new URLSearchParams();
     params.set("title", `[お知らせ管理] 削除: ${item.title}`);
     params.set("operation", "削除");
