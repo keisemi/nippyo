@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../../css/site.css">
   <style>
     .admin-wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+    .admin-page-links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 12px}
     .admin-note{background:#eef4ec;border-left:5px solid #255e17;padding:14px 16px;margin:18px 0 24px;line-height:1.7}
     .admin-actions{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 24px}
     .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:11px 18px;font-weight:700;cursor:pointer}
@@ -50,7 +51,10 @@
 </head>
 <body>
   <main class="admin-wrap">
-    <p><a href="../../">← 臨時ホームページへ戻る</a></p>
+    <p class="admin-page-links">
+      <a href="../">← 管理画面ホームに戻る</a>
+      <a href="https://github.com/keisemi/nippyo">← リポジトリに戻る</a>
+    </p>
     <h1>お知らせ管理</h1>
     <div class="admin-note">
       既存のお知らせを修正するときは、ここで対象を選んでください。<br>
@@ -60,7 +64,6 @@
 
     <div class="admin-actions">
       <a class="admin-btn" id="new-news-link" href="#">新しいお知らせを登録</a>
-      <a class="admin-btn secondary" href="../books/">書誌管理へ</a>
     </div>
 
     <div class="admin-search">
