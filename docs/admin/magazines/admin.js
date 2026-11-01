@@ -405,9 +405,9 @@
         </div>
         ${fieldsHtml}
         <div class="edit-submit-box">
-          「GitHub確認フォームへ進む」を押すと、変更した項目だけをGitHubの確認フォームへ渡します。GitHub側で送信した後にCSVが更新されます。
+          「変更内容を確認する」を押すと、変更前と変更後をこの画面で確認できます。まだCSVは変更されません。
           <div class="edit-submit-actions">
-            <button class="admin-btn" type="submit">GitHub確認フォームへ進む</button>
+            <button class="admin-btn" type="submit">変更内容を確認する</button>
             <button class="admin-btn secondary" id="back-to-magazine-detail" type="button">登録内容へ戻る</button>
           </div>
         </div>
@@ -425,17 +425,17 @@
       params.set("magazine_name",String(detail.magazine_name || ""));
       params.set("current_issue",String(detail.issue || ""));
 
-      let changes = 0;
-      for (const [id] of editFields) {
+      const changedItems = [];
+      for (const [id,label] of editFields) {
         const before = String(source[id] || "");
         const after = String(document.getElementById(`edit-${id}`).value || "").trim();
         if (after !== before) {
           params.set(issueFieldIds[id], after === "" && before !== "" ? "__CLEAR__" : after);
-          changes += 1;
+          changedItems.push({ id, label, before, after });
         }
       }
 
-      if (!changes) {
+      if (!changedItems.length) {
         window.alert("変更された項目がありません。");
         return;
       }
@@ -448,7 +448,64 @@
         window.alert("変更内容が長いため、一度に確認フォームへ送れません。目次・内容紹介などの長文は、ほかの変更と分けて1項目ずつ更新してください。");
         return;
       }
-      openIssueForm(targetUrl);
+
+      const priorityIds = new Set(["issue","pub_date","feature","feature2","issue_number","price_body"]);
+      const orderedItems = [
+        ...changedItems.filter((item) => priorityIds.has(item.id)),
+        ...changedItems.filter((item) => !priorityIds.has(item.id)),
+      ];
+      const preview = document.createElement("div");
+      preview.id = "magazine-change-confirmation";
+      preview.className = "edit-submit-box";
+      preview.innerHTML = `
+        <h3 style="margin-top:0">変更内容の確認</h3>
+        <p><strong>${changedItems.length}項目を変更します。</strong> 変更前と変更後を確認してください。</p>
+        <p style="margin-bottom:12px"><strong>月号・発刊日・特集・通巻番号・価格</strong>を変更する場合は、特に間違いがないか確認してください。</p>
+        <div>
+          ${orderedItems.map((item) => {
+            const before = item.before === "" ? "（空欄）" : item.before;
+            const after = item.after === "" ? "（空欄にする）" : item.after;
+            const important = priorityIds.has(item.id);
+            return `
+              <div style="margin:14px 0;padding:12px;border:${important ? "2px solid #255e17" : "1px solid #d9e0d8"};border-radius:6px;background:#fff">
+                <p style="margin:0 0 8px"><strong>${esc(item.label)}</strong>${important ? ' <span style="color:#255e17;font-size:12px">重点確認</span>' : ""}</p>
+                <div style="margin:6px 0">
+                  <small>変更前</small>
+                  <div style="white-space:pre-wrap;max-height:12em;overflow:auto;padding:8px;background:#f6f8f5">${esc(before)}</div>
+                </div>
+                <div style="margin:6px 0">
+                  <small>変更後</small>
+                  <div style="white-space:pre-wrap;max-height:12em;overflow:auto;padding:8px;background:#f6f8f5">${esc(after)}</div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <p>問題なければGitHubの最終確認フォームへ進んでください。まだこの時点ではCSVは変更されません。</p>
+        <div class="edit-submit-actions">
+          <button class="admin-btn" id="continue-magazine-update" type="button">GitHub確認フォームへ進む</button>
+          <button class="admin-btn secondary" id="review-magazine-update" type="button">編集内容を見直す</button>
+        </div>
+      `;
+
+      const sections = Array.from(document.querySelectorAll("#magazine-edit-form .edit-section"));
+      const submitBox = document.querySelector("#magazine-edit-form > .edit-submit-box");
+      const existingPreview = document.getElementById("magazine-change-confirmation");
+      if (existingPreview) existingPreview.remove();
+      sections.forEach((section) => { section.hidden = true; });
+      submitBox.hidden = true;
+      submitBox.parentNode.insertBefore(preview, submitBox);
+
+      document.getElementById("continue-magazine-update").addEventListener("click", () => {
+        openIssueForm(targetUrl);
+      });
+      document.getElementById("review-magazine-update").addEventListener("click", () => {
+        preview.remove();
+        sections.forEach((section) => { section.hidden = false; });
+        submitBox.hidden = false;
+        document.getElementById(`edit-${changedItems[0].id}`)?.focus();
+      });
+      preview.scrollIntoView({ block: "start" });
     });
   }
 
