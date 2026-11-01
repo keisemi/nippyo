@@ -1,0 +1,49 @@
+name: "【入力用】雑誌号を公開する"
+description: "雑誌管理画面で対象号を選んでから使用してください。"
+title: "[雑誌号再公開] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        非公開の雑誌号を一般公開サイトへ再公開するための確認フォームです。
+        現在登録されている書誌データをそのまま公開します。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "雑誌管理画面から自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_id
+    attributes:
+      label: 雑誌ID
+      description: "雑誌管理画面から自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_name
+    attributes:
+      label: 雑誌名
+      description: "対象誌の確認用です。"
+    validations:
+      required: true
+
+  - type: input
+    id: current_issue
+    attributes:
+      label: 現在の雑誌月号
+      description: "対象号の確認用です。"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: "この号を一般公開サイトへ再公開することを確認しました。"
+          required: true

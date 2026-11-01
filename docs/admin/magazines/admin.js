@@ -26,6 +26,30 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function publicationUrl(detail, publish) {
+    const params = new URLSearchParams();
+    params.set("template", publish ? "magazine_restore.yml" : "magazine_hide.yml");
+    params.set("title", `${publish ? "[雑誌号再公開]" : "[雑誌号公開停止]"} ${detail.magazine_name} ${detail.issue || ""}`);
+    params.set("book_id", String(detail.id || ""));
+    params.set("magazine_id", String(detail.magazine_id || ""));
+    params.set("magazine_name", String(detail.magazine_name || ""));
+    params.set("current_issue", String(detail.issue || ""));
+    return `${issueBase}?${params.toString()}`;
+  }
+
+  function openPublicationChange(detail, publish) {
+    const action = publish ? "公開" : "非公開";
+    const ok = window.confirm(
+      `「${detail.magazine_name} ${detail.issue || ""}」を${action}にします。\n\n` +
+      (publish
+        ? "一般公開サイトの最新号・バックナンバー・検索に表示される状態へ戻します。"
+        : "書誌データは残したまま、一般公開サイトから表示しない状態にします。") +
+      "\n\nGitHubの確認フォームへ進んでよろしいですか？"
+    );
+    if (!ok) return;
+    window.location.href = publicationUrl(detail, publish);
+  }
+
   const ebookLabels = {
     kindle:"Amazon Kindle",
     univcoop:"大学生協",
@@ -742,10 +766,13 @@
       ` : ""}
 
       <section class="detail-section">
-        <h3>この号を修正</h3>
-        <p>現在の登録内容を修正する場合はこちらから進みます。</p>
+        <h3>この号の管理</h3>
+        <p>書誌内容の修正と、一般公開サイトへの表示状態の変更は別操作です。</p>
         <div class="edit-submit-actions">
           <button id="open-magazine-edit" class="admin-btn" type="button">この号を修正</button>
+          ${detail.published === false
+            ? '<button id="restore-magazine" class="admin-btn" type="button">この号を公開する</button>'
+            : '<button id="hide-magazine" class="admin-btn danger" type="button">この号を非公開にする</button>'}
         </div>
       </section>
 
@@ -753,6 +780,8 @@
       ${ebooks}
     `;
     document.getElementById("open-magazine-edit")?.addEventListener("click", () => openEditForm(detail));
+    document.getElementById("hide-magazine")?.addEventListener("click", () => openPublicationChange(detail, false));
+    document.getElementById("restore-magazine")?.addEventListener("click", () => openPublicationChange(detail, true));
   }
 
   async function openDetail(issue) {

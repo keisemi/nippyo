@@ -192,10 +192,12 @@ def read_rows(path: Path):
 
 
 def write_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]], encoding: str) -> None:
+    raw = path.read_bytes()
+    line_ending = "\r\n" if b"\r\n" in raw[:100000] else "\n"
     temp = path.with_suffix(path.suffix + ".tmp")
     try:
         with temp.open("w", encoding=encoding, newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n", extrasaction="ignore")
+            writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator=line_ending, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(rows)
         temp.replace(path)
@@ -360,6 +362,44 @@ def apply_edit(fields: dict[str, str]) -> None:
         print(f" - {label}: {before.replace(chr(10), ' ')[:100]!r} -> {after.replace(chr(10), ' ')[:100]!r}")
 
 
+def apply_visibility(fields: dict[str, str], publish: bool) -> None:
+    book_id = fields.get("書籍ID", "").strip()
+    magazine_id = fields.get("雑誌ID", "").strip()
+    magazine_name = fields.get("雑誌名", "").strip()
+    current_issue = fields.get("現在の雑誌月号", "").strip()
+
+    if not book_id or not magazine_id or not current_issue:
+        raise SystemExit("対象号の識別情報が不足しています。雑誌管理画面からやり直してください。")
+
+    expected_name, path = validate_magazine(magazine_id, magazine_name)
+    fieldnames, rows, encoding = read_rows(path)
+    if "WEB公開属性" not in fieldnames:
+        raise SystemExit("雑誌CSVにWEB公開属性列がありません。")
+
+    row_index, row = find_one(rows, book_id, expected_name)
+    actual_magazine_id = str(row.get("雑誌ID") or "").strip()
+    actual_issue = str(row.get("雑誌月号") or "").strip()
+    if actual_magazine_id != magazine_id:
+        raise SystemExit(f"雑誌IDが一致しません。CSV: {actual_magazine_id} / 申請: {magazine_id}")
+    if actual_issue != current_issue:
+        raise SystemExit(
+            "対象号の月号表記が現在のCSVと一致しません。\n"
+            f"管理画面表示: {current_issue}\nCSV: {actual_issue}\n"
+            "管理画面を再読み込みして対象号を選び直してください。"
+        )
+
+    before = str(row.get("WEB公開属性") or "").strip()
+    after = "1" if publish else "0"
+    if before == after:
+        raise SystemExit("指定した公開状態にすでになっています。")
+
+    row["WEB公開属性"] = after
+    rows[row_index] = row
+    write_rows(path, fieldnames, rows, encoding)
+    print(f"雑誌号公開状態変更: {expected_name} / {current_issue} / 書籍ID {book_id}")
+    print(f" - WEB公開属性: {before!r} -> {after!r}")
+
+
 def apply_new(fields: dict[str, str]) -> None:
     magazine_code_1 = fields.get("雑誌コード(1)", "").strip()
     new_book_id = fields.get("新しい書籍ID", "").strip()
@@ -433,6 +473,12 @@ def main() -> None:
         return
     if title.startswith("[雑誌号新規]"):
         apply_new(fields)
+        return
+    if title.startswith("[雑誌号公開停止]"):
+        apply_visibility(fields, publish=False)
+        return
+    if title.startswith("[雑誌号再公開]"):
+        apply_visibility(fields, publish=True)
         return
     raise SystemExit("雑誌号管理用Issueではありません。")
 

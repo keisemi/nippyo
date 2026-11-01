@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   reject-unauthorized:
-    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]') || startsWith(github.event.issue.title, '[雑誌号公開停止]') || startsWith(github.event.issue.title, '[雑誌号再公開]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,7 +26,7 @@ jobs:
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
 
   update:
-    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]') || startsWith(github.event.issue.title, '[雑誌号公開停止]') || startsWith(github.event.issue.title, '[雑誌号再公開]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -105,6 +105,10 @@ jobs:
           fi
           if [[ "$ISSUE_TITLE" == \[雑誌号新規\]* ]]; then
             MESSAGE="Magazine issue add: issue #${ISSUE_NUMBER} [skip ci]"
+          elif [[ "$ISSUE_TITLE" == \[雑誌号公開停止\]* ]]; then
+            MESSAGE="Magazine issue hide: issue #${ISSUE_NUMBER} [skip ci]"
+          elif [[ "$ISSUE_TITLE" == \[雑誌号再公開\]* ]]; then
+            MESSAGE="Magazine issue restore: issue #${ISSUE_NUMBER} [skip ci]"
           else
             MESSAGE="Magazine issue edit: issue #${ISSUE_NUMBER} [skip ci]"
           fi
@@ -140,5 +144,5 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "雑誌号の登録・修正を反映し、臨時サイトを再公開しました。${PAGE_URL}"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "雑誌号の申請を反映し、臨時サイトを再公開しました。${PAGE_URL}"
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
