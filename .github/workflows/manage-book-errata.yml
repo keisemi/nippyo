@@ -99,6 +99,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
+      contents: read
       pages: write
       id-token: write
       issues: write
@@ -107,13 +108,26 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Checkout deployed source
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Verify published update
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          VERIFY_KIND: errata
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python3 scripts/verify_public_update.py
+
       - name: Close completed request
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$(printf '✅ 更新が完了しました。\n\n公開サイトへの反映も完了しました。\n\n公開サイトを確認：%s' "$PAGE_URL")"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$(printf '✅ 更新が完了しました。\n\n公開サイトへの反映も自動確認できました。\n\n公開サイトを確認：%s' "$PAGE_URL")"
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
 
   notify-failure:
