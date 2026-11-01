@@ -1,0 +1,34 @@
+name: "【入力用】書誌を公開停止"
+description: "管理用書誌検索ページで対象書を選んでから使用してください。"
+title: "[書誌公開停止] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        書誌を公開停止するための確認フォームです。
+        **公開停止しても書誌データ自体は削除されません。**
+        公開サイトの書籍検索、固有URL、トップページの新刊表示から対象書が表示されなくなります。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "管理用検索ページから自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: "対象書の確認用です。管理用検索ページから自動入力されます。"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 公開停止の確認
+      options:
+        - label: "この書籍を公開サイトから表示しない状態にすることを確認しました。"
+          required: true

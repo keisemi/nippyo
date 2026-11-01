@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "data" / "book_search_master.csv"
+HIDDEN_IDS_FILE = ROOT / "data" / "book_hidden_ids.txt"
 DOCS = ROOT / "docs"
 OUTPUT_DIR = DOCS / "data"
 COVERS_DIR = DOCS / "assets" / "covers"
@@ -30,6 +31,7 @@ RELATED_ALLOWED_EXTENSIONS = {
     ".txt",
 }
 SEARCH_JSON_FILE = OUTPUT_DIR / "books-search.json"
+ADMIN_SEARCH_JSON_FILE = OUTPUT_DIR / "books-admin-search.json"
 SEARCH_INDEX_FILE = OUTPUT_DIR / "books-search-index.json"
 ADMIN_SEARCH_INDEX_FILE = OUTPUT_DIR / "books-admin-search-index.json"
 DETAIL_DIR = OUTPUT_DIR / "book-details"
@@ -61,6 +63,7 @@ SEARCH_COLUMNS = [
     "price_body",
     "format",
     "pages",
+    "published",
     "status_flags",
     "identifiers",
 ]
@@ -133,6 +136,35 @@ def cover_path(book_id):
         if candidate.exists():
             return f"assets/covers/{book_id}.{ext}"
     return ""
+
+
+def load_hidden_ids(book_ids):
+    if not HIDDEN_IDS_FILE.exists():
+        return set()
+
+    hidden_ids = set()
+    invalid = []
+    for raw_line in HIDDEN_IDS_FILE.read_text(encoding="utf-8").splitlines():
+        value = raw_line.strip()
+        if not value or value.startswith("#"):
+            continue
+        if not re.fullmatch(r"(?:\d{5}|N\d{5})", value):
+            invalid.append(value)
+            continue
+        hidden_ids.add(value)
+
+    if invalid:
+        raise SystemExit(
+            "公開停止IDファイルに不正な書籍IDがあります: " + ", ".join(sorted(invalid))
+        )
+
+    unknown = sorted(hidden_ids - set(book_ids))
+    if unknown:
+        raise SystemExit(
+            "公開停止IDに対応する書籍がマスターCSVにありません: " + ", ".join(unknown)
+        )
+
+    return hidden_ids
 
 
 def collect_errata_files(book_ids):
@@ -296,6 +328,64 @@ def publication_sort_key(book):
     return int(book.get("pub_year") or 0) * 10000
 
 
+def make_search_row(book):
+    identifiers = []
+    for value in (book.get("isbn_old"), book.get("isbn_new")):
+        value = clean(value)
+        if value and value not in identifiers:
+            identifiers.append(value)
+    status_flags = (1 if book.get("has_errata") else 0) | (2 if book.get("has_related_info") else 0)
+    return [
+        book.get("id", ""),
+        book.get("cover", ""),
+        book.get("pub_year"),
+        book.get("title", ""),
+        book.get("subtitle_before", ""),
+        book.get("subtitle_after", ""),
+        book.get("author", ""),
+        book.get("isbn", ""),
+        book.get("pub_month", ""),
+        book.get("genres", []),
+        book.get("series", ""),
+        book.get("series_volume", ""),
+        book.get("price_body"),
+        book.get("format", ""),
+        book.get("pages"),
+        bool(book.get("published", True)),
+        status_flags,
+        "|".join(identifiers),
+    ]
+
+
+def make_search_index(book, *, include_id=False):
+    identifiers = []
+    for value in (book.get("isbn_old"), book.get("isbn_new")):
+        value = clean(value)
+        if value and value not in identifiers:
+            identifiers.append(value)
+    index_identifiers = []
+    for value in (book.get("isbn"), *identifiers):
+        normalized = normalize_identifier(value)
+        if normalized and normalized not in index_identifiers:
+            index_identifiers.append(normalized)
+
+    values = []
+    if include_id:
+        values.append(book.get("id", ""))
+    values.extend([
+        book.get("title", ""),
+        book.get("subtitle_before", ""),
+        book.get("subtitle_after", ""),
+        book.get("author", ""),
+        book.get("isbn", "") if include_id else " ".join(index_identifiers),
+        "|".join(identifiers) if include_id else "",
+        " ".join(book.get("genres", [])),
+        book.get("series", ""),
+        book.get("search_extra", ""),
+    ])
+    return normalize_search_text(" ".join(str(value) for value in values if value))
+
+
 if not INPUT.exists():
     raise SystemExit(f"入力CSVがありません: {INPUT}")
 
@@ -309,6 +399,7 @@ if not rows:
     raise SystemExit("公開用マスターCSVにレコードがありません。")
 
 book_ids_from_rows = [clean(r.get("id")) for r in rows]
+hidden_ids = load_hidden_ids(book_ids_from_rows)
 errata_files = collect_errata_files(book_ids_from_rows)
 related_files = collect_related_files(book_ids_from_rows)
 
@@ -329,14 +420,13 @@ for r in rows:
     related_file = related_files.get(book_id, "")
     has_errata = clean(r.get("has_errata")) == "1" or bool(errata_pdf)
     has_related_info = clean(r.get("has_related_info")) == "1" or bool(related_file)
+    published = book_id not in hidden_ids
 
     if amazon_asin and not re.fullmatch(r"[A-Z0-9]{10}", amazon_asin):
         raise SystemExit(
             f"Amazon ASINの形式が不正です（書籍ID {book_id}）: {amazon_asin}"
         )
 
-    # 一覧表示にすでに含まれる書名・著者・ISBN等は重複させず、
-    # よみ・HP検索用キーワードなど検索補助情報だけを別フィールドにする。
     search_extra_parts = [
         r.get("search_title"),
         r.get("title_kana"),
@@ -363,14 +453,13 @@ for r in rows:
         "price_body": number(r.get("price_body")),
         "format": clean(r.get("format")),
         "pages": number(r.get("pages")),
+        "published": published,
         "has_errata": has_errata,
         "has_related_info": has_related_info,
         "search_extra": " ".join(clean(x) for x in search_extra_parts if clean(x)),
     }
     search_books.append(search_book)
 
-    # 詳細表示・管理画面で必要になる項目は、刊行年ごとのJSONへ分離する。
-    # 管理画面の編集値はCSVの値を保持し、公開表示用の長文だけ安全に整形する。
     details_by_year[year_key][book_id] = {
         "id": book_id,
         "title": title,
@@ -406,9 +495,11 @@ for r in rows:
 if len(search_books) != len(rows):
     raise SystemExit("CSV行数と生成した書籍件数が一致しません。")
 if any(not b["id"] or not b["title"] for b in search_books):
-    raise SystemExit("書籍IDまたは書名が空欄の公開レコードがあります。")
+    raise SystemExit("書籍IDまたは書名が空欄のレコードがあります。")
 if len({b["id"] for b in search_books}) != len(search_books):
     raise SystemExit("書籍IDが重複しています。")
+
+public_books = [book for book in search_books if book.get("published", True)]
 
 # Top page only needs a small recent-book dataset.
 now_jst = datetime.now(timezone(timedelta(hours=9)))
@@ -424,86 +515,32 @@ home_books = [
         "pub_month": b["pub_month"],
         "price_body": b["price_body"],
     }
-    for b in search_books
+    for b in public_books
     if b["pub_year"] is not None and min_year <= b["pub_year"] <= max_year
 ]
 
-search_rows = []
-search_index = []
-admin_search_index = []
-sort_keys = []
-for book in search_books:
-    identifiers = []
-    for value in (book.get("isbn_old"), book.get("isbn_new")):
-        value = clean(value)
-        if value and value not in identifiers:
-            identifiers.append(value)
-    index_identifiers = []
-    for value in (book.get("isbn"), *identifiers):
-        normalized = normalize_identifier(value)
-        if normalized and normalized not in index_identifiers:
-            index_identifiers.append(normalized)
-    status_flags = (1 if book.get("has_errata") else 0) | (2 if book.get("has_related_info") else 0)
-    search_rows.append([
-        book.get("id", ""),
-        book.get("cover", ""),
-        book.get("pub_year"),
-        book.get("title", ""),
-        book.get("subtitle_before", ""),
-        book.get("subtitle_after", ""),
-        book.get("author", ""),
-        book.get("isbn", ""),
-        book.get("pub_month", ""),
-        book.get("genres", []),
-        book.get("series", ""),
-        book.get("series_volume", ""),
-        book.get("price_body"),
-        book.get("format", ""),
-        book.get("pages"),
-        status_flags,
-        "|".join(identifiers),
-    ])
-    search_index.append(normalize_search_text(" ".join(
-        str(value)
-        for value in (
-            book.get("title", ""),
-            book.get("subtitle_before", ""),
-            book.get("subtitle_after", ""),
-            book.get("author", ""),
-            " ".join(index_identifiers),
-            " ".join(book.get("genres", [])),
-            book.get("series", ""),
-            book.get("search_extra", ""),
-        )
-        if value
-    )))
-    # 管理画面は現行検索挙動（書籍ID・ハイフン付きISBN等）を変えないため、
-    # 公開検索用とは別の正規化済み索引を持つ。
-    admin_search_index.append(normalize_search_text(" ".join(
-        str(value)
-        for value in (
-            book.get("id", ""),
-            book.get("title", ""),
-            book.get("subtitle_before", ""),
-            book.get("subtitle_after", ""),
-            book.get("author", ""),
-            book.get("isbn", ""),
-            "|".join(identifiers),
-            " ".join(book.get("genres", [])),
-            book.get("series", ""),
-            book.get("search_extra", ""),
-        )
-        if value
-    )))
-    sort_keys.append(publication_sort_key(book))
+# 公開検索は公開中の書籍だけ、管理画面は公開停止中を含む全書籍を持つ。
+search_rows = [make_search_row(book) for book in public_books]
+search_index = [make_search_index(book, include_id=False) for book in public_books]
+search_sort_keys = [publication_sort_key(book) for book in public_books]
+default_order = sorted(range(len(search_rows)), key=lambda i: (-search_sort_keys[i], i))
 
-default_order = sorted(range(len(search_rows)), key=lambda i: (-sort_keys[i], i))
+admin_search_rows = [make_search_row(book) for book in search_books]
+admin_search_index = [make_search_index(book, include_id=True) for book in search_books]
+admin_sort_keys = [publication_sort_key(book) for book in search_books]
+admin_default_order = sorted(range(len(admin_search_rows)), key=lambda i: (-admin_sort_keys[i], i))
 
 search_payload = {
     "updated": updated_date,
     "columns": SEARCH_COLUMNS,
     "default_order": default_order,
     "books": search_rows,
+}
+admin_search_payload = {
+    "updated": updated_date,
+    "columns": SEARCH_COLUMNS,
+    "default_order": admin_default_order,
+    "books": admin_search_rows,
 }
 search_index_payload = {
     "updated": updated_date,
@@ -514,6 +551,7 @@ admin_search_index_payload = {
     "search": admin_search_index,
 }
 search_json = json.dumps(search_payload, ensure_ascii=False, separators=(",", ":"))
+admin_search_json = json.dumps(admin_search_payload, ensure_ascii=False, separators=(",", ":"))
 search_index_json = json.dumps(search_index_payload, ensure_ascii=False, separators=(",", ":"))
 admin_search_index_json = json.dumps(admin_search_index_payload, ensure_ascii=False, separators=(",", ":"))
 home_books_js = (
@@ -524,7 +562,6 @@ home_books_js = (
     + ";\n"
 )
 
-# 前回生成した年別詳細だけを削除し、現在の正本から再生成する。
 for old_detail in DETAIL_DIR.glob("books-detail-*.json"):
     old_detail.unlink()
 
@@ -538,33 +575,45 @@ for year_key in sorted(details_by_year, key=lambda x: (x == "undated", x)):
     detail_contents.append(f"{year_key}\n{detail_json}")
 
 SEARCH_JSON_FILE.write_text(search_json + "\n", encoding="utf-8")
+ADMIN_SEARCH_JSON_FILE.write_text(admin_search_json + "\n", encoding="utf-8")
 SEARCH_INDEX_FILE.write_text(search_index_json + "\n", encoding="utf-8")
 ADMIN_SEARCH_INDEX_FILE.write_text(admin_search_index_json + "\n", encoding="utf-8")
 HOME_JS_FILE.write_text(home_books_js, encoding="utf-8")
 
-# 検索用・詳細用・トップ用のどれかが変わればURLも切り替わるよう、
-# 生成データ全体から一つのバージョンキーを作る。
 data_version = hashlib.sha256(
-    (search_json + "\n" + search_index_json + "\n" + admin_search_index_json + "\n" + home_books_js + "\n" + "\n".join(detail_contents)).encode("utf-8")
+    (
+        search_json
+        + "\n"
+        + admin_search_json
+        + "\n"
+        + search_index_json
+        + "\n"
+        + admin_search_index_json
+        + "\n"
+        + home_books_js
+        + "\n"
+        + "\n".join(detail_contents)
+    ).encode("utf-8")
 ).hexdigest()[:16]
 UPDATED_FILE.write_text(data_version + "\n", encoding="utf-8")
 
-# 新構成では不要。残っていると巨大ファイルを誤って再利用する恐れがあるため削除する。
 for legacy_file in LEGACY_FILES:
     if legacy_file.exists():
         legacy_file.unlink()
 
 print("生成完了")
-print(f" - {SEARCH_JSON_FILE}（初期表示用・軽量）")
+print(f" - {SEARCH_JSON_FILE}（公開検索用・軽量）")
+print(f" - {ADMIN_SEARCH_JSON_FILE}（管理画面用・公開停止中を含む）")
 print(f" - {SEARCH_INDEX_FILE}（公開用・正規化済み検索索引・遅延読込）")
 print(f" - {ADMIN_SEARCH_INDEX_FILE}（管理画面用・正規化済み検索索引・遅延読込）")
 print(f" - {DETAIL_DIR}（書籍詳細・刊行年別）")
 print(f" - {HOME_JS_FILE}（トップ新刊用・軽量）")
 print(f" - {UPDATED_FILE}")
-print(f" - 書籍数: {len(search_books):,}")
+print(f" - 書籍数: {len(search_books):,}（公開 {len(public_books):,}／公開停止 {len(hidden_ids):,}）")
 print(f" - 正誤表PDF: {len(errata_files):,}")
 print(f" - 関連情報・付属データ: {len(related_files):,}")
 print(f" - 詳細ファイル数: {len(details_by_year):,}")
-print(f" - 初期表示データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 公開検索データ: {SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 管理検索データ: {ADMIN_SEARCH_JSON_FILE.stat().st_size / 1024 / 1024:.2f} MB")
 print(f" - 公開検索索引: {SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")
-print(f" - 管理画面検索索引: {ADMIN_SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")
+print(f" - 管理索引: {ADMIN_SEARCH_INDEX_FILE.stat().st_size / 1024 / 1024:.2f} MB")

@@ -108,6 +108,15 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function hideUrl(book) {
+    const params = new URLSearchParams();
+    params.set("template", "book_hide.yml");
+    params.set("title", `[書誌公開停止] ${book.title}`);
+    params.set("book_id", book.id);
+    params.set("current_title", book.title);
+    return `${issueBase}?${params.toString()}`;
+  }
+
   function closeBookModal() {
     if (!modal || modal.hidden) return;
     modal.hidden = true;
@@ -151,6 +160,7 @@
     return {
       ...book,
       detail_key: book.detail_key || (Number(book.pub_year) > 0 ? String(Number(book.pub_year)) : "undated"),
+      published: book.published !== false,
       has_errata: book.has_errata ?? Boolean(statusFlags & 1),
       has_related_info: book.has_related_info ?? Boolean(statusFlags & 2),
     };
@@ -158,13 +168,13 @@
 
   async function loadSearchData() {
     dataVersion = await readDataVersion();
-    const response = await fetch(`../../data/books-search.json?v=${encodeURIComponent(dataVersion)}`);
+    const response = await fetch(`../../data/books-admin-search.json?v=${encodeURIComponent(dataVersion)}`);
     if (!response.ok) {
-      throw new Error(`books-search.json を取得できませんでした（HTTP ${response.status}）`);
+      throw new Error(`books-admin-search.json を取得できませんでした（HTTP ${response.status}）`);
     }
     const payload = await response.json();
     if (!payload || !Array.isArray(payload.books)) {
-      throw new Error("books-search.json の形式が不正です。");
+      throw new Error("books-admin-search.json の形式が不正です。");
     }
     return expandRows(payload, "books").map(normalizeSearchBook);
   }
@@ -333,6 +343,17 @@
     modalClose?.focus();
   }
 
+  function openHide(book) {
+    const ok = window.confirm(
+      `「${book.title}」を公開停止します。\n\n` +
+      "公開サイトの書籍検索・固有URL・トップの新刊表示から表示されなくなります。\n" +
+      "書誌データ自体は削除されません。\n\n" +
+      "確認画面へ進んでよろしいですか？"
+    );
+    if (!ok) return;
+    window.location.href = hideUrl(book);
+  }
+
   function renderBookModal(book, detail, trigger) {
     const sub = subtitle(detail);
     const series = [detail.series, detail.series_volume].filter(Boolean).join(" ");
@@ -342,6 +363,7 @@
 
     const metaRows = [
       detailRow("書籍ID", detail.id),
+      detailRow("公開状態", detail.published === false ? "公開停止中" : "公開中"),
       detail.pub_month ? detailRow("刊行年月", `${formatMonth(detail.pub_month)}${detail.pub_note ? `（${detail.pub_note}）` : ""}`) : "",
       ...isbnRows,
       detail.format ? detailRow("判型", detail.format) : "",
@@ -355,6 +377,9 @@
     const statusItems = [];
     if (detail.errata_pdf) statusItems.push("正誤表ファイルが登録されています");
     if (detail.related_file) statusItems.push("関連情報・付属データのファイルが登録されています");
+    const stopButton = detail.published === false
+      ? '<p class="publication-stopped">この書籍は現在、公開停止中です。</p>'
+      : '<button class="admin-btn danger" id="hide-book" type="button">この書誌を公開停止</button>';
 
     modalContent.innerHTML = `
       <p class="admin-modal-kicker">現在の登録内容</p>
@@ -364,14 +389,16 @@
       ${genreTags ? `<div class="admin-modal-tags">${genreTags}</div>` : ""}
       ${metaRows ? `<dl class="detail-grid">${metaRows}</dl>` : ""}
       <div class="admin-edit-box">
-        <p>この書誌の現在値を入力済みにした編集フォームを開きます。</p>
+        <p>この書誌の現在値を入力済みにした編集フォームを開けます。公開停止は書誌データを削除せず、公開サイトからの表示だけを止めます。</p>
         <button class="admin-btn" id="open-edit-form" type="button">この書誌を編集</button>
+        ${stopButton}
       </div>
       ${detail.description ? `<section class="admin-detail-section"><h3>内容紹介</h3><p class="admin-detail-copy">${richText(detail.description)}</p></section>` : ""}
       ${detail.toc ? `<section class="admin-detail-section"><h3>目次</h3><div class="admin-detail-toc">${richText(detail.toc)}</div></section>` : ""}
       ${statusItems.length ? `<section class="admin-detail-section"><h3>関連資料</h3><ul>${statusItems.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
     `;
     document.getElementById("open-edit-form").addEventListener("click", (event) => openEditForm(book, detail, event.currentTarget));
+    document.getElementById("hide-book")?.addEventListener("click", () => openHide(detail));
 
     modal.hidden = false;
     document.body.classList.add("modal-open");
@@ -434,6 +461,12 @@
         span.textContent = part;
         meta.appendChild(span);
       });
+      if (book.published === false) {
+        const status = document.createElement("span");
+        status.className = "publication-stopped";
+        status.textContent = "公開停止中";
+        meta.appendChild(status);
+      }
       card.appendChild(meta);
 
       const actions = document.createElement("div");

@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "data/book_search_master.csv"
+      - "data/book_hidden_ids.txt"
       - "data/news.csv"
       - "data/magazines/**"
       - "scripts/**"
@@ -51,6 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
+          import csv
           import json
           from pathlib import Path
 
@@ -69,35 +71,71 @@ jobs:
                   raise SystemExit(f'{key} の行長が列定義と一致しません。')
               return [dict(zip(columns, row)) for row in rows]
 
+          with Path('data/book_search_master.csv').open(encoding='utf-8-sig', newline='') as f:
+              master_rows = list(csv.DictReader(f))
+          master_ids = [str(x.get('id', '')).strip() for x in master_rows]
+          if any(not x for x in master_ids):
+              raise SystemExit('空の書籍IDがあります。')
+          if len(master_ids) != len(set(master_ids)):
+              raise SystemExit('書籍IDが重複しています。')
+          if any(not str(x.get('title', '')).strip() for x in master_rows):
+              raise SystemExit('空の書名があります。')
+
+          hidden_ids = set()
+          hidden_path = Path('data/book_hidden_ids.txt')
+          if hidden_path.exists():
+              for raw_line in hidden_path.read_text(encoding='utf-8').splitlines():
+                  value = raw_line.strip()
+                  if value and not value.startswith('#'):
+                      hidden_ids.add(value)
+          unknown_hidden = hidden_ids - set(master_ids)
+          if unknown_hidden:
+              raise SystemExit('公開停止IDに対応する書籍がありません: ' + ', '.join(sorted(unknown_hidden)))
+
           search_payload = json.loads(Path('docs/data/books-search.json').read_text(encoding='utf-8'))
           books = expand_rows(search_payload, 'books')
+          admin_payload = json.loads(Path('docs/data/books-admin-search.json').read_text(encoding='utf-8'))
+          admin_books = expand_rows(admin_payload, 'books')
           book_search_index = json.loads(Path('docs/data/books-search-index.json').read_text(encoding='utf-8'))
           book_index_rows = book_search_index.get('search') if isinstance(book_search_index, dict) else None
           admin_search_index = json.loads(Path('docs/data/books-admin-search-index.json').read_text(encoding='utf-8'))
           admin_index_rows = admin_search_index.get('search') if isinstance(admin_search_index, dict) else None
           news = json.loads(Path('docs/data/news.json').read_text(encoding='utf-8'))
-          if not isinstance(books, list) or not books:
-              raise SystemExit('books-search.json が空です。')
-          ids = [str(x.get('id', '')).strip() for x in books]
-          if any(not x for x in ids):
-              raise SystemExit('空の書籍IDがあります。')
-          if len(ids) != len(set(ids)):
-              raise SystemExit('書籍IDが重複しています。')
-          if any(not str(x.get('title', '')).strip() for x in books):
-              raise SystemExit('空の書名があります。')
+
+          if not isinstance(books, list):
+              raise SystemExit('books-search.json の形式が不正です。')
+          if not isinstance(admin_books, list) or not admin_books:
+              raise SystemExit('books-admin-search.json が空です。')
+
+          public_ids = [str(x.get('id', '')).strip() for x in books]
+          admin_ids = [str(x.get('id', '')).strip() for x in admin_books]
+          expected_public_ids = set(master_ids) - hidden_ids
+          if set(public_ids) != expected_public_ids:
+              raise SystemExit('公開用検索データと公開状態が一致しません。')
+          if set(admin_ids) != set(master_ids):
+              raise SystemExit('管理画面用検索データとマスターCSVの書籍IDが一致しません。')
+          if len(admin_books) != len(master_rows):
+              raise SystemExit('管理画面用検索データとマスターCSVの件数が一致しません。')
+
           if not isinstance(book_index_rows, list) or len(book_index_rows) != len(books):
-              raise SystemExit('書籍検索索引と表示データの件数が一致しません。')
+              raise SystemExit('公開用書籍検索索引と表示データの件数が一致しません。')
           if any(not isinstance(x, str) for x in book_index_rows):
-              raise SystemExit('書籍検索索引に文字列以外の値があります。')
-          if not isinstance(admin_index_rows, list) or len(admin_index_rows) != len(books):
+              raise SystemExit('公開用書籍検索索引に文字列以外の値があります。')
+          if not isinstance(admin_index_rows, list) or len(admin_index_rows) != len(admin_books):
               raise SystemExit('管理画面用書籍検索索引と表示データの件数が一致しません。')
           if any(not isinstance(x, str) for x in admin_index_rows):
               raise SystemExit('管理画面用書籍検索索引に文字列以外の値があります。')
+
           book_order = search_payload.get('default_order') if isinstance(search_payload, dict) else None
           if not isinstance(book_order, list) or sorted(book_order) != list(range(len(books))):
               raise SystemExit('書籍の既定表示順が不正です。')
+          admin_order = admin_payload.get('default_order') if isinstance(admin_payload, dict) else None
+          if not isinstance(admin_order, list) or sorted(admin_order) != list(range(len(admin_books))):
+              raise SystemExit('管理画面用書籍の既定表示順が不正です。')
           if 'search_extra' in (search_payload.get('columns') or []):
-              raise SystemExit('初期表示用書誌データに検索専用補助文字列が残っています。')
+              raise SystemExit('公開用書籍データに検索専用補助文字列が残っています。')
+          if 'search_extra' in (admin_payload.get('columns') or []):
+              raise SystemExit('管理画面用書籍データに検索専用補助文字列が残っています。')
 
           detail_ids = []
           detail_dir = Path('docs/data/book-details')
@@ -111,14 +149,17 @@ jobs:
               detail_ids.extend(str(x).strip() for x in payload.keys())
           if len(detail_ids) != len(set(detail_ids)):
               raise SystemExit('刊行年別詳細データ内で書籍IDが重複しています。')
-          if set(detail_ids) != set(ids):
-              raise SystemExit('検索用データと刊行年別詳細データの書籍IDが一致しません。')
+          if set(detail_ids) != set(master_ids):
+              raise SystemExit('管理画面用検索データと刊行年別詳細データの書籍IDが一致しません。')
 
           search_size = Path('docs/data/books-search.json').stat().st_size
+          admin_search_size = Path('docs/data/books-admin-search.json').stat().st_size
           book_index_size = Path('docs/data/books-search-index.json').stat().st_size
           admin_index_size = Path('docs/data/books-admin-search-index.json').stat().st_size
           if search_size > 3 * 1024 * 1024:
-              raise SystemExit(f'初期表示用書誌データが3MBを超えています: {search_size:,} bytes')
+              raise SystemExit(f'公開用書誌データが3MBを超えています: {search_size:,} bytes')
+          if admin_search_size > 3 * 1024 * 1024:
+              raise SystemExit(f'管理画面用書誌データが3MBを超えています: {admin_search_size:,} bytes')
           if book_index_size > 4 * 1024 * 1024:
               raise SystemExit(f'書籍検索索引が4MBを超えています: {book_index_size:,} bytes')
           if admin_index_size > 4 * 1024 * 1024:
@@ -177,8 +218,9 @@ jobs:
           if not Path('docs/data/admin-news.js').exists():
               raise SystemExit('お知らせ管理用データが生成されていません。')
           print(
-              f'書籍検証OK: {len(books):,}件／詳細{len(detail_files):,}ファイル／'
-              f'初期表示{search_size / 1024 / 1024:.2f}MB／公開索引{book_index_size / 1024 / 1024:.2f}MB／管理索引{admin_index_size / 1024 / 1024:.2f}MB／'
+              f'書籍検証OK: 全{len(admin_books):,}件／公開{len(books):,}件／公開停止{len(hidden_ids):,}件／'
+              f'詳細{len(detail_files):,}ファイル／公開表示{search_size / 1024 / 1024:.2f}MB／'
+              f'管理表示{admin_search_size / 1024 / 1024:.2f}MB／公開索引{book_index_size / 1024 / 1024:.2f}MB／管理索引{admin_index_size / 1024 / 1024:.2f}MB／'
               f'雑誌号: {len(issues):,}件／詳細{len(magazine_detail_files):,}ファイル／'
               f'初期表示{magazine_search_size / 1024 / 1024:.2f}MB／索引{magazine_index_size / 1024 / 1024:.2f}MB／'
               f'公開お知らせ: {len(news):,}件'

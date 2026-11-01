@@ -8,6 +8,7 @@ import manage_book
 
 ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "data" / "book_search_master.csv"
+HIDDEN_IDS_FILE = ROOT / "data" / "book_hidden_ids.txt"
 NO_RESPONSE = "_No response_"
 
 LABEL_TO_ENV = {
@@ -40,7 +41,7 @@ LABEL_TO_ENV = {
 def parse_sections(body: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {}
     current = None
-    known_labels = {"書籍ID", "現在の書名", *LABEL_TO_ENV.keys()}
+    known_labels = {"書籍ID", "現在の書名", "公開停止の確認", *LABEL_TO_ENV.keys()}
     for line in (body or "").splitlines():
         if line.startswith("### ") and line[4:].strip() in known_labels:
             current = line[4:].strip()
@@ -73,6 +74,26 @@ def get_issue() -> dict:
 def load_rows() -> list[dict[str, str]]:
     with MASTER.open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
+
+
+def load_hidden_ids() -> set[str]:
+    if not HIDDEN_IDS_FILE.exists():
+        return set()
+    hidden = set()
+    for raw_line in HIDDEN_IDS_FILE.read_text(encoding="utf-8").splitlines():
+        value = raw_line.strip()
+        if not value or value.startswith("#"):
+            continue
+        hidden.add(value)
+    return hidden
+
+
+def save_hidden_ids(hidden_ids: set[str]) -> None:
+    lines = [
+        "# 公開停止中の書籍ID。管理画面から自動更新します。",
+        *sorted(hidden_ids),
+    ]
+    HIDDEN_IDS_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def extract_product_code(isbn: str) -> str:
@@ -134,10 +155,32 @@ def verify_edit_target(book_id: str, current_title: str) -> None:
         )
 
 
+def hide_book(book_id: str, current_title: str) -> None:
+    verify_edit_target(book_id, current_title)
+    hidden_ids = load_hidden_ids()
+    if book_id in hidden_ids:
+        raise SystemExit(f"書籍ID {book_id} はすでに公開停止中です。")
+    hidden_ids.add(book_id)
+    save_hidden_ids(hidden_ids)
+    print("操作: 公開停止")
+    print(f"書籍ID: {book_id}")
+    print(f"書名: {current_title}")
+
+
 def main() -> None:
     issue = get_issue()
     issue_title = (issue.get("title") or "").strip()
     fields = parse_sections(issue.get("body") or "")
+
+    if issue_title.startswith("[書誌公開停止]"):
+        book_id = fields.get("書籍ID", "").strip()
+        if not book_id:
+            raise SystemExit("書籍IDがありません。")
+        current_title = fields.get("現在の書名", "").strip()
+        if not current_title:
+            raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
+        hide_book(book_id, current_title)
+        return
 
     if issue_title.startswith("[書誌修正]"):
         operation = "既存データ修正"
