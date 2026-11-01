@@ -355,7 +355,7 @@
     detailContent.innerHTML = `
       <p class="detail-kicker">雑誌号編集</p>
       <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　${esc(detail.issue || "")}</h2>
-      <p class="edit-intro">現在登録されている値を入力済みにしています。必要な箇所だけ変更してください。変更していない項目はCSVを書き換えません。</p>
+      <p class="edit-intro">現在登録されている値を入力済みにしています。この画面ではまだCSVは変更されません。必要な箇所だけ変更し、最後にGitHubの確認フォームへ進んでください。変更していない項目はCSVを書き換えません。</p>
       <form id="magazine-edit-form">
         <div class="edit-fixed">
           <div><strong>書籍ID</strong><br><code>${esc(detail.id)}</code></div>
@@ -364,9 +364,9 @@
         </div>
         ${fieldsHtml}
         <div class="edit-submit-box">
-          「変更内容を確認する」を押すと、変更した項目だけをGitHubの確認フォームへ渡します。
+          「GitHub確認フォームへ進む」を押すと、変更した項目だけをGitHubの確認フォームへ渡します。GitHub側で送信した後にCSVが更新されます。
           <div class="edit-submit-actions">
-            <button class="admin-btn" type="submit">変更内容を確認する</button>
+            <button class="admin-btn" type="submit">GitHub確認フォームへ進む</button>
             <button class="admin-btn secondary" id="back-to-magazine-detail" type="button">登録内容へ戻る</button>
           </div>
         </div>
@@ -769,7 +769,7 @@
         <h3>この号の管理</h3>
         <p>書誌内容の修正と、一般公開サイトへの表示状態の変更は別操作です。</p>
         <div class="edit-submit-actions">
-          <button id="open-magazine-edit" class="admin-btn" type="button">この号を修正</button>
+          <button id="open-magazine-edit" class="admin-btn" type="button">編集画面を開く</button>
           ${detail.published === false
             ? '<button id="restore-magazine" class="admin-btn" type="button">この号を公開する</button>'
             : '<button id="hide-magazine" class="admin-btn danger" type="button">この号を非公開にする</button>'}
