@@ -113,5 +113,5 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "付属データの更新を反映し、臨時サイトを再公開しました。${PAGE_URL}"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$(printf '✅ 更新が完了しました。\n\n公開サイトへの反映も完了しました。\n\n公開サイトを確認：%s' "$PAGE_URL")"
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
