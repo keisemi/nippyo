@@ -57,6 +57,20 @@ def fallback_target_from_issue_title(issue_title: str, operation: str) -> str:
     return ""
 
 
+def apply_publication_action_from_issue_title(values: dict[str, str], issue_title: str) -> None:
+    actions = {
+        "[お知らせ管理] 公開停止: ": "いいえ",
+        "[お知らせ管理] 再公開: ": "はい",
+    }
+    for prefix, published in actions.items():
+        if issue_title.startswith(prefix):
+            values["操作"] = "既存データ修正"
+            values["公開する"] = published
+            if not values.get("修正・削除するお知らせ", ""):
+                values["修正・削除するお知らせ"] = issue_title[len(prefix):].strip()
+            return
+
+
 def main():
     event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
     if not event_path:
@@ -74,10 +88,13 @@ def main():
             + "、".join(missing)
         )
 
+    issue_title = (issue.get("title") or "").strip()
+    apply_publication_action_from_issue_title(values, issue_title)
+
     operation = values.get("操作", "")
     if not values.get("修正・削除するお知らせ", "") and operation in {"既存データ修正", "削除"}:
         values["修正・削除するお知らせ"] = fallback_target_from_issue_title(
-            (issue.get("title") or "").strip(), operation
+            issue_title, operation
         )
 
     for heading, env_name in ENV_MAP.items():
