@@ -7,115 +7,24 @@
   <title>臨時HP 管理メニュー｜日本評論社</title>
   <link rel="stylesheet" href="../css/site.css">
   <style>
-    .admin-home {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 28px 20px 64px;
-    }
-    .admin-home-links {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      margin: 0 0 12px;
-    }
-    .admin-home-header {
-      margin-bottom: 30px;
-    }
-    .admin-home-header h1 {
-      margin: 8px 0 10px;
-      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
-      font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 500;
-    }
-    .admin-home-lead {
-      max-width: 760px;
-      margin: 0;
-      color: #4f5b4d;
-      line-height: 1.8;
-    }
-    .admin-home-note {
-      margin: 24px 0 30px;
-      padding: 16px 18px;
-      background: #eef4ec;
-      border-left: 5px solid #255e17;
-      line-height: 1.75;
-    }
-    .admin-menu-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-    }
-    .admin-menu-card {
-      display: block;
-      min-height: 190px;
-      padding: 24px;
-      border: 1px solid #d4ddd2;
-      border-top: 4px solid #255e17;
-      border-radius: 8px;
-      background: #fff;
-      text-decoration: none;
-      box-shadow: 0 5px 18px rgba(37,94,23,.04);
-    }
-    .admin-menu-card[href]:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 9px 24px rgba(37,94,23,.09);
-    }
-    .admin-menu-card h2 {
-      margin: 4px 0 10px;
-      font-size: 1.45rem;
-    }
-    .admin-menu-card p {
-      margin: 0;
-      color: #555;
-      line-height: 1.75;
-    }
-    .admin-menu-label {
-      margin: 0 0 6px !important;
-      color: #255e17 !important;
-      font-size: .78rem;
-      font-weight: 700;
-      letter-spacing: .12em;
-    }
-    .admin-menu-link {
-      display: inline-block;
-      margin-top: 16px;
-      color: #255e17;
-      font-weight: 700;
-    }
-    .admin-menu-card.is-disabled {
-      background: #f7f8f6;
-      border-top-color: #aab4a7;
-      color: #666;
-    }
-    .admin-menu-card.is-disabled .admin-menu-label {
-      color: #777 !important;
-    }
-    .admin-menu-status {
-      display: inline-block;
-      margin-top: 16px;
-      padding: 4px 9px;
-      border: 1px solid #c7cec5;
-      border-radius: 999px;
-      color: #666;
-      background: #fff;
-      font-size: .82rem;
-      font-weight: 700;
-    }
-    .admin-home-footer {
-      margin-top: 34px;
-      padding-top: 18px;
-      border-top: 1px solid #d9e0d8;
-      color: #666;
-      font-size: .9rem;
-    }
-    @media (max-width: 720px) {
-      .admin-menu-grid {
-        grid-template-columns: 1fr;
-      }
-      .admin-home {
-        padding-inline: 16px;
-      }
-    }
+    .admin-home{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+    .admin-home-links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 12px}
+    .admin-home-header{margin-bottom:30px}
+    .admin-home-header h1{margin:8px 0 10px;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(2rem,4vw,3rem);font-weight:500}
+    .admin-home-lead{max-width:760px;margin:0;color:#4f5b4d;line-height:1.8}
+    .admin-home-note{margin:24px 0 30px;padding:16px 18px;background:#eef4ec;border-left:5px solid #255e17;line-height:1.75}
+    .admin-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .admin-menu-card{display:block;min-height:190px;padding:24px;border:1px solid #d4ddd2;border-top:4px solid #255e17;border-radius:8px;background:#fff;text-decoration:none;box-shadow:0 5px 18px rgba(37,94,23,.04)}
+    .admin-menu-card[href]:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(37,94,23,.09)}
+    .admin-menu-card h2{margin:4px 0 10px;font-size:1.45rem}
+    .admin-menu-card p{margin:0;color:#555;line-height:1.75}
+    .admin-menu-label{margin:0 0 6px!important;color:#255e17!important;font-size:.78rem;font-weight:700;letter-spacing:.12em}
+    .admin-menu-link{display:inline-block;margin-top:16px;color:#255e17;font-weight:700}
+    .admin-menu-card.is-disabled{background:#f7f8f6;border-top-color:#aab4a7;color:#666}
+    .admin-menu-card.is-disabled .admin-menu-label{color:#777!important}
+    .admin-menu-status{display:inline-block;margin-top:16px;padding:4px 9px;border:1px solid #c7cec5;border-radius:999px;color:#666;background:#fff;font-size:.82rem;font-weight:700}
+    .admin-home-footer{margin-top:34px;padding-top:18px;border-top:1px solid #d9e0d8;color:#666;font-size:.9rem}
+    @media(max-width:720px){.admin-menu-grid{grid-template-columns:1fr}.admin-home{padding-inline:16px}}
   </style>
 </head>
 <body>
@@ -128,15 +37,12 @@
     <header class="admin-home-header">
       <p class="section-kicker">ADMIN</p>
       <h1>臨時HP 管理メニュー</h1>
-      <p class="admin-home-lead">
-        日本評論社 臨時ホームページの日常更新用メニューです。
-        更新したい内容を選んでください。
-      </p>
+      <p class="admin-home-lead">日本評論社 臨時ホームページの日常更新用メニューです。更新したい内容を選んでください。</p>
     </header>
 
     <div class="admin-home-note">
-      <strong>現在利用できる更新機能は「書籍管理」と「お知らせ管理」です。</strong><br>
-      書籍関連ファイル管理は入口を追加し、各操作機能を順次整備しています。雑誌管理、操作マニュアルも今後追加します。
+      <strong>書籍・お知らせ・書籍関連情報の更新機能を利用できます。</strong><br>
+      雑誌管理は既存号の検索・確認画面を追加し、新規登録・修正・書影管理などを順次整備しています。
     </div>
 
     <section class="admin-menu-grid" aria-label="管理メニュー">
@@ -154,17 +60,17 @@
         <span class="admin-menu-link">お知らせ管理を開く →</span>
       </a>
 
-      <div class="admin-menu-card is-disabled" aria-disabled="true">
+      <a class="admin-menu-card" href="magazines/">
         <p class="admin-menu-label">MAGAZINES</p>
         <h2>雑誌管理</h2>
-        <p>雑誌の新しい号の登録、既存号の修正、書影管理などを行う予定です。</p>
-        <span class="admin-menu-status">準備中</span>
-      </div>
+        <p>6誌の既存号を検索・確認できます。新規登録・修正機能は順次追加します。</p>
+        <span class="admin-menu-link">雑誌管理を開く →</span>
+      </a>
 
       <a class="admin-menu-card" href="files/">
         <p class="admin-menu-label">FILES</p>
         <h2>書籍関連ファイル管理</h2>
-        <p>書影、正誤表、付属データの管理画面です。各操作機能を順次追加します。</p>
+        <p>書影、正誤表、付属データ、関連リンクの追加・差替え・削除を行います。</p>
         <span class="admin-menu-link">書籍関連ファイル管理を開く →</span>
       </a>
 
@@ -176,9 +82,7 @@
       </div>
     </section>
 
-    <p class="admin-home-footer">
-      日常更新用の機能は、この管理メニューへ順次集約します。
-    </p>
+    <p class="admin-home-footer">日常更新用の機能は、この管理メニューへ順次集約します。</p>
   </main>
 </body>
 </html>
