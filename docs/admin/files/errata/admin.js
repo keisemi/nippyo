@@ -2,6 +2,7 @@
   "use strict";
 
   const queryInput = document.getElementById("book-query");
+  const errataFilter = document.getElementById("errata-filter");
   const searchButton = document.getElementById("search-button");
   const results = document.getElementById("results");
   const count = document.getElementById("result-count");
@@ -105,14 +106,19 @@
     return `${issueBase}?${params.toString()}`;
   }
 
-  function render(items) {
+  function render(items, total) {
     results.replaceChildren();
     if (!items.length) {
       count.textContent = "該当する書籍がありません。";
-      results.innerHTML = '<div class="empty">検索語を変えてお試しください。</div>';
+      results.innerHTML = '<div class="empty">検索条件を変えてお試しください。</div>';
       return;
     }
-    count.textContent = `${items.length.toLocaleString()}件表示`;
+
+    if (total > items.length) {
+      count.textContent = `${total.toLocaleString()}件中${items.length.toLocaleString()}件表示（さらに絞り込んでください）`;
+    } else {
+      count.textContent = `${total.toLocaleString()}件表示`;
+    }
 
     items.forEach((book) => {
       const hasErrata = Boolean(book.__hasErrata);
@@ -137,18 +143,29 @@
 
   async function search() {
     const terms = queryInput.value.trim().split(/\s+/).filter(Boolean).map(normalize);
-    if (!terms.length) {
-      count.textContent = "検索語を入力してください。";
+    const filter = errataFilter.value;
+
+    if (!terms.length && filter === "all") {
+      count.textContent = "検索語を入力するか、正誤表の有無を選んでください。";
       results.replaceChildren();
       return;
     }
+
     try {
       await ensureSearchIndex();
-      const matched = books.filter((book) =>
-        terms.every((term) => String(book.__searchNormalized || "").includes(term))
-      ).slice(0,50);
-      render(matched);
-      if (matched.length === 50) count.textContent += "（上位50件。さらに絞り込んでください）";
+
+      const matched = books.filter((book) => {
+        const textMatches = terms.every((term) =>
+          String(book.__searchNormalized || "").includes(term)
+        );
+        if (!textMatches) return false;
+
+        if (filter === "yes") return book.__hasErrata === true;
+        if (filter === "no") return book.__hasErrata === false;
+        return true;
+      });
+
+      render(matched.slice(0, 50), matched.length);
     } catch (error) {
       console.error(error);
       count.textContent = "検索用データを読み込めませんでした。ページを再読み込みしてください。";
@@ -162,6 +179,7 @@
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") void search();
       });
+      errataFilter.addEventListener("change", () => { void search(); });
     } catch (error) {
       console.error(error);
       count.textContent = "書籍データを読み込めませんでした。ページを再読み込みしてください。";

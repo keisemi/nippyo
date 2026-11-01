@@ -13,6 +13,7 @@
     .admin-note{margin:22px 0;padding:16px 18px;background:#eef4ec;border-left:5px solid #255e17;line-height:1.75}
     .admin-search{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
     .admin-search input{flex:1;min-width:260px;font-size:16px;padding:12px 14px;border:1px solid #b9c5b6;border-radius:6px}
+    .admin-search select{font-size:16px;padding:12px 36px 12px 12px;border:1px solid #b9c5b6;border-radius:6px;background:#fff}
     .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}
     .admin-btn.danger{background:#fff;color:#8a1f11;border:1px solid #b94b3d}
     .result-count{margin:12px 0;color:#4b5a49}
@@ -38,17 +39,23 @@
     <h1>正誤表管理</h1>
 
     <div class="admin-note">
-      書名・著者・ISBN・書籍IDで対象書籍を検索してください。<br>
+      書名・著者・ISBN・書籍IDで対象書籍を検索できます。
+      「正誤表あり／なし」だけで絞り込むこともできます。<br>
       <strong>PDFの選択は、対象書籍を選んだ後の確認画面で行います。</strong>
       元のPDFファイル名は何でも構いません。送信後、自動的に所定のファイル名へ変更して登録します。
     </div>
 
     <div class="admin-search">
       <input id="book-query" type="search" placeholder="書名・著者・ISBN・書籍IDで検索" autocomplete="off">
+      <select id="errata-filter" aria-label="正誤表の登録状態">
+        <option value="all">正誤表：すべて</option>
+        <option value="yes">正誤表：あり</option>
+        <option value="no">正誤表：なし</option>
+      </select>
       <button class="admin-btn" id="search-button" type="button">検索</button>
     </div>
 
-    <p class="result-count" id="result-count">検索語を入力してください。</p>
+    <p class="result-count" id="result-count">検索語を入力するか、正誤表の有無を選んでください。</p>
     <div id="results"></div>
   </main>
 
