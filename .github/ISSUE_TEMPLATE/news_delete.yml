@@ -1,0 +1,26 @@
+name: "【入力用】お知らせを完全削除"
+description: "対象のお知らせを正本データから完全に削除します。"
+title: "[お知らせ管理] 削除: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        対象のお知らせを**完全削除**します。
+        **公開停止とは異なり、正本データから削除されます。**
+        一時的に公開を止めたいだけの場合は、このフォームを閉じて「公開停止」を使用してください。
+
+  - type: input
+    id: target_title
+    attributes:
+      label: 対象のお知らせ
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 削除の確認
+      options:
+        - label: このお知らせを正本データから完全削除します。
+          required: true

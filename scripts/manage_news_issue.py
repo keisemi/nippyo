@@ -68,12 +68,12 @@ def parse_named_section(body: str, heading: str) -> str:
     return "" if value in EMPTY_RESPONSES else value
 
 
-def publication_request(issue_title: str, body: str) -> dict[str, str] | None:
-    actions = {
+def dedicated_request(issue_title: str, body: str) -> dict[str, str] | None:
+    publication_actions = {
         "[お知らせ管理] 公開停止: ": "いいえ",
         "[お知らせ管理] 再公開: ": "はい",
     }
-    for prefix, published in actions.items():
+    for prefix, published in publication_actions.items():
         if issue_title.startswith(prefix):
             target = parse_named_section(body, "対象のお知らせ")
             if not target:
@@ -83,6 +83,17 @@ def publication_request(issue_title: str, body: str) -> dict[str, str] | None:
             values["修正・削除するお知らせ"] = target
             values["公開する"] = published
             return values
+
+    delete_prefix = "[お知らせ管理] 削除: "
+    if issue_title.startswith(delete_prefix):
+        target = parse_named_section(body, "対象のお知らせ")
+        if not target:
+            target = issue_title[len(delete_prefix):].strip()
+        values = {heading: "" for heading in HEADINGS}
+        values["操作"] = "削除"
+        values["修正・削除するお知らせ"] = target
+        return values
+
     return None
 
 
@@ -96,7 +107,7 @@ def main():
     body = issue.get("body") or ""
     issue_title = (issue.get("title") or "").strip()
 
-    values = publication_request(issue_title, body)
+    values = dedicated_request(issue_title, body)
     if values is None:
         values = parse_issue_form(body)
         missing = [heading for heading in HEADINGS if heading not in values]

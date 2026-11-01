@@ -232,10 +232,10 @@
       "削除確認フォームへ進んでよろしいですか？"
     )) return;
     const params = new URLSearchParams();
+    params.set("template", "news_delete.yml");
     params.set("title", `[お知らせ管理] 削除: ${item.title}`);
-    params.set("operation", "削除");
     params.set("target_title", item.title);
-    openIssueForm(issueUrl(params));
+    openIssueForm(`${issueBase}?${params.toString()}`);
   }
 
   function render(items) {
