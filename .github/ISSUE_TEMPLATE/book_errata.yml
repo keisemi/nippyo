@@ -1,0 +1,53 @@
+name: "【入力用】正誤表を管理"
+description: "管理画面で対象書籍を選んでから、正誤表PDFの追加・差替え・削除を行います。"
+title: "[正誤表管理] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        管理画面から対象書籍を選択した後の確認画面です。
+        **追加・差替えの場合は、PDFを1点だけ選択してください。**
+        元のファイル名は何でも構いません。登録時に自動的に所定のファイル名へ変更します。
+        削除の場合はPDFの選択は不要です。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operation
+    attributes:
+      label: 操作
+      options:
+        - 追加・差替え
+        - 削除
+    validations:
+      required: true
+
+  - type: upload
+    id: pdf_file
+    attributes:
+      label: 正誤表PDF
+      description: 追加・差替えの場合のみ、PDFを1点選択してください（最大25MB）。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: 対象書籍と操作内容を確認しました。
+          required: true
