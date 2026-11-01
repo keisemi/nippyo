@@ -102,11 +102,12 @@
 
   function issueUrl(book, operation) {
     const params = new URLSearchParams();
-    params.set("template", "book_cover.yml");
-    params.set("title", `[書影管理] ${book.title}`);
+    const deleting = operation === "削除";
+    params.set("template", deleting ? "book_cover_delete.yml" : "book_cover.yml");
+    params.set("title", deleting ? `[書影管理] 削除: ${book.title}` : `[書影管理] ${book.title}`);
     params.set("book_id", book.id);
     params.set("current_title", book.title);
-    params.set("operation", operation);
+    if (!deleting) params.set("operation", operation);
     return `${issueBase}?${params.toString()}`;
   }
 

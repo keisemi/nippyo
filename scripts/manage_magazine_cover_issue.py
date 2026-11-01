@@ -183,6 +183,8 @@ def main() -> None:
     magazine_name = sections.get("雑誌名", "").strip()
     current_issue = sections.get("現在の雑誌月号", "").strip()
     operation = sections.get("操作", "").strip()
+    if not operation and title.startswith("[雑誌書影管理] 削除:"):
+        operation = "削除"
 
     verify_target(book_id, magazine_id, magazine_name, current_issue)
 

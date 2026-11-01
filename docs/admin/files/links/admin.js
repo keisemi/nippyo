@@ -161,18 +161,21 @@
 
   function issueUrl(book, operation, link = null) {
     const params = new URLSearchParams();
-    params.set("template","book_external_link.yml");
-    params.set("title",`[関連リンク管理] ${book.title}`);
+    const deleting = operation === "削除";
+    params.set("template", deleting ? "book_external_link_delete.yml" : "book_external_link.yml");
+    params.set("title", deleting ? `[関連リンク管理] 削除: ${book.title}` : `[関連リンク管理] ${book.title}`);
     params.set("book_id",book.id);
     params.set("current_title",book.title);
-    params.set("operation",operation);
+    if (!deleting) params.set("operation",operation);
 
     if (link) {
       params.set("current_slot",String(link.slot));
       params.set("current_url",link.url);
-      params.set("link_title",link.title || "");
-      params.set("comment",link.comment || "");
-      params.set("url",link.url);
+      if (!deleting) {
+        params.set("link_title",link.title || "");
+        params.set("comment",link.comment || "");
+        params.set("url",link.url);
+      }
     }
     return `${issueBase}?${params.toString()}`;
   }

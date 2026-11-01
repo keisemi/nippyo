@@ -200,6 +200,8 @@ def main() -> None:
     book_id = fields.get("書籍ID", "").strip()
     current_title = fields.get("現在の書名", "").strip()
     operation = fields.get("操作", "").strip()
+    if not operation and issue_title.startswith("[関連リンク管理] 削除:"):
+        operation = "削除"
 
     verify_target(book_id, current_title)
     rows = load_links()

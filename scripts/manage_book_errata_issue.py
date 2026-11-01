@@ -127,6 +127,8 @@ def main() -> None:
     book_id = sections.get("書籍ID", "").strip()
     current_title = sections.get("現在の書名", "").strip()
     operation = sections.get("操作", "").strip()
+    if not operation and title.startswith("[正誤表管理] 削除:"):
+        operation = "削除"
 
     verify_target(book_id, current_title)
 

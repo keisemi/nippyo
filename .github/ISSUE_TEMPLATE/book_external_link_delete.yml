@@ -1,0 +1,49 @@
+name: "【入力用】関連リンクを削除"
+description: "対象書籍に登録されている関連リンクを1件削除します。"
+title: "[関連リンク管理] 削除: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        対象書籍の**関連リンクを1件削除**します。
+        書誌情報そのものは削除しません。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_slot
+    attributes:
+      label: 現在のリンク番号
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_url
+    attributes:
+      label: 現在のURL
+      description: 削除対象の確認用です。管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: この関連リンクを削除します。
+          required: true

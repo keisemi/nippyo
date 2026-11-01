@@ -1,0 +1,49 @@
+name: "【入力用】雑誌号の書影を削除"
+description: "対象雑誌号の書影ファイルを削除します。"
+title: "[雑誌書影管理] 削除: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        対象雑誌号の**書影を削除**します。
+        雑誌号の書誌情報そのものは削除しません。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_id
+    attributes:
+      label: 雑誌ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_name
+    attributes:
+      label: 雑誌名
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_issue
+    attributes:
+      label: 現在の雑誌月号
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: この雑誌号の書影を削除します。
+          required: true

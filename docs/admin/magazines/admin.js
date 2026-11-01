@@ -55,13 +55,16 @@
 
   function coverIssueUrl(detail, operation) {
     const params = new URLSearchParams();
-    params.set("template", "magazine_cover.yml");
-    params.set("title", `[雑誌書影管理] ${detail.magazine_name} ${detail.issue || ""}`);
+    const deleting = operation === "削除";
+    params.set("template", deleting ? "magazine_cover_delete.yml" : "magazine_cover.yml");
+    params.set("title", deleting
+      ? `[雑誌書影管理] 削除: ${detail.magazine_name} ${detail.issue || ""}`
+      : `[雑誌書影管理] ${detail.magazine_name} ${detail.issue || ""}`);
     params.set("book_id", String(detail.id || ""));
     params.set("magazine_id", String(detail.magazine_id || ""));
     params.set("magazine_name", String(detail.magazine_name || ""));
     params.set("current_issue", String(detail.issue || ""));
-    params.set("operation", operation);
+    if (!deleting) params.set("operation", operation);
     return `${issueBase}?${params.toString()}`;
   }
 

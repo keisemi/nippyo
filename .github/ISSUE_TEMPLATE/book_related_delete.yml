@@ -1,0 +1,33 @@
+name: "【入力用】付属データを削除"
+description: "対象書籍の付属データファイルを削除します。"
+title: "[付属データ管理] 削除: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        対象書籍の**付属データファイルを削除**します。
+        書誌情報そのものは削除しません。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: この書籍の付属データファイルを削除します。
+          required: true
