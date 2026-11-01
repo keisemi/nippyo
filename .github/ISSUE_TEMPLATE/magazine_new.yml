@@ -1,43 +1,26 @@
 name: "【入力用】新しい雑誌号を登録"
-description: "雑誌管理画面で最新号を雛形にし、新しい号を登録します。"
+description: "選んだ雑誌の最新号を雛形にして、新しい号を登録します。"
 title: "[雑誌号新規] "
 body:
   - type: markdown
     attributes:
       value: |
-        新しい雑誌号の登録内容を確認するフォームです。
-        基本情報は管理画面から自動入力されています。
-        **「登録データ」欄をクリックして Ctrl+V で貼り付けてください。**
-        管理画面で入力した特集・目次などの全項目が、すでにクリップボードへコピーされています。
+        新しい雑誌号の登録フォームです。
+        選択した雑誌の**現在の最新号**を自動で雛形にし、判型・本誌編者などの固定項目を引き継ぎます。
+        月号・通巻・発刊日・価格・特集・目次など、毎号変わる項目を入力してください。
         **現段階では登録後すぐ公開サイトへ反映されます。**
 
-  - type: input
-    id: source_book_id
-    attributes:
-      label: 雛形号の書籍ID
-      description: 管理画面から自動入力されます。変更しないでください。
-    validations:
-      required: true
-
-  - type: input
-    id: source_issue
-    attributes:
-      label: 雛形号の雑誌月号
-      description: 管理画面から自動入力されます。変更しないでください。
-    validations:
-      required: true
-
-  - type: input
-    id: magazine_id
-    attributes:
-      label: 雑誌ID
-    validations:
-      required: true
-
-  - type: input
+  - type: dropdown
     id: magazine_name
     attributes:
       label: 雑誌名
+      options:
+        - 法律時報
+        - 法学セミナー
+        - 経済セミナー
+        - 数学セミナー
+        - こころの科学
+        - そだちの科学
     validations:
       required: true
 
@@ -45,6 +28,7 @@ body:
     id: new_book_id
     attributes:
       label: 新しい書籍ID
+      description: "雑誌6誌で重複しないIDを入力してください。"
     validations:
       required: true
 
@@ -52,6 +36,7 @@ body:
     id: mag_issue
     attributes:
       label: 雑誌月号
+      description: "例：2026年12月・2027年1月号"
     validations:
       required: true
 
@@ -66,22 +51,169 @@ body:
     id: pub_date
     attributes:
       label: 発刊日
+      description: "YYYY-MM-DD 形式。例：2026-11-27"
     validations:
       required: true
 
-  - type: textarea
-    id: payload
+  - type: input
+    id: format
     attributes:
-      label: 登録データ
-      description: この欄をクリックして Ctrl+V で貼り付けてください。管理画面で入力した全項目が入ります。貼り付け後は内容を変更しないでください。
-      placeholder: "ここをクリックして Ctrl+V で貼り付け"
-    validations:
-      required: true
+      label: 判型
+      description: "空欄なら最新号の値を引き継ぎます。"
+
+  - type: input
+    id: pages
+    attributes:
+      label: ページ数
+      description: "数字のみ。"
+
+  - type: input
+    id: price_body
+    attributes:
+      label: 本体価格
+      description: "数字のみ。"
+
+  - type: input
+    id: isbn_old
+    attributes:
+      label: 旧ISBN
+
+  - type: input
+    id: isbn_new
+    attributes:
+      label: 新ISBN
+
+  - type: input
+    id: magazine_code_1
+    attributes:
+      label: 雑誌コード(1)
+
+  - type: input
+    id: magazine_code_2
+    attributes:
+      label: 雑誌コード(2)
+
+  - type: input
+    id: subtitle_before
+    attributes:
+      label: 前副題
+
+  - type: input
+    id: feature
+    attributes:
+      label: 特集
+
+  - type: input
+    id: feature_yomi
+    attributes:
+      label: 特集よみ
+
+  - type: input
+    id: feature_subtitle
+    attributes:
+      label: 後副題
+
+  - type: input
+    id: description_heading
+    attributes:
+      label: 特集内容紹介文見出
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 特集内容紹介文
+
+  - type: input
+    id: subtitle_before2
+    attributes:
+      label: 前副題2
+
+  - type: input
+    id: feature2
+    attributes:
+      label: 特集2
+
+  - type: input
+    id: feature_yomi2
+    attributes:
+      label: 特集2よみ
+
+  - type: input
+    id: feature_subtitle2
+    attributes:
+      label: 後副題2
+
+  - type: input
+    id: description_heading2
+    attributes:
+      label: 特集2 内容紹介文見出
+
+  - type: textarea
+    id: description2
+    attributes:
+      label: 特集2 内容紹介文
+
+  - type: textarea
+    id: toc
+    attributes:
+      label: 目次
+      description: "書誌詳細ページに表示する整形済みの目次を貼り付けてください。"
+
+  - type: input
+    id: external_link_title_1
+    attributes:
+      label: 外部リンク1 タイトル
+
+  - type: textarea
+    id: external_link_comment_1
+    attributes:
+      label: 外部リンク1 コメント
+
+  - type: input
+    id: external_link_url_1
+    attributes:
+      label: 外部リンク1 URL
+
+  - type: input
+    id: external_link_title_2
+    attributes:
+      label: 外部リンク2 タイトル
+
+  - type: textarea
+    id: external_link_comment_2
+    attributes:
+      label: 外部リンク2 コメント
+
+  - type: input
+    id: external_link_url_2
+    attributes:
+      label: 外部リンク2 URL
+
+  - type: input
+    id: external_link_title_3
+    attributes:
+      label: 外部リンク3 タイトル
+
+  - type: textarea
+    id: external_link_comment_3
+    attributes:
+      label: 外部リンク3 コメント
+
+  - type: input
+    id: external_link_url_3
+    attributes:
+      label: 外部リンク3 URL
+
+  - type: textarea
+    id: editor
+    attributes:
+      label: 本誌編者
+      description: "空欄なら最新号の値を引き継ぎます。"
 
   - type: checkboxes
     id: confirmation
     attributes:
       label: 確認
       options:
-        - label: 管理画面で新しい号の内容を確認し、「登録データ」を貼り付けました。
+        - label: 登録する雑誌・月号・通巻番号・発刊日・書籍IDを確認しました。
           required: true

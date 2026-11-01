@@ -245,6 +245,32 @@ def validate_magazine(magazine_id: str, magazine_name: str):
     return expected_name, SOURCE_DIR / filename
 
 
+def magazine_by_name(magazine_name: str):
+    for magazine_id, (name, filename) in MAGAZINES.items():
+        if name == magazine_name:
+            return magazine_id, name, SOURCE_DIR / filename
+    raise SystemExit(f"未対応の雑誌名です: {magazine_name}")
+
+
+def latest_source_row(rows: list[dict[str, str]], magazine_id: str):
+    candidates = [row for row in rows if str(row.get("雑誌ID") or "").strip() == magazine_id]
+    if not candidates:
+        raise SystemExit(f"雑誌ID {magazine_id} の雛形号がありません。")
+
+    def sort_key(row: dict[str, str]):
+        raw_date = str(row.get("発刊日") or "").strip()
+        m = re.fullmatch(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})", raw_date)
+        if m:
+            date_key = tuple(int(x) for x in m.groups())
+        else:
+            date_key = (0, 0, 0)
+        issue_no = re.sub(r"\D", "", str(row.get("雑誌通算番号") or ""))
+        book_id = re.sub(r"\D", "", str(row.get("書籍ID") or ""))
+        return (date_key, int(issue_no or 0), int(book_id or 0))
+
+    return max(candidates, key=sort_key)
+
+
 def find_one(rows: list[dict[str, str]], book_id: str, label: str):
     matches = [(index, row) for index, row in enumerate(rows) if str(row.get("書籍ID") or "").strip() == book_id]
     if not matches:
@@ -311,36 +337,28 @@ def apply_edit(fields: dict[str, str]) -> None:
 
 
 def apply_new(fields: dict[str, str]) -> None:
-    source_book_id = fields.get("雛形号の書籍ID", "").strip()
-    source_issue = fields.get("雛形号の雑誌月号", "").strip()
-    magazine_id = fields.get("雑誌ID", "").strip()
     magazine_name = fields.get("雑誌名", "").strip()
     new_book_id = fields.get("新しい書籍ID", "").strip()
     new_issue = fields.get("雑誌月号", "").strip()
     new_issue_number = fields.get("雑誌通算番号", "").strip()
     pub_date = fields.get("発刊日", "").strip()
 
-    if not all([source_book_id, source_issue, magazine_id, new_book_id, new_issue, new_issue_number, pub_date]):
-        raise SystemExit("新号登録に必要な識別情報が不足しています。管理画面からやり直してください。")
+    if not all([magazine_name, new_book_id, new_issue, new_issue_number, pub_date]):
+        raise SystemExit("新号登録に必要な情報が不足しています。GitHubフォームから登録し直してください。")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", new_book_id):
         raise SystemExit("新しい書籍IDは半角英数字・ハイフン・アンダースコアで入力してください。")
     if new_book_id in all_existing_ids():
         raise SystemExit(f"書籍ID {new_book_id} はすでに雑誌CSVで使われています。")
 
-    expected_name, path = validate_magazine(magazine_id, magazine_name)
+    magazine_id, expected_name, path = magazine_by_name(magazine_name)
     fieldnames, rows, encoding = read_rows(path)
     missing = sorted((set(LABEL_TO_COLUMN.values()) | NEW_ISSUE_CLEAR_COLUMNS | {"WEB公開属性", "雑誌ID"}) - set(fieldnames))
     if missing:
         raise SystemExit("雑誌CSVに必要な列がありません: " + ", ".join(missing))
 
-    _source_index, source = find_one(rows, source_book_id, expected_name)
-    if str(source.get("雑誌ID") or "").strip() != magazine_id:
-        raise SystemExit("雛形号の雑誌IDが一致しません。")
-    if str(source.get("雑誌月号") or "").strip() != source_issue:
-        raise SystemExit(
-            "雛形号の月号表記が現在のCSVと一致しません。\n"
-            f"管理画面表示: {source_issue}\nCSV: {str(source.get('雑誌月号') or '').strip()}"
-        )
+    source = latest_source_row(rows, magazine_id)
+    source_book_id = str(source.get("書籍ID") or "").strip()
+    source_issue = str(source.get("雑誌月号") or "").strip()
 
     if any(str(row.get("雑誌月号") or "").strip() == new_issue for row in rows):
         raise SystemExit(f"雑誌月号 {new_issue} はすでに {expected_name} に登録されています。")
@@ -353,9 +371,9 @@ def apply_new(fields: dict[str, str]) -> None:
     new_row["書籍ID"] = new_book_id
     new_row["雑誌ID"] = magazine_id
 
-    # 現行ビルダーはWEB公開属性=1のみ許容。公開前登録は次工程F-07で分離する。
+    # F-07前は新規登録するとそのまま公開される。
     if str(new_row.get("WEB公開属性") or "").strip() != "1":
-        raise SystemExit("雛形号のWEB公開属性が1ではありません。F-07の公開状態対応前には新規登録できません。")
+        raise SystemExit("最新号のWEB公開属性が1ではありません。F-07の公開状態対応前には新規登録できません。")
 
     for label, column in LABEL_TO_COLUMN.items():
         raw = fields.get(label, "")
@@ -364,14 +382,13 @@ def apply_new(fields: dict[str, str]) -> None:
         validate_changed_value(label, raw)
         new_row[column] = raw
 
-    # 必須値はフォームとサーバー側の両方で確認する。
     for column, label in (("雑誌月号", "雑誌月号"), ("雑誌通算番号", "雑誌通算番号"), ("発刊日", "発刊日")):
         if not str(new_row.get(column) or "").strip():
             raise SystemExit(f"{label}がありません。")
 
     append_row(path, fieldnames, new_row, encoding)
     print(f"雑誌号新規登録: {expected_name} / {new_issue} / 書籍ID {new_book_id}")
-    print(f"雛形号: {source_issue} / 書籍ID {source_book_id}")
+    print(f"自動選択した最新号: {source_issue} / 書籍ID {source_book_id}")
     print(f"更新ファイル: {path.relative_to(ROOT)} / encoding={encoding}")
 
 
@@ -384,7 +401,7 @@ def main() -> None:
         apply_edit(fields)
         return
     if title.startswith("[雑誌号新規]"):
-        apply_new(use_compact_new_payload(fields))
+        apply_new(fields)
         return
     raise SystemExit("雑誌号管理用Issueではありません。")
 

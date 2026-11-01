@@ -20,6 +20,12 @@
   const detailCache = new Map();
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
 
+  function newIssueUrl() {
+    const params = new URLSearchParams();
+    params.set("template", "magazine_new.yml");
+    return `${issueBase}?${params.toString()}`;
+  }
+
   const ebookLabels = {
     kindle:"Amazon Kindle",
     univcoop:"大学生協",
@@ -735,11 +741,10 @@
       ` : ""}
 
       <section class="detail-section">
-        <h3>この号をもとに操作</h3>
-        <p>現在値の修正、またはこの号を雛形にした次号入力画面を開けます。</p>
+        <h3>この号を修正</h3>
+        <p>現在の登録内容を修正する場合はこちらから進みます。</p>
         <div class="edit-submit-actions">
           <button id="open-magazine-edit" class="admin-btn" type="button">この号を修正</button>
-          <button id="open-next-magazine" class="admin-btn secondary" type="button">この号をもとに次号を登録</button>
         </div>
       </section>
 
@@ -747,7 +752,6 @@
       ${ebooks}
     `;
     document.getElementById("open-magazine-edit")?.addEventListener("click", () => openEditForm(detail));
-    document.getElementById("open-next-magazine")?.addEventListener("click", () => openNextIssueForm(detail));
   }
 
   async function openDetail(issue) {
@@ -906,12 +910,7 @@
       });
       searchButton.addEventListener("click", runSearch);
       newIssueButton.addEventListener("click", () => {
-        const latest = latestIssueForMagazine(selectedMagazineId);
-        if (!latest) {
-          window.alert("この雑誌の最新号を取得できませんでした。");
-          return;
-        }
-        void openNextIssueFrom(latest);
+        window.location.href = newIssueUrl();
       });
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") runSearch();
