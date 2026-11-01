@@ -90,8 +90,10 @@ JS_FILE.write_text(
     encoding="utf-8",
 )
 
+# 管理画面用の非公開内容はGitHub Pages配下へ生成しない。
+# 管理画面は正本 data/news.csv をGitHub上から直接読み込む。
 ADMIN_JS_FILE.write_text(
-    "window.NIPPYO_ADMIN_NEWS=" + json.dumps(admin_news, ensure_ascii=False, separators=(",", ":")) + ";\n",
+    "window.NIPPYO_ADMIN_NEWS=[];\n",
     encoding="utf-8",
 )
 
@@ -103,4 +105,4 @@ print(f" - 全件数: {len(admin_news):,}")
 print(f" - 公開件数: {len(public_news):,}")
 print(f" - {JSON_FILE}")
 print(f" - {JS_FILE}")
-print(f" - {ADMIN_JS_FILE}（お知らせ管理用）")
+print(f" - {ADMIN_JS_FILE}（非公開内容は出力しません）")

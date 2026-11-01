@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const news = Array.isArray(window.NIPPYO_ADMIN_NEWS) ? window.NIPPYO_ADMIN_NEWS : [];
+  let news = [];
+  const newsMasterUrl = "https://raw.githubusercontent.com/keisemi/nippyo/main/data/news.csv";
   const queryInput = document.getElementById("news-query");
   const searchButton = document.getElementById("search-button");
   const results = document.getElementById("results");
@@ -38,6 +39,85 @@
 
   function openIssueForm(url) {
     window.open(url, "_blank", "noopener");
+  }
+
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text[i];
+      if (quoted) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') {
+            field += '"';
+            i += 1;
+          } else {
+            quoted = false;
+          }
+        } else {
+          field += ch;
+        }
+      } else if (ch === '"') {
+        quoted = true;
+      } else if (ch === ",") {
+        row.push(field);
+        field = "";
+      } else if (ch === "\n") {
+        row.push(field.replace(/\r$/, ""));
+        rows.push(row);
+        row = [];
+        field = "";
+      } else {
+        field += ch;
+      }
+    }
+
+    if (field || row.length) {
+      row.push(field.replace(/\r$/, ""));
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function truthy(value) {
+    return ["1", "true", "yes", "on", "あり", "はい"].includes(String(value ?? "").trim().toLowerCase());
+  }
+
+  async function loadNewsMaster() {
+    const response = await fetch(`${newsMasterUrl}?t=${Date.now()}`, {cache:"no-store"});
+    if (!response.ok) throw new Error(`お知らせ正本データを取得できませんでした（HTTP ${response.status}）`);
+
+    const rows = parseCsv(await response.text());
+    if (!rows.length) return [];
+
+    const headers = rows[0].map((value,index) => index === 0 ? value.replace(/^\uFEFF/, "").trim() : value.trim());
+    const index = Object.fromEntries(headers.map((name,i) => [name,i]));
+    for (const required of ["id","date","category","title","text","url","pinned","published"]) {
+      if (!(required in index)) throw new Error(`お知らせ正本データに ${required} 列がありません。`);
+    }
+
+    const items = rows.slice(1)
+      .filter((values) => values.some((value) => String(value || "").trim()))
+      .map((values) => ({
+        id: String(values[index.id] || "").trim(),
+        date: String(values[index.date] || "").trim(),
+        category: String(values[index.category] || "").trim() || "お知らせ",
+        title: String(values[index.title] || "").trim(),
+        text: String(values[index.text] || "").trim(),
+        url: String(values[index.url] || "").trim(),
+        pinned: truthy(values[index.pinned]),
+        published: truthy(values[index.published]),
+      }));
+
+    items.sort((a,b) => {
+      const dateDiff = String(b.date || "").localeCompare(String(a.date || ""), "ja", {numeric:true});
+      if (dateDiff) return dateDiff;
+      return String(b.id || "").localeCompare(String(a.id || ""), "ja", {numeric:true});
+    });
+    return items;
   }
 
   function closeModal() {
@@ -185,18 +265,29 @@
     render(news.filter((item) => normalize(`${item.title} ${item.category} ${item.text} ${item.url}`).includes(q)));
   }
 
-  newNewsLink.href = newUrl();
-  newNewsLink.target = "_blank";
-  newNewsLink.rel = "noopener noreferrer";
-  searchButton.addEventListener("click", search);
-  queryInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") search();
-  });
-  modalClose?.addEventListener("click", closeModal);
-  modal?.querySelector("[data-modal-close]")?.addEventListener("click", closeModal);
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeModal();
-  });
+  async function init() {
+    try {
+      news = await loadNewsMaster();
+      newNewsLink.href = newUrl();
+      newNewsLink.target = "_blank";
+      newNewsLink.rel = "noopener noreferrer";
+      searchButton.addEventListener("click", search);
+      queryInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") search();
+      });
+      modalClose?.addEventListener("click", closeModal);
+      modal?.querySelector("[data-modal-close]")?.addEventListener("click", closeModal);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeModal();
+      });
 
-  render(news);
+      render(news);
+    } catch (error) {
+      console.error(error);
+      count.textContent = "お知らせデータを読み込めませんでした。ページを再読み込みしてください。";
+      results.innerHTML = '<div class="empty">管理用データの取得に失敗しました。</div>';
+    }
+  }
+
+  void init();
 })();
