@@ -1,0 +1,54 @@
+name: "【入力用】付属データを管理"
+description: "管理画面で対象書籍を選んでから、付属データの追加・差替え・削除を行います。"
+title: "[付属データ管理] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        管理画面から対象書籍を選択した後の確認画面です。
+        **追加・差替えの場合は、付属データを1点だけ選択してください。**
+        元のファイル名は何でも構いません。登録時に自動的に書籍IDのファイル名へ変更します。
+        複数ファイルや旧形式のOfficeファイルはZIPにまとめてください。
+        削除の場合はファイルの選択は不要です。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operation
+    attributes:
+      label: 操作
+      options:
+        - 追加・差替え
+        - 削除
+    validations:
+      required: true
+
+  - type: upload
+    id: related_file
+    attributes:
+      label: 付属データファイル
+      description: 追加・差替えの場合のみ、PDF・ZIP・XLSX・DOCX・PPTX・CSV・TXTなどを1点選択してください（最大25MB）。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: 対象書籍と操作内容を確認しました。
+          required: true

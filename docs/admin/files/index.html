@@ -19,9 +19,6 @@
     .file-card p{margin:0;color:#555;line-height:1.7}
     .file-label{margin:0 0 6px!important;color:#255e17!important;font-size:.78rem;font-weight:700;letter-spacing:.12em}
     .file-link{display:inline-block;margin-top:16px;color:#255e17;font-weight:700}
-    .file-card.is-disabled{background:#f7f8f6;border-top-color:#aab4a7;color:#666}
-    .file-card.is-disabled .file-label{color:#777!important}
-    .status{display:inline-block;margin-top:16px;padding:4px 9px;border:1px solid #c7cec5;border-radius:999px;color:#666;background:#fff;font-size:.82rem;font-weight:700}
     .admin-footer{margin-top:30px;padding-top:18px;border-top:1px solid #d9e0d8;color:#666;font-size:.9rem;line-height:1.7}
     @media (max-width:760px){.file-grid{grid-template-columns:1fr}.admin-wrap{padding-inline:16px}}
   </style>
@@ -38,8 +35,7 @@
     <p class="admin-lead">書籍に付随するファイルを管理するための画面です。</p>
 
     <div class="admin-note">
-      <strong>現在「書影」と「正誤表」の管理機能を利用できます。</strong><br>
-      付属データの追加、差替え、削除機能は今後追加します。
+      <strong>書影・正誤表・付属データの管理機能を利用できます。</strong>
     </div>
 
     <section class="file-grid" aria-label="書籍関連ファイル管理メニュー">
@@ -57,15 +53,15 @@
         <span class="file-link">正誤表管理を開く →</span>
       </a>
 
-      <div class="file-card is-disabled" aria-disabled="true">
+      <a class="file-card" href="related/">
         <p class="file-label">RELATED</p>
         <h2>付属データ</h2>
         <p>解答、追加問題、Excel、プログラムコードなどの付属データを追加・差替え・削除します。</p>
-        <span class="status">準備中</span>
-      </div>
+        <span class="file-link">付属データ管理を開く →</span>
+      </a>
     </section>
 
-    <p class="admin-footer">日常更新担当者がリポジトリ内のファイルを直接編集しなくても操作できる形に整備します。</p>
+    <p class="admin-footer">日常更新担当者がリポジトリ内のファイルを直接編集しなくても操作できる形に整備しています。</p>
   </main>
 </body>
 </html>

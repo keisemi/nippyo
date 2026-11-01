@@ -1,0 +1,190 @@
+(() => {
+  "use strict";
+
+  const queryInput = document.getElementById("book-query");
+  const relatedFilter = document.getElementById("related-filter");
+  const searchButton = document.getElementById("search-button");
+  const results = document.getElementById("results");
+  const count = document.getElementById("result-count");
+  const issueBase = "https://github.com/keisemi/nippyo/issues/new";
+
+  let books = [];
+  let dataVersion = Date.now().toString();
+  let searchIndexPromise = null;
+
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[c]);
+  }
+
+  function normalize(value) {
+    return String(value ?? "")
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[‐-‒–—―−ーｰ]/g, "-")
+      .replace(/[・･,，、。\./:;；：()（）\[\]【】「」『』<>＜＞\s-]/g, "");
+  }
+
+  function authorDisplay(value) {
+    return String(value || "").split("|").filter(Boolean).join("／");
+  }
+
+  function expandRows(payload, key) {
+    const rows = payload && Array.isArray(payload[key]) ? payload[key] : null;
+    if (!rows) throw new Error(`${key} の検索データがありません。`);
+    if (!rows.length || !Array.isArray(rows[0])) return rows;
+    const columns = Array.isArray(payload.columns) ? payload.columns : [];
+    if (!columns.length) throw new Error(`${key} の列定義がありません。`);
+    return rows.map((row) => {
+      const item = {};
+      columns.forEach((column, index) => { item[column] = row[index]; });
+      return item;
+    });
+  }
+
+  async function readDataVersion() {
+    const stamp = Date.now().toString();
+    try {
+      const response = await fetch(`../../../data/last-updated.txt?t=${stamp}`, {cache:"no-store"});
+      if (response.ok) {
+        const value = (await response.text()).trim();
+        if (value) return value;
+      }
+    } catch (_) {}
+    return stamp;
+  }
+
+  async function loadSearchData() {
+    dataVersion = await readDataVersion();
+    const response = await fetch(`../../../data/books-admin-search.json?v=${encodeURIComponent(dataVersion)}`);
+    if (!response.ok) throw new Error(`書籍データを取得できませんでした（HTTP ${response.status}）`);
+    const payload = await response.json();
+    return expandRows(payload, "books");
+  }
+
+  async function ensureSearchIndex() {
+    if (!searchIndexPromise) {
+      searchIndexPromise = fetch(`../../../data/books-admin-search-index.json?v=${encodeURIComponent(dataVersion)}`)
+        .then((response) => {
+          if (!response.ok) throw new Error(`検索索引を取得できませんでした（HTTP ${response.status}）`);
+          return response.json();
+        })
+        .then((payload) => {
+          if (!payload || !Array.isArray(payload.search) || payload.search.length !== books.length) {
+            throw new Error("検索索引と表示データの件数が一致しません。");
+          }
+          books.forEach((book,index) => {
+            book.__search = String(payload.search[index] || "");
+            book.__searchNormalized = normalize([
+              book.__search,
+              book.id,
+              book.title,
+              book.subtitle_before,
+              book.subtitle_after,
+              book.author,
+              book.isbn,
+              book.identifiers,
+              Array.isArray(book.genres) ? book.genres.join(" ") : book.genres,
+              book.series,
+              book.series_volume,
+            ].filter(Boolean).join(" "));
+            book.__hasRelated = Boolean(Number(book.status_flags || 0) & 2);
+          });
+        });
+    }
+    return searchIndexPromise;
+  }
+
+  function issueUrl(book, operation) {
+    const params = new URLSearchParams();
+    params.set("template", "book_related.yml");
+    params.set("title", `[付属データ管理] ${book.title}`);
+    params.set("book_id", book.id);
+    params.set("current_title", book.title);
+    params.set("operation", operation);
+    return `${issueBase}?${params.toString()}`;
+  }
+
+  function render(items, total) {
+    results.replaceChildren();
+    if (!items.length) {
+      count.textContent = "該当する書籍がありません。";
+      results.innerHTML = '<div class="empty">検索条件を変えてお試しください。</div>';
+      return;
+    }
+
+    if (total > items.length) {
+      count.textContent = `${total.toLocaleString()}件中${items.length.toLocaleString()}件表示（さらに絞り込んでください）`;
+    } else {
+      count.textContent = `${total.toLocaleString()}件表示`;
+    }
+
+    items.forEach((book) => {
+      const hasRelated = Boolean(book.__hasRelated);
+      const article = document.createElement("article");
+      article.className = "book-result";
+      article.innerHTML = `
+        <h2>${esc(book.title || "（書名なし）")}</h2>
+        <div class="book-meta">
+          ${book.author ? `<span>著者：${esc(authorDisplay(book.author))}</span>` : ""}
+          ${book.isbn ? `<span>ISBN：${esc(book.isbn)}</span>` : ""}
+          <span>書籍ID：${esc(book.id)}</span>
+          <span class="status ${hasRelated ? "on" : "off"}">付属データ：${hasRelated ? "登録済み" : "なし"}</span>
+        </div>
+        <div class="book-actions">
+          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}">${hasRelated ? "付属データを差替える" : "付属データを追加する"}</a>
+          ${hasRelated ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}">付属データを削除する</a>` : ""}
+        </div>
+      `;
+      results.appendChild(article);
+    });
+  }
+
+  async function search() {
+    const terms = queryInput.value.trim().split(/\s+/).filter(Boolean).map(normalize);
+    const filter = relatedFilter.value;
+
+    if (!terms.length && filter === "all") {
+      count.textContent = "検索語を入力するか、付属データの有無を選んでください。";
+      results.replaceChildren();
+      return;
+    }
+
+    try {
+      await ensureSearchIndex();
+
+      const matched = books.filter((book) => {
+        const textMatches = terms.every((term) =>
+          String(book.__searchNormalized || "").includes(term)
+        );
+        if (!textMatches) return false;
+
+        if (filter === "yes") return book.__hasRelated === true;
+        if (filter === "no") return book.__hasRelated === false;
+        return true;
+      });
+
+      render(matched.slice(0, 50), matched.length);
+    } catch (error) {
+      console.error(error);
+      count.textContent = "検索用データを読み込めませんでした。ページを再読み込みしてください。";
+    }
+  }
+
+  async function init() {
+    try {
+      books = await loadSearchData();
+      searchButton.addEventListener("click", () => { void search(); });
+      queryInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") void search();
+      });
+      relatedFilter.addEventListener("change", () => { void search(); });
+    } catch (error) {
+      console.error(error);
+      count.textContent = "書籍データを読み込めませんでした。ページを再読み込みしてください。";
+    }
+  }
+
+  init();
+})();
