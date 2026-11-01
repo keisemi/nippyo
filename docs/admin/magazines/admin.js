@@ -315,15 +315,78 @@
   }
 
   function openEditForm(detail) {
-    const params = new URLSearchParams();
-    params.set("template", "magazine_edit.yml");
-    params.set("title", `[雑誌号修正] ${detail.magazine_name} ${detail.issue || ""}`);
-    params.set("book_id", String(detail.id || ""));
-    params.set("magazine_id", String(detail.magazine_id || ""));
-    params.set("magazine_name", String(detail.magazine_name || ""));
-    params.set("current_issue", String(detail.issue || ""));
-    window.location.href = `${issueBase}?${params.toString()}`;
+    const source = editSource(detail);
+    const groups = [];
+    for (const [, , , group] of editFields) {
+      if (!groups.includes(group)) groups.push(group);
+    }
+    const fieldsHtml = groups.map((group) => {
+      const fields = editFields
+        .filter(([, , , fieldGroup]) => fieldGroup === group)
+        .map(([id,label,kind]) => editFieldHtml(id,label,kind,source[id] || ""))
+        .join("");
+      return `<section class="edit-section"><h3>${esc(group)}</h3><div class="edit-grid">${fields}</div></section>`;
+    }).join("");
+
+    detailContent.innerHTML = `
+      <p class="detail-kicker">雑誌号編集</p>
+      <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　${esc(detail.issue || "")}</h2>
+      <p class="edit-intro">現在登録されている値を入力済みにしています。必要な箇所だけ変更してください。変更していない項目はCSVを書き換えません。</p>
+      <form id="magazine-edit-form">
+        <div class="edit-fixed">
+          <div><strong>書籍ID</strong><br><code>${esc(detail.id)}</code></div>
+          <div><strong>雑誌</strong><br>${esc(detail.magazine_name)}</div>
+          <div><strong>現在の月号</strong><br>${esc(detail.issue || "")}</div>
+        </div>
+        ${fieldsHtml}
+        <div class="edit-submit-box">
+          「変更内容を確認する」を押すと、変更した項目だけをGitHubの確認フォームへ渡します。
+          <div class="edit-submit-actions">
+            <button class="admin-btn" type="submit">変更内容を確認する</button>
+            <button class="admin-btn secondary" id="back-to-magazine-detail" type="button">登録内容へ戻る</button>
+          </div>
+        </div>
+      </form>
+    `;
+
+    document.getElementById("back-to-magazine-detail").addEventListener("click", () => renderDetail(detail));
+    document.getElementById("magazine-edit-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const params = new URLSearchParams();
+      params.set("template","magazine_edit.yml");
+      params.set("book_id",String(detail.id || ""));
+      params.set("magazine_id",String(detail.magazine_id || ""));
+      params.set("magazine_name",String(detail.magazine_name || ""));
+      params.set("current_issue",String(detail.issue || ""));
+
+      let changes = 0;
+      for (const [id] of editFields) {
+        const before = String(source[id] || "");
+        const after = String(document.getElementById(`edit-${id}`).value || "").trim();
+        if (after !== before) {
+          params.set(issueFieldIds[id], after === "" && before !== "" ? "__CLEAR__" : after);
+          changes += 1;
+        }
+      }
+
+      if (!changes) {
+        window.alert("変更された項目がありません。");
+        return;
+      }
+
+      const nextIssue = String(document.getElementById("edit-issue").value || "").trim() || String(detail.issue || "");
+      params.set("title",`[雑誌号修正] ${detail.magazine_name} ${nextIssue}`);
+
+      const targetUrl = `${issueBase}?${params.toString()}`;
+      if (targetUrl.length > 7000) {
+        window.alert("変更内容が長いため、一度に確認フォームへ送れません。目次・内容紹介などの長文は、ほかの変更と分けて1項目ずつ更新してください。");
+        return;
+      }
+      window.location.href = targetUrl;
+    });
   }
+
 
   function nextIssueSource(detail) {
     const text = (value) => value === null || value === undefined ? "" : String(value);
