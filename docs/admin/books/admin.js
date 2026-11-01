@@ -461,12 +461,10 @@
         span.textContent = part;
         meta.appendChild(span);
       });
-      if (book.published === false) {
-        const status = document.createElement("span");
-        status.className = "publication-stopped";
-        status.textContent = "公開停止中";
-        meta.appendChild(status);
-      }
+      const status = document.createElement("span");
+      status.className = book.published === false ? "publication-stopped" : "publication-active";
+      status.textContent = book.published === false ? "公開停止中" : "公開中";
+      meta.appendChild(status);
       card.appendChild(meta);
 
       const actions = document.createElement("div");
