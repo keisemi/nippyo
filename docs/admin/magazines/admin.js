@@ -378,6 +378,171 @@
     });
   }
 
+
+  function nextIssueSource(detail) {
+    const text = (value) => value === null || value === undefined ? "" : String(value);
+    return {
+      book_id: "",
+      issue: "",
+      issue_number: "",
+      pub_date: "",
+      format: text(detail.format),
+      pages: "",
+      price_body: "",
+      isbn_old: "",
+      isbn_new: "",
+      magazine_code_1: "",
+      magazine_code_2: "",
+
+      subtitle_before: "",
+      feature: "",
+      feature_yomi: "",
+      feature_subtitle: "",
+      description_heading: "",
+      description: "",
+
+      subtitle_before2: "",
+      feature2: "",
+      feature2_yomi: "",
+      feature2_subtitle: "",
+      description_heading2: "",
+      description2: "",
+
+      toc: "",
+
+      external_link_title_1: "",
+      external_link_comment_1: "",
+      external_link_url_1: "",
+      external_link_title_2: "",
+      external_link_comment_2: "",
+      external_link_url_2: "",
+      external_link_title_3: "",
+      external_link_comment_3: "",
+      external_link_url_3: "",
+
+      editor: text(detail.editor),
+    };
+  }
+
+  function nextIssueFieldHtml(id,label,kind,value,help="") {
+    const wide = kind !== "input" ? " wide" : "";
+    const note = help ? `<small style="display:block;margin-top:4px;color:#667164">${esc(help)}</small>` : "";
+    if (kind === "textarea" || kind === "textarea-large") {
+      const large = kind === "textarea-large" ? " large" : "";
+      return `<label class="edit-field${wide}"><span>${esc(label)}</span><textarea id="next-${esc(id)}" class="${large.trim()}">${esc(value)}</textarea>${note}</label>`;
+    }
+    return `<label class="edit-field"><span>${esc(label)}</span><input id="next-${esc(id)}" type="text" value="${esc(value)}">${note}</label>`;
+  }
+
+  function openNextIssueForm(detail) {
+    const source = nextIssueSource(detail);
+
+    const basics = [
+      nextIssueFieldHtml("book_id","書籍ID","input",source.book_id,"新しい号の書籍ID。前号のIDは引き継ぎません。"),
+      nextIssueFieldHtml("issue","雑誌月号","input",source.issue,"例：2026年12・2027年1月号"),
+      nextIssueFieldHtml("issue_number","雑誌通算番号","input",source.issue_number),
+      nextIssueFieldHtml("pub_date","発刊日","input",source.pub_date,"例：2026-11-27"),
+      nextIssueFieldHtml("format","判型","input",source.format,"前号から自動継承"),
+      nextIssueFieldHtml("pages","ページ数","input",source.pages),
+      nextIssueFieldHtml("price_body","本体価格","input",source.price_body),
+      nextIssueFieldHtml("isbn_old","旧ISBN","input",source.isbn_old),
+      nextIssueFieldHtml("isbn_new","新ISBN","input",source.isbn_new),
+      nextIssueFieldHtml("magazine_code_1","雑誌コード(1)","input",source.magazine_code_1),
+      nextIssueFieldHtml("magazine_code_2","雑誌コード(2)","input",source.magazine_code_2),
+    ].join("");
+
+    const feature1 = [
+      nextIssueFieldHtml("subtitle_before","前副題","input",""),
+      nextIssueFieldHtml("feature","特集","input",""),
+      nextIssueFieldHtml("feature_yomi","特集よみ","input",""),
+      nextIssueFieldHtml("feature_subtitle","後副題","input",""),
+      nextIssueFieldHtml("description_heading","特集内容紹介文見出","input",""),
+      nextIssueFieldHtml("description","特集内容紹介文","textarea",""),
+    ].join("");
+
+    const feature2 = [
+      nextIssueFieldHtml("subtitle_before2","前副題2","input",""),
+      nextIssueFieldHtml("feature2","特集2","input",""),
+      nextIssueFieldHtml("feature2_yomi","特集2よみ","input",""),
+      nextIssueFieldHtml("feature_subtitle2","後副題2","input",""),
+      nextIssueFieldHtml("description_heading2","特集2 内容紹介文見出","input",""),
+      nextIssueFieldHtml("description2","特集2 内容紹介文","textarea",""),
+    ].join("");
+
+    const links = [
+      nextIssueFieldHtml("external_link_title_1","外部リンク1 タイトル","input",""),
+      nextIssueFieldHtml("external_link_comment_1","外部リンク1 コメント","textarea",""),
+      nextIssueFieldHtml("external_link_url_1","外部リンク1 URL","input",""),
+      nextIssueFieldHtml("external_link_title_2","外部リンク2 タイトル","input",""),
+      nextIssueFieldHtml("external_link_comment_2","外部リンク2 コメント","textarea",""),
+      nextIssueFieldHtml("external_link_url_2","外部リンク2 URL","input",""),
+      nextIssueFieldHtml("external_link_title_3","外部リンク3 タイトル","input",""),
+      nextIssueFieldHtml("external_link_comment_3","外部リンク3 コメント","textarea",""),
+      nextIssueFieldHtml("external_link_url_3","外部リンク3 URL","input",""),
+    ].join("");
+
+    detailContent.innerHTML = `
+      <p class="detail-kicker">次号登録の準備</p>
+      <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　次号</h2>
+      <p class="edit-intro">
+        「${esc(detail.issue || "前号")}」を雛形にしています。
+        <strong>雑誌ID・雑誌名・判型・本誌編者</strong>だけを引き継ぎ、
+        書籍ID・月号・通巻・発刊日・ISBN・価格・頁数・特集・目次・外部リンクなどは空欄に戻しています。
+      </p>
+
+      <div class="edit-fixed">
+        <div><strong>雑誌ID</strong><br><code>${esc(detail.magazine_id)}</code></div>
+        <div><strong>雑誌名</strong><br>${esc(detail.magazine_name)}</div>
+        <div><strong>雛形にした号</strong><br>${esc(detail.issue || "")}</div>
+      </div>
+
+      <section class="edit-section">
+        <h3>基本情報</h3>
+        <div class="edit-grid">${basics}</div>
+      </section>
+
+      <section class="edit-section">
+        <h3>特集1</h3>
+        <div class="edit-grid">${feature1}</div>
+      </section>
+
+      <section class="edit-section">
+        <h3>特集2</h3>
+        <div class="edit-grid">${feature2}</div>
+      </section>
+
+      <section class="edit-section">
+        <h3>目次</h3>
+        <div class="edit-grid">
+          ${nextIssueFieldHtml("toc","目次","textarea-large","")}
+        </div>
+      </section>
+
+      <section class="edit-section">
+        <h3>外部リンク</h3>
+        <div class="edit-grid">${links}</div>
+      </section>
+
+      <section class="edit-section">
+        <h3>その他</h3>
+        <div class="edit-grid">
+          ${nextIssueFieldHtml("editor","本誌編者","textarea",source.editor,"前号から自動継承")}
+        </div>
+      </section>
+
+      <div class="edit-submit-box">
+        <strong>F-05ではここまでです。</strong><br>
+        前号を雛形にした次号入力画面が正しく作られることを確認します。
+        実際にCSVへ新号を追加する送信機能は、次のF-06で接続します。
+        <div class="edit-submit-actions">
+          <button class="admin-btn secondary" id="back-from-next-issue" type="button">登録内容へ戻る</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("back-from-next-issue").addEventListener("click", () => renderDetail(detail));
+  }
+
   function renderDetail(detail) {
     const cover = coverUrl(detail);
     const feature1 = featureText(detail);
@@ -454,15 +619,19 @@
       ` : ""}
 
       <section class="detail-section">
-        <h3>この号を修正</h3>
-        <p>現在値を入力済みにした修正フォームを開きます。必要な項目だけ変更してください。</p>
-        <button id="open-magazine-edit" class="admin-btn" type="button">この号を修正</button>
+        <h3>この号をもとに操作</h3>
+        <p>現在値の修正、またはこの号を雛形にした次号入力画面を開けます。</p>
+        <div class="edit-submit-actions">
+          <button id="open-magazine-edit" class="admin-btn" type="button">この号を修正</button>
+          <button id="open-next-magazine" class="admin-btn secondary" type="button">この号をもとに次号を登録</button>
+        </div>
       </section>
 
       ${external}
       ${ebooks}
     `;
     document.getElementById("open-magazine-edit")?.addEventListener("click", () => openEditForm(detail));
+    document.getElementById("open-next-magazine")?.addEventListener("click", () => openNextIssueForm(detail));
   }
 
   async function openDetail(issue) {
