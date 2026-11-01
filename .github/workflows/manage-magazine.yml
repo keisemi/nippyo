@@ -49,7 +49,7 @@ jobs:
         run: python scripts/manage_magazine_issue.py
 
       - name: Generate magazine data
-        run: python scripts/build_magazine_data.py
+        run: python scripts/build_magazine_data_with_visibility.py
 
       - name: Validate
         shell: bash
@@ -95,6 +95,9 @@ jobs:
           git add docs/data/magazine-issues-search.json
           git add docs/data/magazine-issues-search-index.json
           git add docs/data/magazine-details
+          git add docs/data/magazine-admin-search.json
+          git add docs/data/magazine-admin-search-index.json
+          git add docs/data/magazine-admin-details
           git add docs/data/magazine-last-updated.txt
           if git diff --cached --quiet; then
             echo "変更がありません。"

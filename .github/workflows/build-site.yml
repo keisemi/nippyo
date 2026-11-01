@@ -42,7 +42,7 @@ jobs:
         run: python scripts/build_data.py
 
       - name: Generate public magazine issue data
-        run: python scripts/build_magazine_data.py
+        run: python scripts/build_magazine_data_with_visibility.py
 
       - name: Generate public news data
         run: python scripts/build_news.py

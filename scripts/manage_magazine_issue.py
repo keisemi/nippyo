@@ -93,7 +93,7 @@ def get_issue() -> dict:
 def parse_sections(body: str) -> dict[str, str]:
     known = {
         "書籍ID", "雑誌ID", "雑誌名", "現在の雑誌月号", "確認",
-        "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID", "登録データ",
+        "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID", "登録データ", "公開状態",
         *LABEL_TO_COLUMN.keys(),
     }
     sections: dict[str, list[str]] = {}
@@ -366,13 +366,21 @@ def apply_new(fields: dict[str, str]) -> None:
     new_issue = fields.get("雑誌月号", "").strip()
     new_issue_number = fields.get("雑誌通算番号", "").strip()
     pub_date = fields.get("発刊日", "").strip()
+    publication_state = fields.get("公開状態", "").strip()
 
-    if not all([magazine_code_1, new_book_id, new_issue, new_issue_number, pub_date]):
+    if not all([magazine_code_1, new_book_id, new_issue, new_issue_number, pub_date, publication_state]):
         raise SystemExit("新号登録に必要な情報が不足しています。GitHubフォームから登録し直してください。")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", new_book_id):
         raise SystemExit("新しい書籍IDは半角英数字・ハイフン・アンダースコアで入力してください。")
     if new_book_id in all_existing_ids():
         raise SystemExit(f"書籍ID {new_book_id} はすでに雑誌CSVで使われています。")
+
+    if publication_state in {"非公開（登録だけする）", "非公開", "0"}:
+        publication_flag = "0"
+    elif publication_state in {"公開（登録後すぐサイトに出す）", "公開", "1"}:
+        publication_flag = "1"
+    else:
+        raise SystemExit(f"未対応の公開状態です: {publication_state}")
 
     magazine_id, expected_name, path = magazine_by_code1(magazine_code_1)
     fieldnames, rows, encoding = read_rows(path)
@@ -395,10 +403,7 @@ def apply_new(fields: dict[str, str]) -> None:
     new_row["書籍ID"] = new_book_id
     new_row["雑誌ID"] = magazine_id
     new_row["雑誌コード(1)"] = magazine_code_1
-
-    # F-07前は新規登録するとそのまま公開される。
-    if str(new_row.get("WEB公開属性") or "").strip() != "1":
-        raise SystemExit("最新号のWEB公開属性が1ではありません。F-07の公開状態対応前には新規登録できません。")
+    new_row["WEB公開属性"] = publication_flag
 
     for label, column in LABEL_TO_COLUMN.items():
         raw = fields.get(label, "")
@@ -413,6 +418,7 @@ def apply_new(fields: dict[str, str]) -> None:
 
     append_row(path, fieldnames, new_row, encoding)
     print(f"雑誌号新規登録: {expected_name} / {new_issue} / 書籍ID {new_book_id}")
+    print(f"公開状態: {'公開' if publication_flag == '1' else '非公開'}")
     print(f"自動選択した最新号: {source_issue} / 書籍ID {source_book_id}")
     print(f"更新ファイル: {path.relative_to(ROOT)} / encoding={encoding}")
 

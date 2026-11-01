@@ -163,8 +163,8 @@
   async function loadData() {
     version = await readVersion();
     const [dataResponse,indexResponse] = await Promise.all([
-      fetch(`../../data/magazine-issues-search.json?v=${encodeURIComponent(version)}`),
-      fetch(`../../data/magazine-issues-search-index.json?v=${encodeURIComponent(version)}`)
+      fetch(`../../data/magazine-admin-search.json?v=${encodeURIComponent(version)}`),
+      fetch(`../../data/magazine-admin-search-index.json?v=${encodeURIComponent(version)}`)
     ]);
     if (!dataResponse.ok) throw new Error(`雑誌データを取得できませんでした（HTTP ${dataResponse.status}）`);
     if (!indexResponse.ok) throw new Error(`雑誌検索索引を取得できませんでした（HTTP ${indexResponse.status}）`);
@@ -229,7 +229,7 @@
     const key = issue.pub_year ? String(issue.pub_year) : "undated";
     if (!detailCache.has(key)) {
       detailCache.set(key,
-        fetch(`../../data/magazine-details/magazine-details-${encodeURIComponent(key)}.json?v=${encodeURIComponent(version)}`)
+        fetch(`../../data/magazine-admin-details/magazine-admin-details-${encodeURIComponent(key)}.json?v=${encodeURIComponent(version)}`)
           .then((response) => {
             if (!response.ok) throw new Error(`詳細データを取得できませんでした（HTTP ${response.status}）`);
             return response.json();
@@ -706,6 +706,7 @@
       <table class="detail-table">
         <tbody>
           ${row("書籍ID", detail.id)}
+          ${row("公開状態", detail.published === false ? "非公開" : "公開中")}
           ${row("雑誌ID", detail.magazine_id)}
           ${row("通巻番号", detail.issue_number)}
           ${row("発刊日", detail.pub_date)}
@@ -800,6 +801,7 @@
           ${feature ? `<p class="issue-feature">特集：${esc(feature)}</p>` : ""}
           <div class="issue-meta">
             <span>書籍ID：${esc(issue.id)}</span>
+            <span class="status-note">${issue.published === false ? "非公開" : "公開中"}</span>
             ${issue.issue_number ? `<span>通巻：${esc(issue.issue_number)}</span>` : ""}
             ${issue.pub_date ? `<span>発刊日：${esc(issue.pub_date)}</span>` : ""}
             ${issue.isbn ? `<span>ISBN：${esc(issue.isbn)}</span>` : ""}
@@ -807,7 +809,7 @@
           </div>
           <div class="issue-actions">
             <button class="admin-btn" type="button" data-detail-id="${esc(issue.id)}">登録内容を確認</button>
-            <a class="admin-btn secondary" href="${esc(issueDetailUrl(issue))}" target="_blank" rel="noopener noreferrer">公開ページを確認</a>
+            ${issue.published === false ? "" : `<a class="admin-btn secondary" href="${esc(issueDetailUrl(issue))}" target="_blank" rel="noopener noreferrer">公開ページを確認</a>`}
             <a class="admin-btn secondary" href="${esc(backnumberUrl(issue))}" target="_blank" rel="noopener noreferrer">バックナンバーを確認</a>
           </div>
         </div>
@@ -871,6 +873,7 @@
       `現在の最新号：${latest.issue || "（月号未登録）"}`,
       latest.issue_number ? `通巻 ${latest.issue_number}` : "",
       latest.pub_date ? `発刊日 ${latest.pub_date}` : "",
+      latest.published === false ? "非公開" : "公開中",
     ].filter(Boolean);
     newIssueSource.textContent = parts.join(" ／ ");
     newIssueButton.dataset.sourceId = String(latest.id || "");
