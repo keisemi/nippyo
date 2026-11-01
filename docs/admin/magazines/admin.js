@@ -37,6 +37,17 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function deleteUrl(detail) {
+    const params = new URLSearchParams();
+    params.set("template", "magazine_delete.yml");
+    params.set("title", `[雑誌号削除] ${detail.magazine_name} ${detail.issue || ""}`);
+    params.set("book_id", String(detail.id || ""));
+    params.set("magazine_id", String(detail.magazine_id || ""));
+    params.set("magazine_name", String(detail.magazine_name || ""));
+    params.set("current_issue", String(detail.issue || ""));
+    return `${issueBase}?${params.toString()}`;
+  }
+
   function openPublicationChange(detail, publish) {
     const action = publish ? "公開" : "非公開";
     const ok = window.confirm(
@@ -48,6 +59,19 @@
     );
     if (!ok) return;
     window.location.href = publicationUrl(detail, publish);
+  }
+
+  function openDelete(detail) {
+    const ok = window.confirm(
+      `「${detail.magazine_name} ${detail.issue || ""}」の書誌情報そのものを削除します。\n\n` +
+      `書籍ID：${detail.id}\n\n` +
+      "通常の掲載取り下げなら「この号を非公開にする」を使用してください。\n" +
+      "この操作では対象誌の正本CSVから該当号のレコードを削除します。\n" +
+      "雑誌書影などのファイルは削除しません。\n\n" +
+      "削除確認フォームへ進んでよろしいですか？"
+    );
+    if (!ok) return;
+    window.location.href = deleteUrl(detail);
   }
 
   const ebookLabels = {
@@ -776,12 +800,21 @@
         </div>
       </section>
 
+      <section class="detail-section">
+        <h3>この号の書誌情報を削除</h3>
+        <p><strong>書誌情報そのものを削除する場合のみ使用してください。</strong><br>通常の掲載取り下げは「この号を非公開にする」を使用してください。削除しても雑誌書影などのファイルは自動削除しません。</p>
+        <div class="edit-submit-actions">
+          <button id="delete-magazine" class="admin-btn danger" type="button">この号の書誌情報を削除</button>
+        </div>
+      </section>
+
       ${external}
       ${ebooks}
     `;
     document.getElementById("open-magazine-edit")?.addEventListener("click", () => openEditForm(detail));
     document.getElementById("hide-magazine")?.addEventListener("click", () => openPublicationChange(detail, false));
     document.getElementById("restore-magazine")?.addEventListener("click", () => openPublicationChange(detail, true));
+    document.getElementById("delete-magazine")?.addEventListener("click", () => openDelete(detail));
   }
 
   async function openDetail(issue) {

@@ -93,6 +93,7 @@ def get_issue() -> dict:
 def parse_sections(body: str) -> dict[str, str]:
     known = {
         "書籍ID", "雑誌ID", "雑誌名", "現在の雑誌月号", "確認",
+        "削除確認用の書籍ID", "削除の確認",
         "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID", "登録データ", "公開状態",
         *LABEL_TO_COLUMN.keys(),
     }
@@ -400,6 +401,44 @@ def apply_visibility(fields: dict[str, str], publish: bool) -> None:
     print(f" - WEB公開属性: {before!r} -> {after!r}")
 
 
+def apply_delete(fields: dict[str, str]) -> None:
+    book_id = fields.get("書籍ID", "").strip()
+    magazine_id = fields.get("雑誌ID", "").strip()
+    magazine_name = fields.get("雑誌名", "").strip()
+    current_issue = fields.get("現在の雑誌月号", "").strip()
+    confirmation_id = fields.get("削除確認用の書籍ID", "").strip()
+
+    if not book_id or not magazine_id or not current_issue:
+        raise SystemExit("対象号の識別情報が不足しています。雑誌管理画面からやり直してください。")
+    if confirmation_id != book_id:
+        raise SystemExit(
+            "削除確認用の書籍IDが対象号と一致しません。\n"
+            f"対象書籍ID: {book_id}\n"
+            f"確認入力: {confirmation_id or '（空欄）'}"
+        )
+
+    expected_name, path = validate_magazine(magazine_id, magazine_name)
+    fieldnames, rows, encoding = read_rows(path)
+    row_index, row = find_one(rows, book_id, expected_name)
+
+    actual_magazine_id = str(row.get("雑誌ID") or "").strip()
+    actual_issue = str(row.get("雑誌月号") or "").strip()
+    if actual_magazine_id != magazine_id:
+        raise SystemExit(f"雑誌IDが一致しません。CSV: {actual_magazine_id} / 申請: {magazine_id}")
+    if actual_issue != current_issue:
+        raise SystemExit(
+            "対象号の月号表記が現在のCSVと一致しません。\n"
+            f"管理画面表示: {current_issue}\nCSV: {actual_issue}\n"
+            "管理画面を再読み込みして対象号を選び直してください。"
+        )
+
+    del rows[row_index]
+    write_rows(path, fieldnames, rows, encoding)
+    print(f"雑誌号書誌削除: {expected_name} / {current_issue} / 書籍ID {book_id}")
+    print(f"残存件数: {len(rows):,}")
+    print("雑誌書影などのファイルは削除していません。")
+
+
 def apply_new(fields: dict[str, str]) -> None:
     magazine_code_1 = fields.get("雑誌コード(1)", "").strip()
     new_book_id = fields.get("新しい書籍ID", "").strip()
@@ -479,6 +518,9 @@ def main() -> None:
         return
     if title.startswith("[雑誌号再公開]"):
         apply_visibility(fields, publish=True)
+        return
+    if title.startswith("[雑誌号削除]"):
+        apply_delete(fields)
         return
     raise SystemExit("雑誌号管理用Issueではありません。")
 

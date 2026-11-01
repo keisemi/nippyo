@@ -1,0 +1,60 @@
+name: "【入力用】雑誌号の書誌情報を削除する"
+description: "誤登録・重複登録など、本当に不要な雑誌号だけを削除します。"
+title: "[雑誌号削除] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        雑誌号の**書誌情報そのものを正本CSVから削除**するための確認フォームです。
+
+        通常の掲載取り下げは、削除ではなく「非公開」を使用してください。
+        この操作では、雑誌書影などのファイルは削除しません。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "雑誌管理画面から自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_id
+    attributes:
+      label: 雑誌ID
+      description: "雑誌管理画面から自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_name
+    attributes:
+      label: 雑誌名
+      description: "対象誌の確認用です。"
+    validations:
+      required: true
+
+  - type: input
+    id: current_issue
+    attributes:
+      label: 現在の雑誌月号
+      description: "削除する号の確認用です。"
+    validations:
+      required: true
+
+  - type: input
+    id: confirmation_book_id
+    attributes:
+      label: 削除確認用の書籍ID
+      description: "誤削除防止のため、上に表示されている書籍IDをもう一度入力してください。"
+      placeholder: "書籍IDを再入力"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: deletion_confirmation
+    attributes:
+      label: 削除の確認
+      options:
+        - label: "この雑誌号の書誌情報を正本CSVから削除することを確認しました。通常の掲載取り下げではなく、削除が必要です。"
+          required: true

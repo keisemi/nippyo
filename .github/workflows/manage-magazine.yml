@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   reject-unauthorized:
-    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]') || startsWith(github.event.issue.title, '[雑誌号公開停止]') || startsWith(github.event.issue.title, '[雑誌号再公開]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]') || startsWith(github.event.issue.title, '[雑誌号公開停止]') || startsWith(github.event.issue.title, '[雑誌号再公開]') || startsWith(github.event.issue.title, '[雑誌号削除]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,7 +26,7 @@ jobs:
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
 
   update:
-    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]') || startsWith(github.event.issue.title, '[雑誌号公開停止]') || startsWith(github.event.issue.title, '[雑誌号再公開]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]') || startsWith(github.event.issue.title, '[雑誌号公開停止]') || startsWith(github.event.issue.title, '[雑誌号再公開]') || startsWith(github.event.issue.title, '[雑誌号削除]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,6 +109,8 @@ jobs:
             MESSAGE="Magazine issue hide: issue #${ISSUE_NUMBER} [skip ci]"
           elif [[ "$ISSUE_TITLE" == \[雑誌号再公開\]* ]]; then
             MESSAGE="Magazine issue restore: issue #${ISSUE_NUMBER} [skip ci]"
+          elif [[ "$ISSUE_TITLE" == \[雑誌号削除\]* ]]; then
+            MESSAGE="Magazine issue delete: issue #${ISSUE_NUMBER} [skip ci]"
           else
             MESSAGE="Magazine issue edit: issue #${ISSUE_NUMBER} [skip ci]"
           fi
