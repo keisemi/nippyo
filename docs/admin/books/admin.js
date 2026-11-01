@@ -564,6 +564,8 @@
     try {
       books = await loadSearchData();
       newBookLink.href = newUrl();
+      newBookLink.target = "_blank";
+      newBookLink.rel = "noopener noreferrer";
       searchButton.addEventListener("click", () => { void search(); });
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") void search();
