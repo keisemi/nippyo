@@ -41,6 +41,24 @@
     window.open(url, "_blank", "noopener");
   }
 
+  function publicationUrl(item, publish) {
+    const params = new URLSearchParams();
+    params.set("title", `[お知らせ管理] ${publish ? "再公開" : "公開停止"}: ${item.title}`);
+    params.set("operation", "既存データ修正");
+    params.set("target_title", item.title);
+    params.set("published", publish ? "はい" : "いいえ");
+    return issueUrl(params);
+  }
+
+  function openPublicationChange(item, publish) {
+    const action = publish ? "再公開" : "公開停止";
+    const message = publish
+      ? `「${item.title}」を再公開します。\n\n公開サイトのお知らせ一覧に再び表示されます。\n\n確認フォームへ進んでよろしいですか？`
+      : `「${item.title}」を公開停止します。\n\nデータは削除せず管理画面に残るため、あとで再公開できます。\n\n確認フォームへ進んでよろしいですか？`;
+    if (!window.confirm(message)) return;
+    openIssueForm(publicationUrl(item, publish));
+  }
+
   function parseCsv(text) {
     const rows = [];
     let row = [];
@@ -147,9 +165,8 @@
           <label class="edit-field"><span>本文</span><textarea id="edit-text">${esc(item.text)}</textarea><p class="field-help">現在の本文を削除する場合は、この欄を空欄にしてください。</p></label>
           <label class="edit-field"><span>リンク先</span><input id="edit-url" type="text" value="${esc(item.url)}"><p class="field-help">https:// で始まるURL、またはサイト内の相対パスを入力できます。</p></label>
         </div>
-        <div class="edit-grid two-col">
+        <div class="edit-grid">
           <label class="edit-field"><span>重要表示</span><select id="edit-pinned"><option value="0"${item.pinned ? "" : " selected"}>いいえ</option><option value="1"${item.pinned ? " selected" : ""}>はい</option></select></label>
-          <label class="edit-field"><span>公開する</span><select id="edit-published"><option value="1"${item.published ? " selected" : ""}>はい</option><option value="0"${item.published ? "" : " selected"}>いいえ</option></select></label>
         </div>
         <div class="edit-submit-box">
           <p>「変更内容を確認する」を押すと、<strong>変更した項目だけ</strong>が入った確認画面が開きます。内容を確認して、最後に更新を送信してください。</p>
@@ -190,12 +207,6 @@
         changes += 1;
       }
 
-      const published = document.getElementById("edit-published").value === "1";
-      if (published !== Boolean(item.published)) {
-        params.set("published", published ? "はい" : "いいえ");
-        changes += 1;
-      }
-
       if (!changes) {
         window.alert("変更された項目がありません。");
         return;
@@ -215,7 +226,12 @@
   }
 
   function openDelete(item) {
-    if (!window.confirm(`「${item.title}」の削除内容を確認します。次の画面へ進んでよろしいですか？`)) return;
+    if (!window.confirm(
+      `「${item.title}」を完全削除します。\n\n` +
+      "通常の掲載取り下げは「公開停止」を使用してください。\n" +
+      "完全削除すると、お知らせの正本データから該当行を削除します。\n\n" +
+      "削除確認フォームへ進んでよろしいですか？"
+    )) return;
     const params = new URLSearchParams();
     params.set("title", `[お知らせ管理] 削除: ${item.title}`);
     params.set("operation", "削除");
@@ -243,13 +259,22 @@
         ${item.url ? `<p><small>${esc(item.url)}</small></p>` : ""}
         <div class="news-actions">
           <button class="admin-btn" type="button" data-edit="${index}">修正</button>
-          <button class="admin-btn danger" type="button" data-delete="${index}">削除</button>
+          ${item.published
+            ? `<button class="admin-btn secondary" type="button" data-publish="${index}" data-publish-value="0">公開停止</button>`
+            : `<button class="admin-btn" type="button" data-publish="${index}" data-publish-value="1">再公開</button>`}
+          <button class="admin-btn danger" type="button" data-delete="${index}">完全削除</button>
         </div>
       </article>
     `).join("");
 
     results.querySelectorAll("[data-edit]").forEach((button) => {
       button.addEventListener("click", () => openEdit(items[Number(button.dataset.edit)], button));
+    });
+    results.querySelectorAll("[data-publish]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const item = items[Number(button.dataset.publish)];
+        openPublicationChange(item, button.dataset.publishValue === "1");
+      });
     });
     results.querySelectorAll("[data-delete]").forEach((button) => {
       button.addEventListener("click", () => openDelete(items[Number(button.dataset.delete)]));
