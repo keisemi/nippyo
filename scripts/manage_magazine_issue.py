@@ -118,14 +118,17 @@ def parse_sections(body: str) -> dict[str, str]:
 
 def decode_registration_payload(value: str) -> dict[str, str]:
     value = (value or "").strip()
-    if not value.startswith("gz1:"):
-        raise SystemExit("登録データの形式が不正です。管理画面から登録し直してください。")
-    encoded = value[4:]
     try:
-        encoded += "=" * (-len(encoded) % 4)
-        compressed = base64.urlsafe_b64decode(encoded.encode("ascii"))
-        raw = gzip.decompress(compressed).decode("utf-8")
-        payload = json.loads(raw)
+        if value.startswith("json1:"):
+            payload = json.loads(value[6:])
+        elif value.startswith("gz1:"):
+            encoded = value[4:]
+            encoded += "=" * (-len(encoded) % 4)
+            compressed = base64.urlsafe_b64decode(encoded.encode("ascii"))
+            raw = gzip.decompress(compressed).decode("utf-8")
+            payload = json.loads(raw)
+        else:
+            raise ValueError("未対応の登録データ形式")
     except Exception as error:
         raise SystemExit(f"登録データを復元できません: {error}") from error
 

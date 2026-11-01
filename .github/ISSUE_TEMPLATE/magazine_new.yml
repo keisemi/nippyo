@@ -6,8 +6,9 @@ body:
     attributes:
       value: |
         新しい雑誌号の登録内容を確認するフォームです。
-        管理画面で入力した全項目は、URLが長くなりすぎないよう圧縮した「登録データ」として渡しています。
-        下の基本情報を確認し、**「登録データ」は変更せず**そのまま送信してください。
+        基本情報は管理画面から自動入力されています。
+        **「登録データ」欄をクリックして Ctrl+V で貼り付けてください。**
+        管理画面で入力した特集・目次などの全項目が、すでにクリップボードへコピーされています。
         **現段階では登録後すぐ公開サイトへ反映されます。**
 
   - type: input
@@ -68,51 +69,12 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: format
-    attributes:
-      label: 判型
-
-  - type: input
-    id: pages
-    attributes:
-      label: ページ数
-
-  - type: input
-    id: price_body
-    attributes:
-      label: 本体価格
-
-  - type: input
-    id: isbn_old
-    attributes:
-      label: 旧ISBN
-
-  - type: input
-    id: isbn_new
-    attributes:
-      label: 新ISBN
-
-  - type: input
-    id: magazine_code_1
-    attributes:
-      label: 雑誌コード(1)
-
-  - type: input
-    id: magazine_code_2
-    attributes:
-      label: 雑誌コード(2)
-
-  - type: input
-    id: feature
-    attributes:
-      label: 特集
-
   - type: textarea
     id: payload
     attributes:
       label: 登録データ
-      description: 管理画面が自動生成した圧縮データです。変更・削除しないでください。
+      description: この欄をクリックして Ctrl+V で貼り付けてください。管理画面で入力した全項目が入ります。貼り付け後は内容を変更しないでください。
+      placeholder: "ここをクリックして Ctrl+V で貼り付け"
     validations:
       required: true
 
@@ -121,5 +83,5 @@ body:
     attributes:
       label: 確認
       options:
-        - label: 管理画面で新しい号の内容を確認しました。「登録データ」は変更していません。
+        - label: 管理画面で新しい号の内容を確認し、「登録データ」を貼り付けました。
           required: true

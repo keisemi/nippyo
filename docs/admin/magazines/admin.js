@@ -438,24 +438,29 @@
   }
 
 
-  async function encodeRegistrationPayload(data) {
-    if (typeof CompressionStream !== "function") {
-      throw new Error("このブラウザでは長文登録用の圧縮機能を利用できません。Chrome / Edge の最新版で開いてください。");
+  function encodeRegistrationPayload(data) {
+    return "json1:" + JSON.stringify(data);
+  }
+
+  function copyRegistrationPayload(payload) {
+    const textarea = document.createElement("textarea");
+    textarea.value = payload;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-10000px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } finally {
+      textarea.remove();
     }
-    const json = JSON.stringify(data);
-    const bytes = new TextEncoder().encode(json);
-    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"));
-    const buffer = await new Response(stream).arrayBuffer();
-    const view = new Uint8Array(buffer);
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let i = 0; i < view.length; i += chunkSize) {
-      binary += String.fromCharCode(...view.subarray(i, i + chunkSize));
+    if (!copied) {
+      throw new Error("登録データをクリップボードへコピーできませんでした。ブラウザのクリップボード利用を許可して、もう一度お試しください。");
     }
-    return "gz1:" + btoa(binary)
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/g, "");
   }
 
   function openNextIssueForm(detail) {
@@ -624,7 +629,9 @@
       submitButton.disabled = true;
       submitButton.textContent = "登録内容を準備中…";
       try {
-        const payload = await encodeRegistrationPayload(registration);
+        const payload = encodeRegistrationPayload(registration);
+        copyRegistrationPayload(payload);
+
         const params = new URLSearchParams();
         params.set("template","magazine_new.yml");
         params.set("title",`[雑誌号新規] ${detail.magazine_name} ${get("issue")}`);
@@ -636,16 +643,12 @@
         params.set("mag_issue",get("issue"));
         params.set("issue_number",get("issue_number"));
         params.set("pub_date",get("pub_date"));
-        for (const id of ["format","pages","price_body","isbn_old","isbn_new","magazine_code_1","magazine_code_2","feature"]) {
-          const value = get(id);
-          if (value) params.set(issueFieldIds[id], value);
-        }
-        params.set("payload",payload);
 
         const targetUrl = `${issueBase}?${params.toString()}`;
-        if (targetUrl.length > 6000) {
-          throw new Error("登録データを圧縮してもGitHubの確認URLが長すぎます。入力内容を確認してください。");
-        }
+        window.alert(
+          "登録データをクリップボードにコピーしました。\n\n" +
+          "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてから送信してください。"
+        );
         window.location.href = targetUrl;
       } catch (error) {
         console.error(error);
