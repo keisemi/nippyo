@@ -23,6 +23,7 @@
   function newIssueUrl() {
     const params = new URLSearchParams();
     params.set("template", "magazine_new.yml");
+    params.set("new_book_id", nextAvailableBookId());
     return `${issueBase}?${params.toString()}`;
   }
 
