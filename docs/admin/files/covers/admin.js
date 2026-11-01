@@ -18,7 +18,11 @@
   }
 
   function normalize(value) {
-    return String(value ?? "").normalize("NFKC").toLowerCase().replace(/[\s\-‐-‒–—―ー]/g, "");
+    return String(value ?? "")
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[‐-‒–—―−ーｰ]/g, "-")
+      .replace(/[・･,，、。\./:;；：()（）\[\]【】「」『』<>＜＞\s-]/g, "");
   }
 
   function authorDisplay(value) {
@@ -69,7 +73,22 @@
           if (!payload || !Array.isArray(payload.search) || payload.search.length !== books.length) {
             throw new Error("検索索引と表示データの件数が一致しません。");
           }
-          books.forEach((book,index) => { book.__search = String(payload.search[index] || ""); });
+          books.forEach((book,index) => {
+            book.__search = String(payload.search[index] || "");
+            book.__searchNormalized = normalize([
+              book.__search,
+              book.id,
+              book.title,
+              book.subtitle_before,
+              book.subtitle_after,
+              book.author,
+              book.isbn,
+              book.identifiers,
+              Array.isArray(book.genres) ? book.genres.join(" ") : book.genres,
+              book.series,
+              book.series_volume,
+            ].filter(Boolean).join(" "));
+          });
         });
     }
     return searchIndexPromise;
@@ -137,7 +156,7 @@
     try {
       await ensureSearchIndex();
       const matched = books.filter((book) =>
-        terms.every((term) => String(book.__search || "").includes(term))
+        terms.every((term) => String(book.__searchNormalized || "").includes(term))
       ).slice(0,50);
       render(matched);
       if (matched.length === 50) count.textContent += "（上位50件。さらに絞り込んでください）";
