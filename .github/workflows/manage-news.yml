@@ -55,7 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY2'
+          python - <<'PY'
           import csv
           import json
           from pathlib import Path
