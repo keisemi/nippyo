@@ -65,6 +65,7 @@ SEARCH_COLUMNS = [
     "pages",
     "published",
     "status_flags",
+    "file_flags",
     "identifiers",
 ]
 
@@ -335,6 +336,7 @@ def make_search_row(book):
         if value and value not in identifiers:
             identifiers.append(value)
     status_flags = (1 if book.get("has_errata") else 0) | (2 if book.get("has_related_info") else 0)
+    file_flags = (1 if book.get("errata_file_exists") else 0) | (2 if book.get("related_file_exists") else 0)
     return [
         book.get("id", ""),
         book.get("cover", ""),
@@ -353,6 +355,7 @@ def make_search_row(book):
         book.get("pages"),
         bool(book.get("published", True)),
         status_flags,
+        file_flags,
         "|".join(identifiers),
     ]
 
@@ -456,6 +459,8 @@ for r in rows:
         "published": published,
         "has_errata": has_errata,
         "has_related_info": has_related_info,
+        "errata_file_exists": bool(errata_pdf),
+        "related_file_exists": bool(related_file),
         "search_extra": " ".join(clean(x) for x in search_extra_parts if clean(x)),
     }
     search_books.append(search_book)

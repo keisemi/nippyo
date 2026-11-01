@@ -2,7 +2,7 @@
   "use strict";
 
   const queryInput = document.getElementById("book-query");
-  const relatedFilter = document.getElementById("related-filter");
+  const stateFilter = document.getElementById("related-filter");
   const searchButton = document.getElementById("search-button");
   const results = document.getElementById("results");
   const count = document.getElementById("result-count");
@@ -89,7 +89,11 @@
               book.series,
               book.series_volume,
             ].filter(Boolean).join(" "));
-            book.__hasRelated = Boolean(Number(book.status_flags || 0) & 2);
+            const statusFlags = Number(book.status_flags || 0);
+            const fileFlags = Number(book.file_flags || 0);
+            book.__hasSourceFlag = Boolean(statusFlags & 2);
+            book.__hasFile = Boolean(fileFlags & 2);
+            book.__pendingUpload = book.__hasSourceFlag && !book.__hasFile;
           });
         });
     }
@@ -121,7 +125,10 @@
     }
 
     items.forEach((book) => {
-      const hasRelated = Boolean(book.__hasRelated);
+      const hasFile = Boolean(book.__hasFile);
+      const pending = Boolean(book.__pendingUpload);
+      const statusClass = hasFile ? "on" : (pending ? "pending" : "off");
+      const statusText = hasFile ? "登録済み" : (pending ? "要アップロード" : "なし");
       const article = document.createElement("article");
       article.className = "book-result";
       article.innerHTML = `
@@ -130,11 +137,11 @@
           ${book.author ? `<span>著者：${esc(authorDisplay(book.author))}</span>` : ""}
           ${book.isbn ? `<span>ISBN：${esc(book.isbn)}</span>` : ""}
           <span>書籍ID：${esc(book.id)}</span>
-          <span class="status ${hasRelated ? "on" : "off"}">付属データ：${hasRelated ? "登録済み" : "なし"}</span>
+          <span class="status ${statusClass}">付属データ：${statusText}</span>
         </div>
         <div class="book-actions">
-          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}">${hasRelated ? "付属データを差替える" : "付属データを追加する"}</a>
-          ${hasRelated ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}">付属データを削除する</a>` : ""}
+          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}">${hasFile ? "付属データを差替える" : "付属データを追加する"}</a>
+          ${hasFile ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}">付属データを削除する</a>` : ""}
         </div>
       `;
       results.appendChild(article);
@@ -143,28 +150,26 @@
 
   async function search() {
     const terms = queryInput.value.trim().split(/\s+/).filter(Boolean).map(normalize);
-    const filter = relatedFilter.value;
+    const filter = stateFilter.value;
 
     if (!terms.length && filter === "all") {
-      count.textContent = "検索語を入力するか、付属データの有無を選んでください。";
+      count.textContent = "検索語を入力するか、ファイルの状態を選んでください。";
       results.replaceChildren();
       return;
     }
 
     try {
       await ensureSearchIndex();
-
       const matched = books.filter((book) => {
         const textMatches = terms.every((term) =>
           String(book.__searchNormalized || "").includes(term)
         );
         if (!textMatches) return false;
-
-        if (filter === "yes") return book.__hasRelated === true;
-        if (filter === "no") return book.__hasRelated === false;
+        if (filter === "yes") return book.__hasFile === true;
+        if (filter === "no") return book.__hasFile === false;
+        if (filter === "pending") return book.__pendingUpload === true;
         return true;
       });
-
       render(matched.slice(0, 50), matched.length);
     } catch (error) {
       console.error(error);
@@ -179,7 +184,7 @@
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") void search();
       });
-      relatedFilter.addEventListener("change", () => { void search(); });
+      stateFilter.addEventListener("change", () => { void search(); });
     } catch (error) {
       console.error(error);
       count.textContent = "書籍データを読み込めませんでした。ページを再読み込みしてください。";
