@@ -2,208 +2,264 @@
 
 通常の日本評論社ウェブサイトのメンテナンス期間中に、必要な情報を継続提供するための臨時サイトです。
 
-## 現在実装済み
+## 管理画面
+
+> **日常更新はこちらから行います。**  
+> <https://keisemi.github.io/nippyo/admin/>
+
+書籍・お知らせなどの日常更新機能は、今後この管理画面に集約します。
+
+現在利用できる管理機能は以下です。
+
+- **書籍管理**：新規書誌の登録、既存書誌の検索・確認・修正
+- **お知らせ管理**：新規登録、修正、削除
+
+以下は現在整備中です。
+
+- 雑誌管理
+- 書影・正誤表・付属データの管理
+- 書籍の公開停止・再公開
+- 操作マニュアル
+
+更新操作は、GitHub上でこのリポジトリへの更新権限を持つアカウントから行う必要があります。権限のないアカウントから送信された更新申請は、自動的に拒否され、サイト内容は変更されません。
+
+---
+
+## 公開サイト
+
+<https://keisemi.github.io/nippyo/>
+
+---
+
+## 現在実装済みの主な機能
 
 - トップページ
-- 書籍・雑誌号横断検索（書籍：書名・著者名・ISBN・分野・キーワード／雑誌：雑誌名・月号・通巻番号・特集・執筆者名等）
-- 書籍・雑誌号の詳細ポップアップと固有URL（`?book=ID` / `?mag=ID`）
+- 書籍・雑誌号の横断検索
+- 書籍・雑誌号の詳細表示
+- 書籍・雑誌号ごとの固有URL
 - Amazon購入導線
-- 書誌データからの新刊自動表示
-- 書誌追加・修正用 GitHub Issue Form
-- 書誌管理用検索・編集ページ
-- お知らせ追加・修正・削除用 GitHub Issue Form
-- お知らせ管理ページ（現在値を確認・編集してIssueへ引き継ぐ）
-- 雑誌ページ（定期雑誌6誌の最新号を自動表示。『経済セミナー』note／全記事データベースへのリンクを含む）
-- 定期雑誌6誌のバックナンバーページ（誌別・刊行年別の絞り込み、30号ずつのページ送り、各号の固有URLへの導線）
-- 定期雑誌6誌の号データ（検索用軽量JSON＋刊行年別詳細JSON）を既存検索画面に統合
-- SNSページ（X、Facebook、Instagram、Threads、YouTube、note の各アカウントへのリンク）
+- 新刊の自動表示
+- 書誌管理画面
+- お知らせ管理画面
+- 定期雑誌6誌の最新号表示
+- 定期雑誌6誌のバックナンバー表示
+- 雑誌号の書誌・目次・特集等の表示
+- 正誤表・付属データ等の関連資料表示
+- SNSリンク
 - 会社概要・各部署連絡先・アクセス
+- 特設ページ
 
-## データ構造
+---
 
-### 書誌
+## 日常更新の考え方
 
-`data/book_search_master.csv` を書誌の唯一の正本とします。
+通常の更新担当者は、原則として
 
-このCSVから `scripts/build_data.py` が、用途ごとに軽量化した公開用データを自動生成します。
+- HTML
+- CSS
+- JavaScript
+- Python
+- CSV
+- JSON
+- GitHub Actions
 
-- `docs/data/books-search.json`：書籍検索・一覧表示用の軽量データ（列名を1回だけ持つコンパクト形式）
-- `docs/data/book-details/books-detail-YYYY.json`：書籍詳細・管理画面用の刊行年別データ
-- `docs/data/book-details/books-detail-undated.json`：刊行年がない書籍の詳細データ
-- `docs/data/home-books.js`：トップページの新刊表示用・軽量
-- `docs/data/last-updated.txt`：書誌生成データのバージョンキー
+を直接編集しません。
 
-書籍検索ページは、最初に `books-search.json` だけを読み込みます。検索用JSONは表示項目を減らさず、列名を各書籍で繰り返さないコンパクト形式にして転送量を抑えています。内容紹介・目次等の長い詳細情報は、書名をクリックしたときに該当する刊行年の詳細JSONだけを読み込みます。
+書誌やお知らせは管理画面から入力し、GitHub上の確認画面を経由して更新します。
 
-旧形式の `docs/data/books.js`、`docs/data/books.json`、`docs/data/admin-books.js` は使用しません。
+書影・正誤表・付属データ等についても、最終的には同じ管理画面から操作できる形へ移行する予定です。
 
-トップページの新刊、通常の書籍検索、書誌管理用検索は、いずれも同じ `data/book_search_master.csv` を正本とします。
+細かな操作手順、障害時の対応、復旧方法などは、READMEではなく別途メンテナンス文書にまとめます。
 
-### 定期雑誌6誌の号データ
+---
 
-会社から提供された定期雑誌6誌のCSVを `data/magazines/` に置き、号データの正本とします。
-
-- `01_horitsu_jiho.csv`：法律時報
-- `02_hogaku_seminar.csv`：法学セミナー
-- `03_keizai_seminar.csv`：経済セミナー
-- `04_sugaku_seminar.csv`：数学セミナー
-- `05_kokoro_no_kagaku.csv`：こころの科学
-- `06_sodachi_no_kagaku.csv`：そだちの科学
-
-`scripts/build_magazine_data.py` が以下を自動生成します。
-
-- `docs/data/magazine-issues-search.json`：6誌全号の検索・一覧表示用の軽量データ（列名を1回だけ持つコンパクト形式）
-- `docs/data/magazine-details/magazine-details-YYYY.json`：雑誌号詳細用の刊行年別データ
-- `docs/data/magazine-details/magazine-details-undated.json`：発刊年が取れない号がある場合の詳細データ
-- `docs/data/magazine-last-updated.txt`：雑誌号生成データのバージョンキー
-
-検索用JSONには目次全文・記事タイトル・長い内容紹介を入れません。雑誌名、月号、通巻番号、特集、ISBN・雑誌コード等に加え、目次から明確に判定できる執筆者・評者等の人名だけを検索補助情報として保持します。古い号などで人名を安全に判定できない場合は無理に補完しません。
-
-書籍・雑誌検索ページでは `books-search.json` と `magazine-issues-search.json` の軽量データだけを最初に読み込みます。どちらも表示項目は維持したまま、列名の重複をなくしたコンパクト形式です。雑誌号の内容紹介・目次等は、号をクリックしたときに該当する刊行年の `magazine-details-YYYY.json` だけを読み込みます。
-
-雑誌ページでは `magazine-issues-search.json` から6誌それぞれの最新号を自動判定し、月号・特集・発刊日・通巻番号・判型・頁数・本体価格を表示します。最新号は固有URLで詳細ポップアップへ直接つなぎ、各誌の「バックナンバーを見る」から共通バックナンバーページ `magazines/backnumbers/?magazine=雑誌ID` へ移動します。バックナンバーページでは、誌別・刊行年別の絞り込みと30号ずつのページ送りを行い、各号の「詳細を見る」から `books/?mag=雑誌号ID` の固有URLへつなぎます。
-
-雑誌の検索結果はあくまで「号」単位です。目次全文や記事タイトルは検索対象にせず、目次から明確に判定できた執筆者・評者等の人名だけを検索補助に使います。
-
-### 書籍・雑誌号の固有URL
-
-検索結果の詳細ポップアップには、書籍・雑誌号ごとの固有URLを使用します。
-
-- 書籍：`books/?book=書籍ID`（例：`books/?book=54143`）
-- 雑誌号：`books/?mag=雑誌号ID`（例：経済セミナー2026年10・11月号は `books/?mag=9792`）
-
-固有URLを直接開くと、検索データの読み込み後に該当する詳細ポップアップが自動で開きます。検索結果から詳細を開いた場合もURLが固有URLに切り替わり、ブラウザの「戻る」で元の検索結果へ戻れます。雑誌号IDには、6誌CSVの `書籍ID` をそのまま使用します。
-
-### お知らせ
-
-`data/news.csv` をお知らせの正本とします。
-
-このCSVから `scripts/build_news.py` が以下を自動生成します。
-
-- `docs/data/news.json`
-- `docs/data/news.js`
-- `docs/data/admin-news.js`（お知らせ管理ページ用。非公開データも含む）
-- `docs/data/news-last-updated.txt`
-
-通常運用では、これらのCSV・JSON・JavaScriptを直接編集しません。
-
-## 書誌の更新
-
-### 既存書誌の修正
-
-管理用検索ページを開きます。
-
-<https://keisemi.github.io/nippyo/admin/books/>
-
-1. 書名・著者名・ISBN・書籍IDで対象書を検索
-2. 書名を押して現在の登録内容を確認
-3. 「この書誌を編集」をクリック
-4. 現在値が入力済みの編集画面で、必要な箇所だけ変更
-5. 「GitHubで変更を確定」を押す
-6. GitHub Issue Formで変更内容を確認してIssueを作成
-
-Issueには変更した項目だけが渡されます。編集画面で既存値を空欄にした場合は、自動的に `__CLEAR__` として処理されます。
-
-### 新規書誌の登録
-
-管理用検索ページの「新しい書誌を登録」からGitHub Issue Formを開きます。
-
-書籍IDは自動採番されます。
-
-- ISBNあり：日本評論社ISBNの商品番号5桁（例：`978-4-535-54143-6` → `54143`）
-- ISBNなし：`N` + 5桁の管理用ID
-
-サイト更新権限のあるCollaborator等からの申請だけが自動反映されます。
-
-## お知らせの更新
-
-お知らせ管理ページを開きます。
-
-<https://keisemi.github.io/nippyo/admin/news/>
-
-### 既存のお知らせを修正
-
-1. 対象のお知らせを検索または一覧から確認
-2. 「修正」を押す
-3. 日付・種別・タイトル・本文・リンク先・重要表示・公開状態が現在値入りで表示される
-4. 必要な箇所だけ変更
-5. 「GitHubで変更を確定」を押す
-6. GitHub Issue Formで変更内容を確認してIssueを作成
-
-変更していない項目はIssueへ送りません。本文やリンク先を空にした場合は、自動的に `__CLEAR__` として処理されます。
-
-### 新しいお知らせを登録
-
-お知らせ管理ページの「新しいお知らせを登録」からGitHub Issue Formを開きます。
-
-### お知らせを削除
-
-お知らせ管理ページで対象のお知らせの「削除」を押し、確認後にGitHub Issueを作成します。
-
-書誌と同様、権限のあるユーザーのIssueだけが自動反映されます。処理に成功すると、GitHub Actionsがデータ更新・再生成・GitHub Pages再公開・Issueの自動クローズまで行います。
-
-## 書影
+## データ構成の概要
 
 ### 書籍
 
-`docs/assets/covers/` に、書籍IDをファイル名にした画像を置きます。
-
-例：書籍ID `54143`
+書誌の正本は以下です。
 
 ```text
-docs/assets/covers/54143.jpg
+data/book_search_master.csv
 ```
 
-### 雑誌
+`scripts/build_data.py` が、検索・詳細表示・管理画面・トップページ表示に必要な公開用データを自動生成します。
 
-`docs/assets/magazine-covers/` に、雑誌号ID（雑誌CSVの `書籍ID`）をファイル名にした画像を置きます。
-
-例：雑誌号ID `9792`
+主な生成先：
 
 ```text
-docs/assets/magazine-covers/9792.jpg
+docs/data/books-search.json
+docs/data/books-search-index.json
+docs/data/books-admin-search-index.json
+docs/data/book-details/
+docs/data/home-books.js
+docs/data/last-updated.txt
 ```
 
-雑誌書影は、雑誌トップの最新号、バックナンバー一覧、雑誌号詳細に自動表示されます。雑誌トップとバックナンバーでは、書影からその号の詳細へ移動できます。
+旧形式の以下のファイルは使用しません。
 
-書籍・雑誌とも、使用できる形式は `.jpg`、`.jpeg`、`.png`、`.webp` です。画像をPushすると再構築Workflowが動き、次回ビルド時に自動認識されます。
+```text
+docs/data/books.js
+docs/data/books.json
+docs/data/admin-books.js
+```
 
-## 正誤表・関連情報（付属データ）
+### 定期雑誌6誌
+
+雑誌号データの正本は `data/magazines/` 配下の6本のCSVです。
+
+```text
+01_horitsu_jiho.csv
+02_hogaku_seminar.csv
+03_keizai_seminar.csv
+04_sugaku_seminar.csv
+05_kokoro_no_kagaku.csv
+06_sodachi_no_kagaku.csv
+```
+
+`scripts/build_magazine_data.py` が、検索・詳細表示・最新号表示・バックナンバー表示に必要な公開用データを自動生成します。
+
+主な生成先：
+
+```text
+docs/data/magazine-issues-search.json
+docs/data/magazine-issues-search-index.json
+docs/data/magazine-details/
+docs/data/magazine-last-updated.txt
+```
+
+### お知らせ
+
+お知らせの正本は以下です。
+
+```text
+data/news.csv
+```
+
+`scripts/build_news.py` が公開用・管理画面用データを生成します。
+
+主な生成先：
+
+```text
+docs/data/news.json
+docs/data/news.js
+docs/data/admin-news.js
+docs/data/news-last-updated.txt
+```
+
+---
+
+## 書影・正誤表・付属データ
+
+### 書籍書影
+
+```text
+docs/assets/covers/
+```
+
+書籍IDをファイル名として使用します。
+
+### 雑誌書影
+
+```text
+docs/assets/magazine-covers/
+```
+
+雑誌号IDをファイル名として使用します。
 
 ### 正誤表
 
-`docs/assets/errata/` に、`errata` + 書籍IDをファイル名にしたPDFを置きます。
-
-例：書籍ID `52107`
-
 ```text
-docs/assets/errata/errata52107.pdf
+docs/assets/errata/
 ```
 
-PDFをPushすると次回ビルド時に自動認識され、書籍詳細の「関連資料」に正誤表へのリンクが表示されます。書誌CSVの `has_errata` を手動で変更する必要はありません。
-
-### 関連情報・付属データ
-
-`docs/assets/related/` に、書籍IDそのものをファイル名にした配布ファイルを置きます。
-
-例：
+基本の命名規則：
 
 ```text
-docs/assets/related/52333.pdf
-docs/assets/related/54142.zip
-docs/assets/related/55924.xlsx
+errata<書籍ID>.pdf
 ```
 
-運用ルールは **1冊につき1ファイル** です。複数のPDF・Excel・PowerPoint・データ等を配布する場合は、1つのZIPにまとめて `書籍ID.zip` としてください。
+### 付属データ・関連資料
 
-そのまま置ける形式は `.pdf`、`.zip`、`.xlsx`、`.xls`、`.xlsm`、`.csv`、`.docx`、`.pptx`、`.ppt`、`.txt` です。これ以外の形式を配布する場合はZIPにまとめます。ISBNのない書籍の管理用ID（`N` + 5桁）も同じルールで使用できます。
+```text
+docs/assets/related/
+```
 
-ファイルをPushすると次回ビルド時に自動認識され、検索結果には「関連情報あり」、書籍詳細の「関連資料」には実ファイルへのリンクが表示されます。書誌CSVの `has_related_info` を手動で変更する必要はありません。
+基本の命名規則：
 
-同じ書籍IDのファイルが複数ある場合、ファイル名の書籍IDが書誌に存在しない場合、命名規則や対応形式に合わない場合は、誤公開を防ぐためビルドをエラーにして停止します。
+```text
+<書籍ID>.<拡張子>
+```
 
-## 公開
+これらは現在、所定の場所へ正しいファイル名で配置すると自動認識されます。今後、管理画面から追加・差替え・削除できるようにする予定です。
+
+---
+
+## 書籍・雑誌号の固有URL
+
+書籍：
+
+```text
+https://keisemi.github.io/nippyo/books/?book=<書籍ID>
+```
+
+雑誌号：
+
+```text
+https://keisemi.github.io/nippyo/books/?mag=<雑誌号ID>
+```
+
+---
+
+## 自動更新・公開
 
 GitHub Pages は GitHub Actions から `docs/` を公開します。
 
-HTML・画像等をPushした場合は **【自動】臨時サイトを再構築・公開（通常は操作不要）** が動きます。書誌・お知らせのIssueでは、それぞれ専用Workflowが更新と公開まで行います。
+現在の主なWorkflowは以下です。
+
+```text
+.github/workflows/build-site.yml
+.github/workflows/manage-book.yml
+.github/workflows/manage-news.yml
+```
+
+役割：
+
+- `build-site.yml`：通常の再構築・公開
+- `manage-book.yml`：書誌更新申請の反映・再公開
+- `manage-news.yml`：お知らせ更新申請の反映・再公開
+
+更新系Workflowは、同時に `main` を変更しないよう共通の待ち列で順番に実行されます。
+
+---
+
+## 現在整備中の項目
+
+引継ぎに向け、以下を順次整備しています。
+
+- 書籍の公開停止・再公開
+- 書影管理
+- 正誤表管理
+- 付属データ管理
+- 書籍関連リンク管理
+- 雑誌の新規号登録・修正・公開管理
+- 雑誌書影管理
+- お知らせの非公開データの扱いの整理
+- 更新前確認・誤操作防止
+- 成功・失敗メッセージの統一
+- 日常更新マニュアル
+- システム管理・復旧マニュアル
+
+---
+
+## 運用方針
+
+この臨時サイトは、最終的に
+
+> **GitHubやWeb制作の知識がない担当者でも、管理画面から安全に日常更新できること**
+
+を目標にしています。
+
+日常更新担当者がリポジトリ内のコードやデータファイルを直接編集する運用にはしません。
+
+技術的な構成、復旧手順、詳細な更新方法については、別途メンテナンス文書を正本として整備します。
