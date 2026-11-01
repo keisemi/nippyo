@@ -335,18 +335,18 @@
       params.set("book_id", source.id);
       params.set("current_title", source.title);
 
-      let changes = 0;
-      for (const [id] of editFields) {
+      const changedItems = [];
+      for (const [id, label] of editFields) {
         const el = document.getElementById(`edit-${id}`);
         const before = String(source[id] || "");
         const after = String(el.value || "").trim();
         if (after !== before) {
           params.set(issueFieldName(id), after === "" && before !== "" ? "__CLEAR__" : after);
-          changes += 1;
+          changedItems.push({ id, label, before, after });
         }
       }
 
-      if (!changes) {
+      if (!changedItems.length) {
         window.alert("変更された項目がありません。");
         return;
       }
@@ -356,7 +356,60 @@
         window.alert("変更内容が長いため、一度に確認画面へ送れません。内容紹介・目次などの長文は1項目ずつ更新してください。");
         return;
       }
-      openIssueForm(targetUrl);
+
+      const preview = document.createElement("div");
+      preview.id = "book-change-confirmation";
+      preview.className = "admin-note";
+      preview.innerHTML = `
+        <h3 style="margin-top:0">変更内容の確認</h3>
+        <p><strong>${changedItems.length}項目を変更します。</strong> 変更前と変更後を確認してください。</p>
+        <div>
+          ${changedItems.map((item) => {
+            const before = item.before === "" ? "（空欄）" : item.before;
+            const after = item.after === "" ? "（空欄にする）" : item.after;
+            return `
+              <div style="margin:14px 0;padding:12px;border:1px solid #d9e0d8;border-radius:6px;background:#fff">
+                <p style="margin:0 0 8px"><strong>${esc(item.label)}</strong></p>
+                <div style="margin:6px 0">
+                  <small>変更前</small>
+                  <div style="white-space:pre-wrap;max-height:12em;overflow:auto;padding:8px;background:#f6f8f5">${esc(before)}</div>
+                </div>
+                <div style="margin:6px 0">
+                  <small>変更後</small>
+                  <div style="white-space:pre-wrap;max-height:12em;overflow:auto;padding:8px;background:#f6f8f5">${esc(after)}</div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <p>問題なければGitHubの最終確認フォームへ進んでください。まだこの時点では書誌データは変更されません。</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="admin-btn" id="continue-book-update" type="button">GitHub確認フォームへ進む</button>
+          <button class="admin-btn secondary" id="review-book-update" type="button">編集内容を見直す</button>
+        </div>
+      `;
+
+      const editGrid = form.querySelector(".edit-grid");
+      const adminNote = form.querySelector(".admin-note");
+      const submitBox = form.querySelector(".edit-submit-box");
+      const existingPreview = document.getElementById("book-change-confirmation");
+      if (existingPreview) existingPreview.remove();
+      editGrid.hidden = true;
+      adminNote.hidden = true;
+      submitBox.hidden = true;
+      form.insertBefore(preview, submitBox);
+
+      document.getElementById("continue-book-update").addEventListener("click", () => {
+        openIssueForm(targetUrl);
+      });
+      document.getElementById("review-book-update").addEventListener("click", () => {
+        preview.remove();
+        editGrid.hidden = false;
+        adminNote.hidden = false;
+        submitBox.hidden = false;
+        document.getElementById(`edit-${changedItems[0].id}`)?.focus();
+      });
+      preview.scrollIntoView({ block: "start" });
     });
     document.getElementById("back-to-detail").addEventListener("click", () => renderBookModal(book, detail, trigger));
 
