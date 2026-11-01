@@ -36,6 +36,10 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function openIssueForm(url) {
+    window.open(url, "_blank", "noopener");
+  }
+
   function closeModal() {
     if (!modal || modal.hidden) return;
     modal.hidden = true;
@@ -122,7 +126,7 @@
         window.alert("変更内容が長いため、一度に確認画面へ送れません。長い本文は短く分けて更新してください。");
         return;
       }
-      window.location.href = url;
+      openIssueForm(url);
     });
 
     modal.hidden = false;
@@ -136,7 +140,7 @@
     params.set("title", `[お知らせ管理] 削除: ${item.title}`);
     params.set("operation", "削除");
     params.set("target_title", item.title);
-    window.location.href = issueUrl(params);
+    openIssueForm(issueUrl(params));
   }
 
   function render(items) {
@@ -182,6 +186,8 @@
   }
 
   newNewsLink.href = newUrl();
+  newNewsLink.target = "_blank";
+  newNewsLink.rel = "noopener noreferrer";
   searchButton.addEventListener("click", search);
   queryInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") search();

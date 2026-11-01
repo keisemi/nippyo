@@ -11,6 +11,10 @@
   const modalClose = document.getElementById("book-modal-close");
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
 
+  function openIssueForm(url) {
+    window.open(url, "_blank", "noopener");
+  }
+
   let books = [];
   let dataVersion = Date.now().toString();
   let lastModalTrigger = null;
@@ -352,7 +356,7 @@
         window.alert("変更内容が長いため、一度に確認画面へ送れません。内容紹介・目次などの長文は1項目ずつ更新してください。");
         return;
       }
-      window.location.href = targetUrl;
+      openIssueForm(targetUrl);
     });
     document.getElementById("back-to-detail").addEventListener("click", () => renderBookModal(book, detail, trigger));
 
@@ -369,7 +373,7 @@
       "確認画面へ進んでよろしいですか？"
     );
     if (!ok) return;
-    window.location.href = hideUrl(book);
+    openIssueForm(hideUrl(book));
   }
 
   function openRestore(book) {
@@ -380,7 +384,7 @@
       "確認画面へ進んでよろしいですか？"
     );
     if (!ok) return;
-    window.location.href = restoreUrl(book);
+    openIssueForm(restoreUrl(book));
   }
 
   function openDelete(book) {
@@ -393,7 +397,7 @@
       "削除確認画面へ進んでよろしいですか？"
     );
     if (!ok) return;
-    window.location.href = deleteUrl(book);
+    openIssueForm(deleteUrl(book));
   }
 
   function renderBookModal(book, detail, trigger) {

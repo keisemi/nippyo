@@ -137,8 +137,8 @@
             <span class="status ${cover ? "on" : "off"}">書影：${cover ? "登録済み" : "なし"}</span>
           </div>
           <div class="book-actions">
-            <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}">${cover ? "書影を差替える" : "書影を追加する"}</a>
-            ${cover ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}">書影を削除する</a>` : ""}
+            <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}" target="_blank" rel="noopener noreferrer">${cover ? "書影を差替える" : "書影を追加する"}</a>
+            ${cover ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}" target="_blank" rel="noopener noreferrer">書影を削除する</a>` : ""}
           </div>
         </div>
       `;

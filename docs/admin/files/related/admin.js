@@ -140,8 +140,8 @@
           <span class="status ${statusClass}">付属データ：${statusText}</span>
         </div>
         <div class="book-actions">
-          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}">${hasFile ? "付属データを差替える" : "付属データを追加する"}</a>
-          ${hasFile ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}">付属データを削除する</a>` : ""}
+          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}" target="_blank" rel="noopener noreferrer">${hasFile ? "付属データを差替える" : "付属データを追加する"}</a>
+          ${hasFile ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}" target="_blank" rel="noopener noreferrer">付属データを削除する</a>` : ""}
         </div>
       `;
       results.appendChild(article);

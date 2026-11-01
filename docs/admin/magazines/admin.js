@@ -20,6 +20,10 @@
   const detailCache = new Map();
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
 
+  function openIssueForm(url) {
+    window.open(url, "_blank", "noopener");
+  }
+
   function newIssueUrl() {
     const params = new URLSearchParams();
     params.set("template", "magazine_new.yml");
@@ -59,7 +63,7 @@
       "\n\nGitHubの確認フォームへ進んでよろしいですか？"
     );
     if (!ok) return;
-    window.location.href = publicationUrl(detail, publish);
+    openIssueForm(publicationUrl(detail, publish));
   }
 
   function openDelete(detail) {
@@ -72,7 +76,7 @@
       "削除確認フォームへ進んでよろしいですか？"
     );
     if (!ok) return;
-    window.location.href = deleteUrl(detail);
+    openIssueForm(deleteUrl(detail));
   }
 
   const ebookLabels = {
@@ -432,7 +436,7 @@
         window.alert("変更内容が長いため、一度に確認フォームへ送れません。目次・内容紹介などの長文は、ほかの変更と分けて1項目ずつ更新してください。");
         return;
       }
-      window.location.href = targetUrl;
+      openIssueForm(targetUrl);
     });
   }
 
@@ -719,7 +723,7 @@
           "登録データをクリップボードにコピーしました。\n\n" +
           "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてから送信してください。"
         );
-        window.location.href = targetUrl;
+        openIssueForm(targetUrl);
       } catch (error) {
         console.error(error);
         submitButton.disabled = false;
@@ -991,7 +995,7 @@
       });
       searchButton.addEventListener("click", runSearch);
       newIssueButton.addEventListener("click", () => {
-        window.location.href = newIssueUrl();
+        openIssueForm(newIssueUrl());
       });
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") runSearch();

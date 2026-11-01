@@ -197,8 +197,8 @@
           ${link.comment ? `<p class="link-comment">${esc(link.comment)}</p>` : ""}
           <p class="link-url"><a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.url)}</a></p>
           <div class="link-actions">
-            <a class="admin-btn secondary" href="${esc(issueUrl(book,"修正",link))}">このリンクを修正</a>
-            <a class="admin-btn danger" href="${esc(issueUrl(book,"削除",link))}">このリンクを削除</a>
+            <a class="admin-btn secondary" href="${esc(issueUrl(book,"修正",link))}" target="_blank" rel="noopener noreferrer">このリンクを修正</a>
+            <a class="admin-btn danger" href="${esc(issueUrl(book,"削除",link))}" target="_blank" rel="noopener noreferrer">このリンクを削除</a>
           </div>
         </li>
       `).join("");
@@ -211,7 +211,7 @@
           <span>書籍ID：${esc(book.id)}</span>
           <span class="status">関連リンク：${links.length}件</span>
         </div>
-        <a class="admin-btn" href="${esc(issueUrl(book,"追加"))}">関連リンクを追加する</a>
+        <a class="admin-btn" href="${esc(issueUrl(book,"追加"))}" target="_blank" rel="noopener noreferrer">関連リンクを追加する</a>
         ${links.length ? `<ul class="link-list">${linkItems}</ul>` : '<p>現在、関連リンクは登録されていません。</p>'}
       `;
       results.appendChild(article);

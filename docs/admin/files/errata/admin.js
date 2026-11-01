@@ -140,8 +140,8 @@
           <span class="status ${statusClass}">正誤表：${statusText}</span>
         </div>
         <div class="book-actions">
-          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}">${hasFile ? "正誤表を差替える" : "正誤表を追加する"}</a>
-          ${hasFile ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}">正誤表を削除する</a>` : ""}
+          <a class="admin-btn" href="${esc(issueUrl(book, "追加・差替え"))}" target="_blank" rel="noopener noreferrer">${hasFile ? "正誤表を差替える" : "正誤表を追加する"}</a>
+          ${hasFile ? `<a class="admin-btn danger" href="${esc(issueUrl(book, "削除"))}" target="_blank" rel="noopener noreferrer">正誤表を削除する</a>` : ""}
         </div>
       `;
       results.appendChild(article);
