@@ -1,4 +1,6 @@
+import base64
 import csv
+import gzip
 import io
 import json
 import os
@@ -91,7 +93,7 @@ def get_issue() -> dict:
 def parse_sections(body: str) -> dict[str, str]:
     known = {
         "書籍ID", "雑誌ID", "雑誌名", "現在の雑誌月号", "確認",
-        "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID",
+        "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID", "登録データ",
         *LABEL_TO_COLUMN.keys(),
     }
     sections: dict[str, list[str]] = {}
@@ -112,6 +114,65 @@ def parse_sections(body: str) -> dict[str, str]:
         out[key] = value
     return out
 
+
+
+def decode_registration_payload(value: str) -> dict[str, str]:
+    value = (value or "").strip()
+    if not value.startswith("gz1:"):
+        raise SystemExit("登録データの形式が不正です。管理画面から登録し直してください。")
+    encoded = value[4:]
+    try:
+        encoded += "=" * (-len(encoded) % 4)
+        compressed = base64.urlsafe_b64decode(encoded.encode("ascii"))
+        raw = gzip.decompress(compressed).decode("utf-8")
+        payload = json.loads(raw)
+    except Exception as error:
+        raise SystemExit(f"登録データを復元できません: {error}") from error
+
+    if not isinstance(payload, dict):
+        raise SystemExit("登録データがオブジェクトではありません。")
+
+    allowed = {
+        "雛形号の書籍ID", "雛形号の雑誌月号", "雑誌ID", "雑誌名", "新しい書籍ID",
+        *LABEL_TO_COLUMN.keys(),
+    }
+    unknown = sorted(set(payload) - allowed)
+    if unknown:
+        raise SystemExit("登録データに未対応の項目があります: " + ", ".join(unknown))
+
+    out: dict[str, str] = {}
+    for key, item in payload.items():
+        if item is None:
+            out[key] = ""
+        elif isinstance(item, str):
+            out[key] = item
+        else:
+            raise SystemExit(f"登録データの値が文字列ではありません: {key}")
+    return out
+
+
+def use_compact_new_payload(fields: dict[str, str]) -> dict[str, str]:
+    packed = fields.get("登録データ", "").strip()
+    if not packed:
+        return fields
+    decoded = decode_registration_payload(packed)
+
+    for label in (
+        "雛形号の書籍ID", "雛形号の雑誌月号", "雑誌ID", "雑誌名",
+        "新しい書籍ID", "雑誌月号", "雑誌通算番号", "発刊日",
+        "判型", "ページ数", "本体価格", "旧ISBN", "新ISBN",
+        "雑誌コード(1)", "雑誌コード(2)", "特集",
+    ):
+        if label not in fields:
+            continue
+        shown = fields.get(label, "").strip()
+        actual = decoded.get(label, "").strip()
+        if shown != actual:
+            raise SystemExit(
+                f"{label}が確認欄と登録データで一致しません。"
+                "管理画面から登録し直してください。"
+            )
+    return decoded
 
 def read_rows(path: Path):
     last_error = None
@@ -320,7 +381,7 @@ def main() -> None:
         apply_edit(fields)
         return
     if title.startswith("[雑誌号新規]"):
-        apply_new(fields)
+        apply_new(use_compact_new_payload(fields))
         return
     raise SystemExit("雑誌号管理用Issueではありません。")
 

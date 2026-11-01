@@ -437,6 +437,27 @@
     return `<label class="edit-field"><span>${esc(label)}</span><input id="next-${esc(id)}" type="text" value="${esc(value)}">${note}</label>`;
   }
 
+
+  async function encodeRegistrationPayload(data) {
+    if (typeof CompressionStream !== "function") {
+      throw new Error("このブラウザでは長文登録用の圧縮機能を利用できません。Chrome / Edge の最新版で開いてください。");
+    }
+    const json = JSON.stringify(data);
+    const bytes = new TextEncoder().encode(json);
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"));
+    const buffer = await new Response(stream).arrayBuffer();
+    const view = new Uint8Array(buffer);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < view.length; i += chunkSize) {
+      binary += String.fromCharCode(...view.subarray(i, i + chunkSize));
+    }
+    return "gz1:" + btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+  }
+
   function openNextIssueForm(detail) {
     const source = nextIssueSource(detail);
 
@@ -545,7 +566,8 @@
     `;
 
     document.getElementById("back-from-next-issue").addEventListener("click", () => renderDetail(detail));
-    document.getElementById("submit-next-issue").addEventListener("click", () => {
+    document.getElementById("submit-next-issue").addEventListener("click", async () => {
+      const submitButton = document.getElementById("submit-next-issue");
       const get = (id) => String(document.getElementById(`next-${id}`)?.value || "").trim();
       const required = [
         ["book_id","書籍ID"],
@@ -587,29 +609,50 @@
         }
       }
 
-      const params = new URLSearchParams();
-      params.set("template","magazine_new.yml");
-      params.set("title",`[雑誌号新規] ${detail.magazine_name} ${get("issue")}`);
-      params.set("source_book_id",String(detail.id || ""));
-      params.set("source_issue",String(detail.issue || ""));
-      params.set("magazine_id",String(detail.magazine_id || ""));
-      params.set("magazine_name",String(detail.magazine_name || ""));
-      params.set("new_book_id",get("book_id"));
-
-      for (const [id] of editFields) {
+      const registration = {
+        "雛形号の書籍ID": String(detail.id || ""),
+        "雛形号の雑誌月号": String(detail.issue || ""),
+        "雑誌ID": String(detail.magazine_id || ""),
+        "雑誌名": String(detail.magazine_name || ""),
+        "新しい書籍ID": get("book_id"),
+      };
+      for (const [id,label] of editFields) {
         const value = get(id);
-        if (value) params.set(issueFieldIds[id],value);
+        if (value) registration[label] = value;
       }
 
-      const targetUrl = `${issueBase}?${params.toString()}`;
-      if (targetUrl.length > 7000) {
-        window.alert(
-          "入力内容が長いため、一度にGitHubの確認フォームへ送れません。\n\n" +
-          "目次・内容紹介などの長文はいったん空欄にして新しい号を登録し、登録後に「この号を修正」から長文だけ追加してください。"
-        );
-        return;
+      submitButton.disabled = true;
+      submitButton.textContent = "登録内容を準備中…";
+      try {
+        const payload = await encodeRegistrationPayload(registration);
+        const params = new URLSearchParams();
+        params.set("template","magazine_new.yml");
+        params.set("title",`[雑誌号新規] ${detail.magazine_name} ${get("issue")}`);
+        params.set("source_book_id",String(detail.id || ""));
+        params.set("source_issue",String(detail.issue || ""));
+        params.set("magazine_id",String(detail.magazine_id || ""));
+        params.set("magazine_name",String(detail.magazine_name || ""));
+        params.set("new_book_id",get("book_id"));
+        params.set("mag_issue",get("issue"));
+        params.set("issue_number",get("issue_number"));
+        params.set("pub_date",get("pub_date"));
+        for (const id of ["format","pages","price_body","isbn_old","isbn_new","magazine_code_1","magazine_code_2","feature"]) {
+          const value = get(id);
+          if (value) params.set(issueFieldIds[id], value);
+        }
+        params.set("payload",payload);
+
+        const targetUrl = `${issueBase}?${params.toString()}`;
+        if (targetUrl.length > 6000) {
+          throw new Error("登録データを圧縮してもGitHubの確認URLが長すぎます。入力内容を確認してください。");
+        }
+        window.location.href = targetUrl;
+      } catch (error) {
+        console.error(error);
+        submitButton.disabled = false;
+        submitButton.textContent = "登録内容を確認する";
+        window.alert(error.message || "登録内容をGitHubへ渡す準備に失敗しました。");
       }
-      window.location.href = targetUrl;
     });
   }
 
