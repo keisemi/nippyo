@@ -1,0 +1,234 @@
+name: "【入力用】新しい雑誌号を登録"
+description: "雑誌管理画面で既存号を雛形にし、新しい号を登録します。"
+title: "[雑誌号新規] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        新しい雑誌号の登録内容を確認するフォームです。
+        雛形号から雑誌ID・判型などの固定項目を引き継ぎ、ここに表示された新号の内容で1行を追加します。
+        **現段階では登録後すぐ公開サイトへ反映されます。公開前登録の切替は次工程で追加します。**
+
+  - type: input
+    id: source_book_id
+    attributes:
+      label: 雛形号の書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: source_issue
+    attributes:
+      label: 雛形号の雑誌月号
+      description: 対象確認用です。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_id
+    attributes:
+      label: 雑誌ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: magazine_name
+    attributes:
+      label: 雑誌名
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: new_book_id
+    attributes:
+      label: 新しい書籍ID
+      description: 新しい号の書籍IDです。既存号と重複していないことを自動確認します。
+    validations:
+      required: true
+
+  - type: input
+    id: mag_issue
+    attributes:
+      label: 雑誌月号
+    validations:
+      required: true
+
+  - type: input
+    id: issue_number
+    attributes:
+      label: 雑誌通算番号
+    validations:
+      required: true
+
+  - type: input
+    id: pub_date
+    attributes:
+      label: 発刊日
+      description: 例：2026-11-27
+    validations:
+      required: true
+
+  - type: input
+    id: format
+    attributes:
+      label: 判型
+      description: 雛形号から自動入力されます。必要なら変更できます。
+
+  - type: input
+    id: pages
+    attributes:
+      label: ページ数
+      description: 数字のみ。
+
+  - type: input
+    id: price_body
+    attributes:
+      label: 本体価格
+      description: 数字のみ。
+
+  - type: input
+    id: isbn_old
+    attributes:
+      label: 旧ISBN
+
+  - type: input
+    id: isbn_new
+    attributes:
+      label: 新ISBN
+
+  - type: input
+    id: magazine_code_1
+    attributes:
+      label: 雑誌コード(1)
+
+  - type: input
+    id: magazine_code_2
+    attributes:
+      label: 雑誌コード(2)
+
+  - type: input
+    id: subtitle_before
+    attributes:
+      label: 前副題
+
+  - type: input
+    id: feature
+    attributes:
+      label: 特集
+
+  - type: input
+    id: feature_yomi
+    attributes:
+      label: 特集よみ
+
+  - type: input
+    id: feature_subtitle
+    attributes:
+      label: 後副題
+
+  - type: input
+    id: description_heading
+    attributes:
+      label: 特集内容紹介文見出
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 特集内容紹介文
+
+  - type: input
+    id: subtitle_before2
+    attributes:
+      label: 前副題2
+
+  - type: input
+    id: feature2
+    attributes:
+      label: 特集2
+
+  - type: input
+    id: feature2_yomi
+    attributes:
+      label: 特集2よみ
+
+  - type: input
+    id: feature2_subtitle
+    attributes:
+      label: 後副題2
+
+  - type: input
+    id: description_heading2
+    attributes:
+      label: 特集2 内容紹介文見出
+
+  - type: textarea
+    id: description2
+    attributes:
+      label: 特集2 内容紹介文
+
+  - type: textarea
+    id: toc
+    attributes:
+      label: 目次
+
+  - type: input
+    id: external_link_title_1
+    attributes:
+      label: 外部リンク1 タイトル
+
+  - type: textarea
+    id: external_link_comment_1
+    attributes:
+      label: 外部リンク1 コメント
+
+  - type: input
+    id: external_link_url_1
+    attributes:
+      label: 外部リンク1 URL
+
+  - type: input
+    id: external_link_title_2
+    attributes:
+      label: 外部リンク2 タイトル
+
+  - type: textarea
+    id: external_link_comment_2
+    attributes:
+      label: 外部リンク2 コメント
+
+  - type: input
+    id: external_link_url_2
+    attributes:
+      label: 外部リンク2 URL
+
+  - type: input
+    id: external_link_title_3
+    attributes:
+      label: 外部リンク3 タイトル
+
+  - type: textarea
+    id: external_link_comment_3
+    attributes:
+      label: 外部リンク3 コメント
+
+  - type: input
+    id: external_link_url_3
+    attributes:
+      label: 外部リンク3 URL
+
+  - type: textarea
+    id: editor
+    attributes:
+      label: 本誌編者
+      description: 雛形号から自動入力されます。必要なら変更できます。
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: 新しい号の雑誌・書籍ID・月号・通巻・発刊日・内容を確認しました。
+          required: true

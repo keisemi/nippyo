@@ -1,4 +1,4 @@
-name: "【自動】雑誌号修正申請を反映"
+name: "【自動】雑誌号申請を反映"
 
 on:
   issues:
@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   reject-unauthorized:
-    if: ${{ startsWith(github.event.issue.title, '[雑誌号修正]') && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,7 +26,7 @@ jobs:
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
 
   update:
-    if: ${{ startsWith(github.event.issue.title, '[雑誌号修正]') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[雑誌号修正]') || startsWith(github.event.issue.title, '[雑誌号新規]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Apply magazine issue edit
+      - name: Apply magazine issue request
         run: python scripts/manage_magazine_issue.py
 
       - name: Generate magazine data
@@ -72,6 +72,9 @@ jobs:
               raise SystemExit("雑誌検索データと検索索引の件数が一致しません。")
           if any(not isinstance(row, list) or len(row) != len(columns) for row in issues):
               raise SystemExit("雑誌検索データの行長が列定義と一致しません。")
+          ids = [str(row[columns.index("id")]) for row in issues]
+          if len(ids) != len(set(ids)):
+              raise SystemExit("雑誌号の書籍IDが重複しています。")
           if not list(Path("docs/data/magazine-details").glob("magazine-details-*.json")):
               raise SystemExit("雑誌詳細データがありません。")
           print(f"雑誌データ検証OK: {len(issues):,}号")
@@ -83,6 +86,7 @@ jobs:
         shell: bash
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -96,7 +100,12 @@ jobs:
             echo "変更がありません。"
             exit 1
           fi
-          git commit -m "Magazine issue edit: issue #${ISSUE_NUMBER} [skip ci]"
+          if [[ "$ISSUE_TITLE" == \[雑誌号新規\]* ]]; then
+            MESSAGE="Magazine issue add: issue #${ISSUE_NUMBER} [skip ci]"
+          else
+            MESSAGE="Magazine issue edit: issue #${ISSUE_NUMBER} [skip ci]"
+          fi
+          git commit -m "$MESSAGE"
           git push origin main
 
       - name: Configure GitHub Pages
@@ -128,5 +137,5 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "雑誌号の修正を反映し、臨時サイトを再公開しました。${PAGE_URL}"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "雑誌号の登録・修正を反映し、臨時サイトを再公開しました。${PAGE_URL}"
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"

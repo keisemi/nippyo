@@ -464,7 +464,7 @@
       nextIssueFieldHtml("subtitle_before2","前副題2","input",""),
       nextIssueFieldHtml("feature2","特集2","input",""),
       nextIssueFieldHtml("feature2_yomi","特集2よみ","input",""),
-      nextIssueFieldHtml("feature_subtitle2","後副題2","input",""),
+      nextIssueFieldHtml("feature2_subtitle","後副題2","input",""),
       nextIssueFieldHtml("description_heading2","特集2 内容紹介文見出","input",""),
       nextIssueFieldHtml("description2","特集2 内容紹介文","textarea",""),
     ].join("");
@@ -531,16 +531,83 @@
       </section>
 
       <div class="edit-submit-box">
-        <strong>F-05ではここまでです。</strong><br>
-        前号を雛形にした次号入力画面が正しく作られることを確認します。
-        実際にCSVへ新号を追加する送信機能は、次のF-06で接続します。
+        <strong>新しい号として登録します。</strong><br>
+        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。内容を確認して送信すると、該当誌のCSVへ新しい1行を追加し、臨時サイトを再公開します。<br>
+        <strong>注意：</strong>公開前登録の切替は次工程で追加するため、現段階では登録後すぐ公開サイトへ反映されます。
         <div class="edit-submit-actions">
+          <button class="admin-btn" id="submit-next-issue" type="button">登録内容を確認する</button>
           <button class="admin-btn secondary" id="back-from-next-issue" type="button">登録内容へ戻る</button>
         </div>
       </div>
     `;
 
     document.getElementById("back-from-next-issue").addEventListener("click", () => renderDetail(detail));
+    document.getElementById("submit-next-issue").addEventListener("click", () => {
+      const get = (id) => String(document.getElementById(`next-${id}`)?.value || "").trim();
+      const required = [
+        ["book_id","書籍ID"],
+        ["issue","雑誌月号"],
+        ["issue_number","雑誌通算番号"],
+        ["pub_date","発刊日"],
+      ];
+      for (const [id,label] of required) {
+        if (!get(id)) {
+          window.alert(`${label}を入力してください。`);
+          document.getElementById(`next-${id}`)?.focus();
+          return;
+        }
+      }
+
+      if (!/^[A-Za-z0-9_-]+$/.test(get("book_id"))) {
+        window.alert("書籍IDは半角英数字・ハイフン・アンダースコアで入力してください。");
+        document.getElementById("next-book_id")?.focus();
+        return;
+      }
+      if (!/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(get("pub_date"))) {
+        window.alert("発刊日は YYYY-MM-DD 形式で入力してください。");
+        document.getElementById("next-pub_date")?.focus();
+        return;
+      }
+      for (const id of ["pages","price_body"]) {
+        if (get(id) && !/^\d+$/.test(get(id))) {
+          window.alert(`${id === "pages" ? "ページ数" : "本体価格"}は数字のみで入力してください。`);
+          document.getElementById(`next-${id}`)?.focus();
+          return;
+        }
+      }
+      for (const id of ["external_link_url_1","external_link_url_2","external_link_url_3"]) {
+        const value = get(id);
+        if (value && !/^https?:\/\//i.test(value)) {
+          window.alert("外部リンクURLは http:// または https:// から入力してください。");
+          document.getElementById(`next-${id}`)?.focus();
+          return;
+        }
+      }
+
+      const params = new URLSearchParams();
+      params.set("template","magazine_new.yml");
+      params.set("title",`[雑誌号新規] ${detail.magazine_name} ${get("issue")}`);
+      params.set("source_book_id",String(detail.id || ""));
+      params.set("source_issue",String(detail.issue || ""));
+      params.set("magazine_id",String(detail.magazine_id || ""));
+      params.set("magazine_name",String(detail.magazine_name || ""));
+      params.set("new_book_id",get("book_id"));
+
+      for (const [id] of editFields) {
+        const value = get(id);
+        if (value) params.set(issueFieldIds[id],value);
+      }
+
+      const targetUrl = `${issueBase}?${params.toString()}`;
+      if (targetUrl.length > 7000) {
+        window.alert(
+          "入力内容が長いため、一度にGitHubの確認フォームへ送れません。\n\n" +
+          "目次・内容紹介などの長文はいったん空欄にして新しい号を登録し、登録後に「この号を修正」から長文だけ追加してください。"
+        );
+        return;
+      }
+      window.location.href = targetUrl;
+    });
   }
 
   function renderDetail(detail) {
