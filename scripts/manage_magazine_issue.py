@@ -245,11 +245,35 @@ def validate_magazine(magazine_id: str, magazine_name: str):
     return expected_name, SOURCE_DIR / filename
 
 
-def magazine_by_name(magazine_name: str):
-    for magazine_id, (name, filename) in MAGAZINES.items():
-        if name == magazine_name:
-            return magazine_id, name, SOURCE_DIR / filename
-    raise SystemExit(f"未対応の雑誌名です: {magazine_name}")
+def magazine_by_code1(code1: str):
+    code1 = (code1 or "").strip()
+    if not re.fullmatch(r"\d{5}", code1):
+        raise SystemExit("雑誌コード(1)は5桁の数字で入力してください。")
+
+    fixed = {
+        "08027": "1",  # 法律時報
+        "08069": "2",  # 法学セミナー
+        "03545": "3",  # 経済セミナー
+        "05423": "4",  # 数学セミナー
+    }
+    magazine_id = fixed.get(code1)
+
+    if magazine_id is None:
+        number = int(code1)
+        # こころの科学は元CSVで13949から14150まで連続的に使用。
+        # 将来分を含め、同シリーズの安全なコード帯として14999まで許容する。
+        if 13949 <= number <= 14999:
+            magazine_id = "6"
+        # そだちの科学は元CSVで90701から90767まで使用。
+        # 将来分を含め、同シリーズの安全なコード帯として90999まで許容する。
+        elif 90701 <= number <= 90999:
+            magazine_id = "7"
+
+    if magazine_id is None:
+        raise SystemExit(f"未対応の雑誌コード(1)です: {code1}")
+
+    name, filename = MAGAZINES[magazine_id]
+    return magazine_id, name, SOURCE_DIR / filename
 
 
 def latest_source_row(rows: list[dict[str, str]], magazine_id: str):
@@ -337,20 +361,20 @@ def apply_edit(fields: dict[str, str]) -> None:
 
 
 def apply_new(fields: dict[str, str]) -> None:
-    magazine_name = fields.get("雑誌名", "").strip()
+    magazine_code_1 = fields.get("雑誌コード(1)", "").strip()
     new_book_id = fields.get("新しい書籍ID", "").strip()
     new_issue = fields.get("雑誌月号", "").strip()
     new_issue_number = fields.get("雑誌通算番号", "").strip()
     pub_date = fields.get("発刊日", "").strip()
 
-    if not all([magazine_name, new_book_id, new_issue, new_issue_number, pub_date]):
+    if not all([magazine_code_1, new_book_id, new_issue, new_issue_number, pub_date]):
         raise SystemExit("新号登録に必要な情報が不足しています。GitHubフォームから登録し直してください。")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", new_book_id):
         raise SystemExit("新しい書籍IDは半角英数字・ハイフン・アンダースコアで入力してください。")
     if new_book_id in all_existing_ids():
         raise SystemExit(f"書籍ID {new_book_id} はすでに雑誌CSVで使われています。")
 
-    magazine_id, expected_name, path = magazine_by_name(magazine_name)
+    magazine_id, expected_name, path = magazine_by_code1(magazine_code_1)
     fieldnames, rows, encoding = read_rows(path)
     missing = sorted((set(LABEL_TO_COLUMN.values()) | NEW_ISSUE_CLEAR_COLUMNS | {"WEB公開属性", "雑誌ID"}) - set(fieldnames))
     if missing:
@@ -370,6 +394,7 @@ def apply_new(fields: dict[str, str]) -> None:
         new_row[column] = ""
     new_row["書籍ID"] = new_book_id
     new_row["雑誌ID"] = magazine_id
+    new_row["雑誌コード(1)"] = magazine_code_1
 
     # F-07前は新規登録するとそのまま公開される。
     if str(new_row.get("WEB公開属性") or "").strip() != "1":

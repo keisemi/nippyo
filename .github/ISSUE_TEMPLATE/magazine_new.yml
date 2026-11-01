@@ -6,21 +6,17 @@ body:
     attributes:
       value: |
         新しい雑誌号の登録フォームです。
-        選択した雑誌の**現在の最新号**を自動で雛形にし、判型・本誌編者などの固定項目を引き継ぎます。
+        **登録先の雑誌は「雑誌コード(1)」から自動判定します。雑誌名を選ぶ必要はありません。**
+        判定した雑誌の現在の最新号を自動で雛形にし、判型・本誌編者などの固定項目を引き継ぎます。
         月号・通巻・発刊日・価格・特集・目次など、毎号変わる項目を入力してください。
+        未対応の雑誌コード(1)は登録せず、エラーで停止します。
         **現段階では登録後すぐ公開サイトへ反映されます。**
 
-  - type: dropdown
-    id: magazine_name
+  - type: input
+    id: magazine_code_1
     attributes:
-      label: 雑誌名
-      options:
-        - 法律時報
-        - 法学セミナー
-        - 経済セミナー
-        - 数学セミナー
-        - こころの科学
-        - そだちの科学
+      label: 雑誌コード(1)
+      description: "このコードから登録先の雑誌を自動判定します。例：経済セミナー 03545"
     validations:
       required: true
 
@@ -82,11 +78,6 @@ body:
     id: isbn_new
     attributes:
       label: 新ISBN
-
-  - type: input
-    id: magazine_code_1
-    attributes:
-      label: 雑誌コード(1)
 
   - type: input
     id: magazine_code_2
