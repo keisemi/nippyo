@@ -21,6 +21,11 @@ body:
       required: true
 
   - type: input
+    id: magazine_code_2
+    attributes:
+      label: 雑誌コード(2)
+
+  - type: input
     id: new_book_id
     attributes:
       label: 新しい書籍ID
@@ -78,11 +83,6 @@ body:
     id: isbn_new
     attributes:
       label: 新ISBN
-
-  - type: input
-    id: magazine_code_2
-    attributes:
-      label: 雑誌コード(2)
 
   - type: input
     id: subtitle_before
