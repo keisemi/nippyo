@@ -436,10 +436,25 @@
   }
 
 
+  function nextAvailableBookId() {
+    const used = new Set(
+      issues
+        .map((issue) => String(issue.id || "").trim())
+        .filter(Boolean)
+    );
+    let maxNumericId = 0;
+    used.forEach((id) => {
+      if (/^\d+$/.test(id)) maxNumericId = Math.max(maxNumericId, Number(id));
+    });
+    let candidate = maxNumericId + 1;
+    while (used.has(String(candidate))) candidate += 1;
+    return String(candidate);
+  }
+
   function nextIssueSource(detail) {
     const text = (value) => value === null || value === undefined ? "" : String(value);
     return {
-      book_id: "",
+      book_id: nextAvailableBookId(),
       issue: "",
       issue_number: "",
       pub_date: "",
@@ -521,7 +536,7 @@
     const source = nextIssueSource(detail);
 
     const basics = [
-      nextIssueFieldHtml("book_id","書籍ID","input",source.book_id,"新しい号の書籍ID。前号のIDは引き継ぎません。"),
+      nextIssueFieldHtml("book_id","書籍ID","input",source.book_id,"既存の雑誌書籍IDの最大値＋1を自動入力します。必要なら変更できます。"),
       nextIssueFieldHtml("issue","雑誌月号","input",source.issue,"例：2026年12・2027年1月号"),
       nextIssueFieldHtml("issue_number","雑誌通算番号","input",source.issue_number),
       nextIssueFieldHtml("pub_date","発刊日","input",source.pub_date,"例：2026-11-27"),
