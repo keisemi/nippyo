@@ -16,7 +16,7 @@
     .magazine-choice.is-active{background:#255e17;color:#fff;border-color:#255e17}
     .search-row{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
     .search-row input{flex:1;min-width:260px;font-size:16px;padding:12px 14px;border:1px solid #b9c5b6;border-radius:6px}
-    .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}
+    .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
     .result-count{margin:12px 0;color:#4b5a49}
     .issue-card{display:grid;grid-template-columns:92px 1fr;gap:16px;border:1px solid #d4ddd2;border-radius:8px;padding:16px;margin:12px 0;background:#fff}
     .issue-cover{width:90px;height:128px;object-fit:contain;background:#f6f7f5;border:1px solid #dde3db}
@@ -28,7 +28,39 @@
     .admin-btn.secondary{background:#fff;color:#255e17;border:1px solid #255e17}
     .empty{padding:24px;border:1px dashed #b9c5b6;border-radius:8px;color:#5e685c}
     .status-note{display:inline-block;padding:3px 8px;border:1px solid #cbd5c8;border-radius:999px;font-size:12px;background:#f7f8f6;color:#666}
-    @media(max-width:760px){.magazine-selector{grid-template-columns:1fr 1fr}.issue-card{grid-template-columns:1fr}.issue-cover,.issue-cover-empty{width:110px;height:156px}}
+
+    .detail-overlay[hidden]{display:none}
+    .detail-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.52);padding:28px 18px;overflow:auto}
+    .detail-panel{position:relative;max-width:900px;margin:0 auto;background:#fff;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.25);padding:28px}
+    .detail-close{position:absolute;right:16px;top:14px;width:38px;height:38px;border:1px solid #cbd3c9;border-radius:50%;background:#fff;cursor:pointer;font-size:24px;line-height:1}
+    .detail-header{display:grid;grid-template-columns:150px 1fr;gap:22px;padding-right:42px}
+    .detail-cover{width:148px;max-height:210px;object-fit:contain;border:1px solid #d9dfd7;background:#f6f7f5}
+    .detail-cover-empty{width:148px;height:210px;display:flex;align-items:center;justify-content:center;background:#f6f7f5;border:1px solid #d9dfd7;color:#777}
+    .detail-kicker{margin:0 0 5px;color:#255e17;font-size:12px;font-weight:700;letter-spacing:.1em}
+    .detail-title{margin:0 0 10px;font-size:26px}
+    .detail-feature{margin:8px 0;font-size:17px;font-weight:700}
+    .detail-table{width:100%;border-collapse:collapse;margin:22px 0}
+    .detail-table th,.detail-table td{padding:10px 12px;border-top:1px solid #d9e0d8;vertical-align:top;text-align:left}
+    .detail-table th{width:150px;color:#4a5747;font-weight:700;background:#fafbf9}
+    .detail-section{margin:26px 0}
+    .detail-section h3{margin:0 0 10px;padding-left:10px;border-left:4px solid #255e17;font-size:18px}
+    .detail-text{white-space:pre-wrap;line-height:1.75;overflow-wrap:anywhere}
+    .detail-link-list{margin:0;padding-left:20px}
+    .detail-link-list li{margin:8px 0}
+    .detail-link-comment{color:#586455;font-size:14px}
+    .detail-loading{padding:50px 0;text-align:center;color:#586455}
+    .detail-error{padding:20px;background:#fff3ef;border:1px solid #e2b9ad;border-radius:6px;color:#7d2a1d}
+    body.detail-open{overflow:hidden}
+
+    @media(max-width:760px){
+      .magazine-selector{grid-template-columns:1fr 1fr}
+      .issue-card{grid-template-columns:1fr}
+      .issue-cover,.issue-cover-empty{width:110px;height:156px}
+      .detail-panel{padding:22px 18px}
+      .detail-header{grid-template-columns:1fr;padding-right:34px}
+      .detail-cover,.detail-cover-empty{width:120px;height:170px}
+      .detail-table th{width:105px}
+    }
     @media(max-width:480px){.magazine-selector{grid-template-columns:1fr}}
   </style>
 </head>
@@ -43,9 +75,9 @@
     <h1>雑誌管理</h1>
 
     <div class="admin-note">
-      まず雑誌を選び、既存号を検索・確認できます。<br>
-      <strong>この段階では閲覧・確認のみです。</strong>
-      新しい号の登録、既存号の修正、公開管理、書影管理は次の工程から追加します。
+      雑誌を選び、既存号を検索・確認できます。<br>
+      各号の<strong>「登録内容を確認」</strong>から、現在登録されている特集・目次・価格・ISBN等を確認できます。
+      修正機能は次の工程で追加します。
     </div>
 
     <div class="magazine-selector" id="magazine-selector" aria-label="雑誌を選択">
@@ -65,6 +97,15 @@
     <p class="result-count" id="result-count">雑誌を選んでください。</p>
     <div id="results"></div>
   </main>
+
+  <div id="detail-overlay" class="detail-overlay" hidden>
+    <section class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <button id="detail-close" class="detail-close" type="button" aria-label="閉じる">×</button>
+      <div id="detail-content">
+        <p class="detail-loading">登録内容を読み込んでいます。</p>
+      </div>
+    </section>
+  </div>
 
   <script src="admin.js"></script>
 </body>
