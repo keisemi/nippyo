@@ -10,6 +10,9 @@
   const detailOverlay = document.getElementById("detail-overlay");
   const detailClose = document.getElementById("detail-close");
   const detailContent = document.getElementById("detail-content");
+  const newIssueAction = document.getElementById("new-issue-action");
+  const newIssueSource = document.getElementById("new-issue-source");
+  const newIssueButton = document.getElementById("new-issue-button");
 
   let issues = [];
   let selectedMagazineId = "";
@@ -784,12 +787,67 @@
     render(matched.slice(0,50), matched.length);
   }
 
+
+  function publicationKey(issue) {
+    const raw = String(issue?.pub_date || "").trim();
+    const match = raw.match(/^(\d{4})[-/.]?(\d{1,2})?[-/.]?(\d{1,2})?/);
+    if (match) {
+      return Number(match[1]) * 10000 + Number(match[2] || 0) * 100 + Number(match[3] || 0);
+    }
+    return Number(issue?.pub_year || 0) * 10000;
+  }
+
+  function latestIssueForMagazine(magazineId) {
+    const candidates = issues.filter((issue) => String(issue.magazine_id || "") === String(magazineId || ""));
+    if (!candidates.length) return null;
+    return [...candidates].sort((a,b) => {
+      const dateDiff = publicationKey(b) - publicationKey(a);
+      if (dateDiff) return dateDiff;
+      const bNo = Number(String(b.issue_number || "").replace(/\D/g,"")) || 0;
+      const aNo = Number(String(a.issue_number || "").replace(/\D/g,"")) || 0;
+      if (bNo !== aNo) return bNo - aNo;
+      return String(b.id || "").localeCompare(String(a.id || ""), "ja", {numeric:true});
+    })[0];
+  }
+
+  function updateNewIssueAction() {
+    const latest = latestIssueForMagazine(selectedMagazineId);
+    if (!latest) {
+      newIssueAction.hidden = true;
+      newIssueButton.dataset.sourceId = "";
+      return;
+    }
+    const parts = [
+      `現在の最新号：${latest.issue || "（月号未登録）"}`,
+      latest.issue_number ? `通巻 ${latest.issue_number}` : "",
+      latest.pub_date ? `発刊日 ${latest.pub_date}` : "",
+    ].filter(Boolean);
+    newIssueSource.textContent = parts.join(" ／ ");
+    newIssueButton.dataset.sourceId = String(latest.id || "");
+    newIssueAction.hidden = false;
+  }
+
+  async function openNextIssueFrom(issue) {
+    if (!issue) return;
+    detailOverlay.hidden = false;
+    document.body.classList.add("detail-open");
+    detailContent.innerHTML = '<p class="detail-loading">最新号の登録内容を読み込んでいます。</p>';
+    try {
+      const detail = await loadDetail(issue);
+      openNextIssueForm(detail);
+    } catch (error) {
+      console.error(error);
+      detailContent.innerHTML = `<div class="detail-error">${esc(error.message || "最新号の登録内容を読み込めませんでした。")}</div>`;
+    }
+  }
+
   function selectMagazine(id) {
     selectedMagazineId = String(id || "");
     choices.forEach((button) => {
       button.classList.toggle("is-active", button.dataset.magazineId === selectedMagazineId);
     });
     queryInput.value = "";
+    updateNewIssueAction();
     runSearch();
   }
 
@@ -801,6 +859,14 @@
         button.addEventListener("click", () => selectMagazine(button.dataset.magazineId));
       });
       searchButton.addEventListener("click", runSearch);
+      newIssueButton.addEventListener("click", () => {
+        const latest = latestIssueForMagazine(selectedMagazineId);
+        if (!latest) {
+          window.alert("この雑誌の最新号を取得できませんでした。");
+          return;
+        }
+        void openNextIssueFrom(latest);
+      });
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") runSearch();
       });

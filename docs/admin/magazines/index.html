@@ -14,6 +14,14 @@
     .magazine-selector{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0}
     .magazine-choice{padding:12px 10px;border:1px solid #b9c5b6;border-radius:7px;background:#fff;cursor:pointer;text-align:center;font-weight:700}
     .magazine-choice.is-active{background:#255e17;color:#fff;border-color:#255e17}
+
+    .new-issue-action{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:12px 0 22px;padding:18px 20px;background:#eef4ec;border:2px solid #255e17;border-radius:8px}
+    .new-issue-action[hidden]{display:none}
+    .new-issue-action-copy{min-width:260px;flex:1}
+    .new-issue-action-kicker{margin:0 0 4px;color:#255e17;font-size:12px;font-weight:700;letter-spacing:.08em}
+    .new-issue-action-title{margin:0;font-size:18px;font-weight:700;color:#263623}
+    .new-issue-action-meta{margin:5px 0 0;color:#596655;font-size:14px}
+    .new-issue-action .admin-btn{font-size:16px;padding:12px 18px}
     .search-row{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
     .search-row input{flex:1;min-width:260px;font-size:16px;padding:12px 14px;border:1px solid #b9c5b6;border-radius:6px}
     .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
@@ -91,8 +99,8 @@
 
     <div class="admin-note">
       雑誌を選び、既存号を検索・確認できます。<br>
-      各号の<strong>「登録内容を確認」</strong>から、既存号の修正と<strong>「この号をもとに次号を登録」</strong>の準備ができます。<br>
-      次号作成では、雑誌ID・雑誌名・判型・本誌編者などの固定項目を前号から引き継ぎ、毎号変わる項目を入力して新しい号を登録できます。
+      雑誌を選ぶと、<strong>その時点の最新号をもとに「新しい号を登録」</strong>できます。<br>
+      既存号の確認・修正や、特定の過去号を雛形にした登録は、各号の<strong>「登録内容を確認」</strong>から行えます。
     </div>
 
     <div class="magazine-selector" id="magazine-selector" aria-label="雑誌を選択">
@@ -103,6 +111,15 @@
       <button type="button" class="magazine-choice" data-magazine-id="6">こころの科学</button>
       <button type="button" class="magazine-choice" data-magazine-id="7">そだちの科学</button>
     </div>
+
+    <section id="new-issue-action" class="new-issue-action" hidden aria-live="polite">
+      <div class="new-issue-action-copy">
+        <p class="new-issue-action-kicker">NEW ISSUE</p>
+        <p class="new-issue-action-title">新しい号を登録</p>
+        <p id="new-issue-source" class="new-issue-action-meta"></p>
+      </div>
+      <button id="new-issue-button" class="admin-btn" type="button">最新号をもとに新しい号を登録</button>
+    </section>
 
     <div class="search-row">
       <input id="issue-query" type="search" placeholder="月号・通巻・特集・書籍ID・ISBN・執筆者などで検索" autocomplete="off">
@@ -122,6 +139,6 @@
     </section>
   </div>
 
-  <script src="admin.js?v=20261101-f06"></script>
+  <script src="admin.js?v=20261101-f06b"></script>
 </body>
 </html>
