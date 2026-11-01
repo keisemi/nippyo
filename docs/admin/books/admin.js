@@ -126,6 +126,15 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function deleteUrl(book) {
+    const params = new URLSearchParams();
+    params.set("template", "book_delete.yml");
+    params.set("title", `[書誌削除] ${book.title}`);
+    params.set("book_id", book.id);
+    params.set("current_title", book.title);
+    return `${issueBase}?${params.toString()}`;
+  }
+
   function closeBookModal() {
     if (!modal || modal.hidden) return;
     modal.hidden = true;
@@ -374,6 +383,19 @@
     window.location.href = restoreUrl(book);
   }
 
+  function openDelete(book) {
+    const ok = window.confirm(
+      `「${book.title}」の書誌情報そのものを削除します。\n\n` +
+      `書籍ID：${book.id}\n\n` +
+      "通常の掲載取り下げなら「公開停止」を使用してください。\n" +
+      "この操作では正本CSVから書誌レコードを削除します。\n" +
+      "書影・正誤表・付属データ等のファイルは削除しません。\n\n" +
+      "削除確認画面へ進んでよろしいですか？"
+    );
+    if (!ok) return;
+    window.location.href = deleteUrl(book);
+  }
+
   function renderBookModal(book, detail, trigger) {
     const sub = subtitle(detail);
     const series = [detail.series, detail.series_volume].filter(Boolean).join(" ");
@@ -413,6 +435,10 @@
         <button class="admin-btn" id="open-edit-form" type="button">この書誌を編集</button>
         ${publicationAction}
       </div>
+      <div class="admin-edit-box">
+        <p><strong>書誌情報そのものを削除する場合のみ使用してください。</strong><br>通常の掲載取り下げは「公開停止」を使用してください。削除しても書影・正誤表・付属データ等のファイルは自動削除しません。</p>
+        <button class="admin-btn danger" id="delete-book" type="button">この書誌情報を削除</button>
+      </div>
       ${detail.description ? `<section class="admin-detail-section"><h3>内容紹介</h3><p class="admin-detail-copy">${richText(detail.description)}</p></section>` : ""}
       ${detail.toc ? `<section class="admin-detail-section"><h3>目次</h3><div class="admin-detail-toc">${richText(detail.toc)}</div></section>` : ""}
       ${statusItems.length ? `<section class="admin-detail-section"><h3>関連資料</h3><ul>${statusItems.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
@@ -420,6 +446,7 @@
     document.getElementById("open-edit-form").addEventListener("click", (event) => openEditForm(book, detail, event.currentTarget));
     document.getElementById("hide-book")?.addEventListener("click", () => openHide(detail));
     document.getElementById("restore-book")?.addEventListener("click", () => openRestore(detail));
+    document.getElementById("delete-book")?.addEventListener("click", () => openDelete(detail));
 
     modal.hidden = false;
     document.body.classList.add("modal-open");

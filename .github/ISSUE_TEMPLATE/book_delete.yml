@@ -1,0 +1,47 @@
+name: "【入力用】書誌情報を削除"
+description: "誤登録・重複登録など、本当に不要な書誌情報を正本CSVから削除します。"
+title: "[書誌削除] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        書誌情報そのものを削除するための確認フォームです。
+        **通常の掲載取り下げには「公開停止」を使用してください。**
+
+        この操作を実行すると、対象書の書誌レコードは正本CSVから削除され、
+        公開サイトおよび管理画面の書誌検索・詳細表示から消えます。
+
+        **書影・正誤表・付属データ等のファイルは、この操作では削除しません。**
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "管理用検索ページから自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: "対象書の確認用です。管理用検索ページから自動入力されます。"
+    validations:
+      required: true
+
+  - type: input
+    id: confirm_book_id
+    attributes:
+      label: 削除確認用の書籍ID
+      description: "上に表示されている書籍IDを、確認のためもう一度入力してください。"
+      placeholder: "例：52107"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 削除の確認
+      options:
+        - label: "公開停止ではなく、この書誌情報そのものを正本CSVから削除することを確認しました。"
+          required: true

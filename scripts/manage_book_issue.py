@@ -41,7 +41,15 @@ LABEL_TO_ENV = {
 def parse_sections(body: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {}
     current = None
-    known_labels = {"書籍ID", "現在の書名", "公開停止の確認", "再公開の確認", *LABEL_TO_ENV.keys()}
+    known_labels = {
+        "書籍ID",
+        "現在の書名",
+        "公開停止の確認",
+        "再公開の確認",
+        "削除確認用の書籍ID",
+        "削除の確認",
+        *LABEL_TO_ENV.keys(),
+    }
     for line in (body or "").splitlines():
         if line.startswith("### ") and line[4:].strip() in known_labels:
             current = line[4:].strip()
@@ -179,6 +187,34 @@ def restore_book(book_id: str, current_title: str) -> None:
     print(f"書名: {current_title}")
 
 
+def delete_book(book_id: str, current_title: str, confirmation_id: str) -> None:
+    verify_edit_target(book_id, current_title)
+    if confirmation_id != book_id:
+        raise SystemExit(
+            "削除確認用の書籍IDが対象書と一致しません。\n"
+            f"対象書籍ID: {book_id}\n"
+            f"確認入力: {confirmation_id or '（空欄）'}"
+        )
+
+    rows = manage_book.load_master()
+    remaining = [row for row in rows if (row.get("id") or "").strip() != book_id]
+    if len(remaining) != len(rows) - 1:
+        raise SystemExit(f"書籍ID {book_id} の削除対象を1件に特定できません。CSVは変更していません。")
+
+    manage_book.save_master(remaining)
+
+    hidden_ids = load_hidden_ids()
+    if book_id in hidden_ids:
+        hidden_ids.remove(book_id)
+        save_hidden_ids(hidden_ids)
+
+    print("操作: 書誌削除")
+    print(f"書籍ID: {book_id}")
+    print(f"書名: {current_title}")
+    print(f"公開用マスター件数: {len(remaining):,}")
+    print("書影・正誤表・付属データ等のファイルは削除していません。")
+
+
 def main() -> None:
     issue = get_issue()
     issue_title = (issue.get("title") or "").strip()
@@ -202,6 +238,22 @@ def main() -> None:
         if not current_title:
             raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
         restore_book(book_id, current_title)
+        return
+
+    if issue_title.startswith("[書誌削除]"):
+        book_id = fields.get("書籍ID", "").strip()
+        if not book_id:
+            raise SystemExit("書籍IDがありません。")
+        current_title = fields.get("現在の書名", "").strip()
+        if not current_title:
+            raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
+        confirmation_id = fields.get("削除確認用の書籍ID", "").strip()
+        if not confirmation_id:
+            raise SystemExit("削除確認用の書籍IDがありません。")
+        delete_confirmation = fields.get("削除の確認", "")
+        if not re.search(r"-\s*\[[xX]\]", delete_confirmation):
+            raise SystemExit("書誌削除の確認チェックがありません。")
+        delete_book(book_id, current_title, confirmation_id)
         return
 
     if issue_title.startswith("[書誌修正]"):

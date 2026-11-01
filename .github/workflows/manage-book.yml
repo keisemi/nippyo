@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   reject-unauthorized:
-    if: ${{ (startsWith(github.event.issue.title, '[書誌修正]') || startsWith(github.event.issue.title, '[書誌新規]') || startsWith(github.event.issue.title, '[書誌公開停止]') || startsWith(github.event.issue.title, '[書誌再公開]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[書誌修正]') || startsWith(github.event.issue.title, '[書誌新規]') || startsWith(github.event.issue.title, '[書誌公開停止]') || startsWith(github.event.issue.title, '[書誌再公開]') || startsWith(github.event.issue.title, '[書誌削除]')) && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,7 +26,7 @@ jobs:
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
 
   update:
-    if: ${{ (startsWith(github.event.issue.title, '[書誌修正]') || startsWith(github.event.issue.title, '[書誌新規]') || startsWith(github.event.issue.title, '[書誌公開停止]') || startsWith(github.event.issue.title, '[書誌再公開]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    if: ${{ (startsWith(github.event.issue.title, '[書誌修正]') || startsWith(github.event.issue.title, '[書誌新規]') || startsWith(github.event.issue.title, '[書誌公開停止]') || startsWith(github.event.issue.title, '[書誌再公開]') || startsWith(github.event.issue.title, '[書誌削除]')) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
