@@ -57,18 +57,33 @@ def fallback_target_from_issue_title(issue_title: str, operation: str) -> str:
     return ""
 
 
-def apply_publication_action_from_issue_title(values: dict[str, str], issue_title: str) -> None:
+def parse_named_section(body: str, heading: str) -> str:
+    pattern = re.compile(
+        rf"(?ms)^### {re.escape(heading)}\s*\n\n(.*?)(?=^### .+?\s*$|\Z)"
+    )
+    match = pattern.search(body or "")
+    if not match:
+        return ""
+    value = match.group(1).strip()
+    return "" if value in EMPTY_RESPONSES else value
+
+
+def publication_request(issue_title: str, body: str) -> dict[str, str] | None:
     actions = {
         "[お知らせ管理] 公開停止: ": "いいえ",
         "[お知らせ管理] 再公開: ": "はい",
     }
     for prefix, published in actions.items():
         if issue_title.startswith(prefix):
+            target = parse_named_section(body, "対象のお知らせ")
+            if not target:
+                target = issue_title[len(prefix):].strip()
+            values = {heading: "" for heading in HEADINGS}
             values["操作"] = "既存データ修正"
+            values["修正・削除するお知らせ"] = target
             values["公開する"] = published
-            if not values.get("修正・削除するお知らせ", ""):
-                values["修正・削除するお知らせ"] = issue_title[len(prefix):].strip()
-            return
+            return values
+    return None
 
 
 def main():
@@ -79,17 +94,17 @@ def main():
     event = json.loads(Path(event_path).read_text(encoding="utf-8"))
     issue = event.get("issue") or {}
     body = issue.get("body") or ""
-    values = parse_issue_form(body)
-
-    missing = [heading for heading in HEADINGS if heading not in values]
-    if missing:
-        raise SystemExit(
-            "お知らせ更新フォームを正しく読み取れませんでした。未検出項目: "
-            + "、".join(missing)
-        )
-
     issue_title = (issue.get("title") or "").strip()
-    apply_publication_action_from_issue_title(values, issue_title)
+
+    values = publication_request(issue_title, body)
+    if values is None:
+        values = parse_issue_form(body)
+        missing = [heading for heading in HEADINGS if heading not in values]
+        if missing:
+            raise SystemExit(
+                "お知らせ更新フォームを正しく読み取れませんでした。未検出項目: "
+                + "、".join(missing)
+            )
 
     operation = values.get("操作", "")
     if not values.get("修正・削除するお知らせ", "") and operation in {"既存データ修正", "削除"}:

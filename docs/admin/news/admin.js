@@ -43,11 +43,10 @@
 
   function publicationUrl(item, publish) {
     const params = new URLSearchParams();
+    params.set("template", publish ? "news_restore.yml" : "news_hide.yml");
     params.set("title", `[お知らせ管理] ${publish ? "再公開" : "公開停止"}: ${item.title}`);
-    params.set("operation", "既存データ修正");
     params.set("target_title", item.title);
-    params.set("published", publish ? "はい" : "いいえ");
-    return issueUrl(params);
+    return `${issueBase}?${params.toString()}`;
   }
 
   function openPublicationChange(item, publish) {

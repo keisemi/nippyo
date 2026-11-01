@@ -1,0 +1,25 @@
+name: "【入力用】お知らせを再公開"
+description: "公開停止中のお知らせを、公開サイトに再表示します。"
+title: "[お知らせ管理] 再公開: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        対象のお知らせを**再公開**します。
+        公開サイトのお知らせ一覧に再び表示されます。
+
+  - type: input
+    id: target_title
+    attributes:
+      label: 対象のお知らせ
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: このお知らせを再公開します。
+          required: true
