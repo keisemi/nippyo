@@ -6,7 +6,8 @@ on:
       - opened
 
 concurrency:
-  group: news-data-maintenance
+  group: nippyo-site-maintenance
+  queue: max
   cancel-in-progress: false
 
 jobs:

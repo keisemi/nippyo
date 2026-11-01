@@ -6,7 +6,8 @@ on:
       - opened
 
 concurrency:
-  group: book-data-maintenance
+  group: nippyo-site-maintenance
+  queue: max
   cancel-in-progress: false
 
 jobs:
@@ -101,7 +102,7 @@ jobs:
           if not isinstance(book_order, list) or sorted(book_order) != list(range(len(books))):
               raise SystemExit('書籍の既定表示順が不正です。')
           if 'search_extra' in (search_payload.get('columns') or []):
-              raise SystemExit('初期表示用書籍データに検索専用補助文字列が残っています。')
+              raise SystemExit('初期表示用書誌データに検索専用補助文字列が残っています。')
 
           detail_ids = []
           detail_files = sorted(Path('docs/data/book-details').glob('books-detail-*.json'))
