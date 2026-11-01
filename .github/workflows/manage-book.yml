@@ -228,3 +228,20 @@ jobs:
         run: |
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$(printf '✅ 更新が完了しました。\n\n公開サイトへの反映も完了しました。\n\n公開サイトを確認：%s' "$PAGE_URL")"
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+
+  notify-failure:
+    needs:
+      - update
+      - deploy
+    if: ${{ always() && (needs.update.result == 'failure' || needs.deploy.result == 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Notify failed request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body $'❌ 更新処理が完了しませんでした。\n\n公開サイトへの反映完了を確認できていません。\n\nこのIssueのURLを管理担当者へ送ってください。Actions画面を確認する必要はありません。'
+
