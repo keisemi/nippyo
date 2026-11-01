@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>書籍関連ファイル管理｜日本評論社 臨時ホームページ</title>
+  <link rel="stylesheet" href="../../css/site.css">
+  <style>
+    .admin-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+    .admin-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin: 0 0 18px;
+    }
+    .admin-wrap h1 {
+      margin: 8px 0 12px;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      font-weight: 500;
+    }
+    .admin-lead {
+      max-width: 760px;
+      color: #4f5b4d;
+      line-height: 1.8;
+    }
+    .admin-note {
+      margin: 22px 0 28px;
+      padding: 16px 18px;
+      background: #eef4ec;
+      border-left: 5px solid #255e17;
+      line-height: 1.75;
+    }
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .file-card {
+      min-height: 190px;
+      padding: 22px;
+      border: 1px solid #d4ddd2;
+      border-top: 4px solid #aab4a7;
+      border-radius: 8px;
+      background: #f7f8f6;
+    }
+    .file-card h2 {
+      margin: 4px 0 10px;
+      font-size: 1.35rem;
+    }
+    .file-card p {
+      margin: 0;
+      color: #555;
+      line-height: 1.7;
+    }
+    .file-label {
+      margin: 0 0 6px !important;
+      color: #777 !important;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+    }
+    .status {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 4px 9px;
+      border: 1px solid #c7cec5;
+      border-radius: 999px;
+      color: #666;
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .admin-footer {
+      margin-top: 30px;
+      padding-top: 18px;
+      border-top: 1px solid #d9e0d8;
+      color: #666;
+      font-size: .9rem;
+      line-height: 1.7;
+    }
+    @media (max-width: 760px) {
+      .file-grid {
+        grid-template-columns: 1fr;
+      }
+      .admin-wrap {
+        padding-inline: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <p class="admin-links">
+      <a href="../">← 管理画面ホームに戻る</a>
+      <a href="https://github.com/keisemi/nippyo">← リポジトリに戻る</a>
+    </p>
+
+    <p class="section-kicker">FILES</p>
+    <h1>書籍関連ファイル管理</h1>
+    <p class="admin-lead">
+      書籍に付随するファイルを管理するための画面です。
+      各機能は順次追加します。
+    </p>
+
+    <div class="admin-note">
+      <strong>この画面は現在、管理メニューの入口のみ利用できます。</strong><br>
+      書影・正誤表・付属データの追加、差替え、削除機能は次の工程から1つずつ実装します。
+    </div>
+
+    <section class="file-grid" aria-label="書籍関連ファイル管理メニュー">
+      <div class="file-card" aria-disabled="true">
+        <p class="file-label">COVER</p>
+        <h2>書影</h2>
+        <p>書籍の書影画像を追加・差替え・削除します。</p>
+        <span class="status">準備中</span>
+      </div>
+
+      <div class="file-card" aria-disabled="true">
+        <p class="file-label">ERRATA</p>
+        <h2>正誤表</h2>
+        <p>書籍の正誤表PDFを追加・差替え・削除します。</p>
+        <span class="status">準備中</span>
+      </div>
+
+      <div class="file-card" aria-disabled="true">
+        <p class="file-label">RELATED</p>
+        <h2>付属データ</h2>
+        <p>解答、追加問題、Excel、プログラムコードなどの付属データを追加・差替え・削除します。</p>
+        <span class="status">準備中</span>
+      </div>
+    </section>
+
+    <p class="admin-footer">
+      日常更新担当者がリポジトリ内のファイルを直接編集しなくても操作できる形に整備します。
+    </p>
+  </main>
+</body>
+</html>
