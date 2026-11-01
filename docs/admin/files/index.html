@@ -12,7 +12,7 @@
     .admin-wrap h1{margin:8px 0 12px;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(2rem,4vw,2.7rem);font-weight:500}
     .admin-lead{max-width:760px;color:#4f5b4d;line-height:1.8}
     .admin-note{margin:22px 0 28px;padding:16px 18px;background:#eef4ec;border-left:5px solid #255e17;line-height:1.75}
-    .file-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .file-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     .file-card{display:block;min-height:190px;padding:22px;border:1px solid #d4ddd2;border-top:4px solid #255e17;border-radius:8px;background:#fff;text-decoration:none;box-shadow:0 5px 18px rgba(37,94,23,.04)}
     .file-card[href]:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(37,94,23,.09)}
     .file-card h2{margin:4px 0 10px;font-size:1.35rem}
@@ -32,13 +32,13 @@
 
     <p class="section-kicker">FILES</p>
     <h1>書籍関連ファイル管理</h1>
-    <p class="admin-lead">書籍に付随するファイルを管理するための画面です。</p>
+    <p class="admin-lead">書籍に付随するファイルや外部リンクを管理するための画面です。</p>
 
     <div class="admin-note">
-      <strong>書影・正誤表・付属データの管理機能を利用できます。</strong>
+      <strong>書影・正誤表・付属データ・関連リンクの管理機能を利用できます。</strong>
     </div>
 
-    <section class="file-grid" aria-label="書籍関連ファイル管理メニュー">
+    <section class="file-grid" aria-label="書籍関連情報管理メニュー">
       <a class="file-card" href="covers/">
         <p class="file-label">COVER</p>
         <h2>書影</h2>
@@ -54,14 +54,21 @@
       </a>
 
       <a class="file-card" href="related/">
-        <p class="file-label">RELATED</p>
+        <p class="file-label">RELATED FILE</p>
         <h2>付属データ</h2>
         <p>解答、追加問題、Excel、プログラムコードなどの付属データを追加・差替え・削除します。</p>
         <span class="file-link">付属データ管理を開く →</span>
       </a>
+
+      <a class="file-card" href="links/">
+        <p class="file-label">EXTERNAL LINK</p>
+        <h2>関連リンク</h2>
+        <p>サポートサイト、動画、記事、イベントページなどの外部リンクを追加・修正・削除します。</p>
+        <span class="file-link">関連リンク管理を開く →</span>
+      </a>
     </section>
 
-    <p class="admin-footer">日常更新担当者がリポジトリ内のファイルを直接編集しなくても操作できる形に整備しています。</p>
+    <p class="admin-footer">日常更新担当者がリポジトリ内のファイルやCSVを直接編集しなくても操作できる形に整備しています。</p>
   </main>
 </body>
 </html>
