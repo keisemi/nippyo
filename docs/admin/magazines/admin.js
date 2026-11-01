@@ -53,6 +53,18 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function coverIssueUrl(detail, operation) {
+    const params = new URLSearchParams();
+    params.set("template", "magazine_cover.yml");
+    params.set("title", `[雑誌書影管理] ${detail.magazine_name} ${detail.issue || ""}`);
+    params.set("book_id", String(detail.id || ""));
+    params.set("magazine_id", String(detail.magazine_id || ""));
+    params.set("magazine_name", String(detail.magazine_name || ""));
+    params.set("current_issue", String(detail.issue || ""));
+    params.set("operation", operation);
+    return `${issueBase}?${params.toString()}`;
+  }
+
   function openPublicationChange(detail, publish) {
     const action = publish ? "公開" : "非公開";
     const ok = window.confirm(
@@ -817,6 +829,15 @@
           ${detail.published === false
             ? '<button id="restore-magazine" class="admin-btn" type="button">この号を公開する</button>'
             : '<button id="hide-magazine" class="admin-btn danger" type="button">この号を非公開にする</button>'}
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3>この号の書影</h3>
+        <p>現在の書影：<strong>${cover ? "登録済み" : "なし"}</strong></p>
+        <div class="edit-submit-actions">
+          <a class="admin-btn" href="${esc(coverIssueUrl(detail, "追加・差替え"))}" target="_blank" rel="noopener noreferrer">${cover ? "書影を差替える" : "書影を追加する"}</a>
+          ${cover ? `<a class="admin-btn danger" href="${esc(coverIssueUrl(detail, "削除"))}" target="_blank" rel="noopener noreferrer">書影を削除する</a>` : ""}
         </div>
       </section>
 

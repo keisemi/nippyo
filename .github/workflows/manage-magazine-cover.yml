@@ -1,0 +1,120 @@
+name: "【自動】雑誌書影申請を反映"
+
+on:
+  issues:
+    types:
+      - opened
+
+concurrency:
+  group: nippyo-site-maintenance
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  reject-unauthorized:
+    if: ${{ startsWith(github.event.issue.title, '[雑誌書影管理]') && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Reject unauthorized request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "このフォームは更新権限のある担当者専用です。この申請からサイト内容は変更されません。"
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+
+  update:
+    if: ${{ startsWith(github.event.issue.title, '[雑誌書影管理]') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Apply magazine cover request
+        run: python scripts/manage_magazine_cover_issue.py
+
+      - name: Regenerate magazine data
+        run: python scripts/build_magazine_data_with_visibility.py
+
+      - name: Validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("docs/data/magazine-admin-search.json").read_text(encoding="utf-8"))
+          columns = payload.get("columns") if isinstance(payload, dict) else None
+          rows = payload.get("issues") if isinstance(payload, dict) else None
+          if not isinstance(columns, list) or "id" not in columns:
+              raise SystemExit("雑誌管理画面用データの列定義が不正です。")
+          if not isinstance(rows, list) or not rows:
+              raise SystemExit("雑誌管理画面用データが空です。")
+          print(f"雑誌データ生成確認OK: {len(rows):,}号")
+          PY
+          node --check docs/admin/magazines/admin.js
+          git diff --check
+
+      - name: Commit updated magazine cover
+        shell: bash
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/assets/magazine-covers docs/data
+          if git diff --cached --quiet; then
+            echo "変更はありません。"
+            exit 1
+          fi
+          git commit -m "Magazine cover: issue #${ISSUE_NUMBER} [skip ci]"
+          git push origin main
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      issues: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Close completed request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "雑誌書影の更新を反映し、臨時サイトを再公開しました。${PAGE_URL}"
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
