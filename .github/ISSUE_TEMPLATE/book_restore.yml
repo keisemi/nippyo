@@ -1,0 +1,34 @@
+name: "【入力用】書誌を再公開"
+description: "管理用書誌検索ページで公開停止中の対象書を選んでから使用してください。"
+title: "[書誌再公開] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        公開停止中の書誌を再公開するための確認フォームです。
+        **現在登録されている書誌データをそのまま使って再公開します。**
+        公開サイトの書籍検索、固有URL、トップページの新刊表示に対象書が再び表示されます。
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: "管理用検索ページから自動入力されます。変更しないでください。"
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: "対象書の確認用です。管理用検索ページから自動入力されます。"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 再公開の確認
+      options:
+        - label: "この書籍を公開サイトに再び表示することを確認しました。"
+          required: true

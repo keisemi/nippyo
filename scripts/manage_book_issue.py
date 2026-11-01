@@ -41,7 +41,7 @@ LABEL_TO_ENV = {
 def parse_sections(body: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {}
     current = None
-    known_labels = {"書籍ID", "現在の書名", "公開停止の確認", *LABEL_TO_ENV.keys()}
+    known_labels = {"書籍ID", "現在の書名", "公開停止の確認", "再公開の確認", *LABEL_TO_ENV.keys()}
     for line in (body or "").splitlines():
         if line.startswith("### ") and line[4:].strip() in known_labels:
             current = line[4:].strip()
@@ -167,6 +167,18 @@ def hide_book(book_id: str, current_title: str) -> None:
     print(f"書名: {current_title}")
 
 
+def restore_book(book_id: str, current_title: str) -> None:
+    verify_edit_target(book_id, current_title)
+    hidden_ids = load_hidden_ids()
+    if book_id not in hidden_ids:
+        raise SystemExit(f"書籍ID {book_id} は公開停止中ではありません。")
+    hidden_ids.remove(book_id)
+    save_hidden_ids(hidden_ids)
+    print("操作: 再公開")
+    print(f"書籍ID: {book_id}")
+    print(f"書名: {current_title}")
+
+
 def main() -> None:
     issue = get_issue()
     issue_title = (issue.get("title") or "").strip()
@@ -180,6 +192,16 @@ def main() -> None:
         if not current_title:
             raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
         hide_book(book_id, current_title)
+        return
+
+    if issue_title.startswith("[書誌再公開]"):
+        book_id = fields.get("書籍ID", "").strip()
+        if not book_id:
+            raise SystemExit("書籍IDがありません。")
+        current_title = fields.get("現在の書名", "").strip()
+        if not current_title:
+            raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
+        restore_book(book_id, current_title)
         return
 
     if issue_title.startswith("[書誌修正]"):

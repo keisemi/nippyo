@@ -117,6 +117,15 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+  function restoreUrl(book) {
+    const params = new URLSearchParams();
+    params.set("template", "book_restore.yml");
+    params.set("title", `[書誌再公開] ${book.title}`);
+    params.set("book_id", book.id);
+    params.set("current_title", book.title);
+    return `${issueBase}?${params.toString()}`;
+  }
+
   function closeBookModal() {
     if (!modal || modal.hidden) return;
     modal.hidden = true;
@@ -354,6 +363,17 @@
     window.location.href = hideUrl(book);
   }
 
+  function openRestore(book) {
+    const ok = window.confirm(
+      `「${book.title}」を再公開します。\n\n` +
+      "公開サイトの書籍検索・固有URL・トップの新刊表示に再び表示されます。\n" +
+      "書誌データは現在登録されている内容をそのまま使用します。\n\n" +
+      "確認画面へ進んでよろしいですか？"
+    );
+    if (!ok) return;
+    window.location.href = restoreUrl(book);
+  }
+
   function renderBookModal(book, detail, trigger) {
     const sub = subtitle(detail);
     const series = [detail.series, detail.series_volume].filter(Boolean).join(" ");
@@ -377,8 +397,8 @@
     const statusItems = [];
     if (detail.errata_pdf) statusItems.push("正誤表ファイルが登録されています");
     if (detail.related_file) statusItems.push("関連情報・付属データのファイルが登録されています");
-    const stopButton = detail.published === false
-      ? '<p class="publication-stopped">この書籍は現在、公開停止中です。</p>'
+    const publicationAction = detail.published === false
+      ? '<p class="publication-stopped">この書籍は現在、公開停止中です。</p><button class="admin-btn" id="restore-book" type="button">この書誌を再公開</button>'
       : '<button class="admin-btn danger" id="hide-book" type="button">この書誌を公開停止</button>';
 
     modalContent.innerHTML = `
@@ -391,7 +411,7 @@
       <div class="admin-edit-box">
         <p>この書誌の現在値を入力済みにした編集フォームを開けます。公開停止は書誌データを削除せず、公開サイトからの表示だけを止めます。</p>
         <button class="admin-btn" id="open-edit-form" type="button">この書誌を編集</button>
-        ${stopButton}
+        ${publicationAction}
       </div>
       ${detail.description ? `<section class="admin-detail-section"><h3>内容紹介</h3><p class="admin-detail-copy">${richText(detail.description)}</p></section>` : ""}
       ${detail.toc ? `<section class="admin-detail-section"><h3>目次</h3><div class="admin-detail-toc">${richText(detail.toc)}</div></section>` : ""}
@@ -399,6 +419,7 @@
     `;
     document.getElementById("open-edit-form").addEventListener("click", (event) => openEditForm(book, detail, event.currentTarget));
     document.getElementById("hide-book")?.addEventListener("click", () => openHide(detail));
+    document.getElementById("restore-book")?.addEventListener("click", () => openRestore(detail));
 
     modal.hidden = false;
     document.body.classList.add("modal-open");
