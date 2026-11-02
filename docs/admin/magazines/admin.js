@@ -794,6 +794,7 @@
       submitButton.textContent = "登録内容を準備中…";
       try {
         const payload = await encodeRegistrationPayload(registration);
+        copyRegistrationPayload(payload);
 
         const params = new URLSearchParams();
         params.set("template","magazine_new.yml");
@@ -814,15 +815,17 @@
 
         let targetUrl = `${issueBase}?${params.toString()}`;
         if (targetUrl.length > 7000) {
-          copyRegistrationPayload(payload);
           params.delete("registration_data");
           targetUrl = `${issueBase}?${params.toString()}`;
-          window.alert(
-            "登録内容が長いため、登録データだけクリップボードにコピーしました。\n\n" +
-            "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてください。\n" +
-            "それ以外の項目は自動入力されています。"
-          );
         }
+
+        window.alert(
+          "登録データをクリップボードにコピーしました。\n\n" +
+          "次のGitHub画面で「登録データ」欄を確認してください。\n" +
+          "・内容が入っていれば、そのまま送信できます。\n" +
+          "・空欄なら、その欄をクリックして Ctrl+V で貼り付けてください。\n\n" +
+          "登録データの内容は編集しないでください。"
+        );
         openIssueForm(targetUrl);
       } catch (error) {
         console.error(error);
