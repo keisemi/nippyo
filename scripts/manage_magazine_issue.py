@@ -129,7 +129,10 @@ def decode_registration_payload(value: str) -> dict[str, str]:
             raw = gzip.decompress(compressed).decode("utf-8")
             payload = json.loads(raw)
         else:
-            raise ValueError("未対応の登録データ形式")
+            raise ValueError(
+                "管理画面から自動入力された登録データではありません。"
+                "「登録データ」欄は手入力せず、雑誌管理画面から登録し直してください。"
+            )
     except Exception as error:
         raise SystemExit(f"登録データを復元できません: {error}") from error
 

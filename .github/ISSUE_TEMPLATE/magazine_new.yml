@@ -28,8 +28,8 @@ body:
     id: registration_data
     attributes:
       label: 登録データ
-      description: "管理画面の「登録内容を確認する」を押したときにコピーされたデータを、Ctrl+Vで貼り付けてください。内容は編集しないでください。"
-      placeholder: "管理画面でコピーした登録データを貼り付け"
+      description: "管理画面から通常は自動入力されます。内容は変更しないでください。空欄の場合だけ、管理画面の案内に従って Ctrl+V で貼り付けてください。"
+      placeholder: "通常は自動入力されます"
     validations:
       required: true
 

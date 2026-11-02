@@ -584,8 +584,24 @@
   }
 
 
-  function encodeRegistrationPayload(data) {
-    return "json1:" + JSON.stringify(data);
+  async function encodeRegistrationPayload(data) {
+    const raw = JSON.stringify(data);
+    if (typeof CompressionStream === "undefined") {
+      return "json1:" + raw;
+    }
+
+    const compressed = new Blob([raw], { type: "application/json" })
+      .stream()
+      .pipeThrough(new CompressionStream("gzip"));
+    const bytes = new Uint8Array(await new Response(compressed).arrayBuffer());
+
+    let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+
+    return "gz1:" + btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
   }
 
   function copyRegistrationPayload(payload) {
@@ -707,8 +723,8 @@
 
       <div class="edit-submit-box">
         <strong>新しい号として登録します。</strong><br>
-        「登録内容を確認する」を押すと、入力した登録データをクリップボードへコピーし、GitHubの確認フォームを開きます。<br>
-        GitHub画面の<strong>「登録データ」欄に Ctrl+V で貼り付け</strong>、公開状態を確認して送信してください。<br>
+        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。<br>
+        <strong>登録データは通常、自動入力されるので変更しないでください。</strong> 内容が非常に長い場合だけ、画面の案内に従って Ctrl+V で貼り付けます。<br>
         <strong>公開状態：</strong>初期値は「非公開（登録だけする）」です。公開準備が整っている号だけ「公開」を選んでください。
         <div class="edit-submit-actions">
           <button class="admin-btn" id="submit-next-issue" type="button">登録内容を確認する</button>
@@ -777,8 +793,7 @@
       submitButton.disabled = true;
       submitButton.textContent = "登録内容を準備中…";
       try {
-        const payload = encodeRegistrationPayload(registration);
-        copyRegistrationPayload(payload);
+        const payload = await encodeRegistrationPayload(registration);
 
         const params = new URLSearchParams();
         params.set("template","magazine_new.yml");
@@ -795,12 +810,19 @@
           const value = get(id);
           if (value) params.set(id,value);
         }
+        params.set("registration_data", payload);
 
-        const targetUrl = `${issueBase}?${params.toString()}`;
-        window.alert(
-          "登録データをクリップボードにコピーしました。\n\n" +
-          "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてから送信してください。"
-        );
+        let targetUrl = `${issueBase}?${params.toString()}`;
+        if (targetUrl.length > 7000) {
+          copyRegistrationPayload(payload);
+          params.delete("registration_data");
+          targetUrl = `${issueBase}?${params.toString()}`;
+          window.alert(
+            "登録内容が長いため、登録データだけクリップボードにコピーしました。\n\n" +
+            "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてください。\n" +
+            "それ以外の項目は自動入力されています。"
+          );
+        }
         openIssueForm(targetUrl);
       } catch (error) {
         console.error(error);
