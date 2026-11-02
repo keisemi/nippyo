@@ -584,31 +584,6 @@
   }
 
 
-  function encodeRegistrationPayload(data) {
-    return "json1:" + JSON.stringify(data);
-  }
-
-  function copyRegistrationPayload(payload) {
-    const textarea = document.createElement("textarea");
-    textarea.value = payload;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.left = "-10000px";
-    textarea.style.top = "0";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    let copied = false;
-    try {
-      copied = document.execCommand("copy");
-    } finally {
-      textarea.remove();
-    }
-    if (!copied) {
-      throw new Error("登録データをクリップボードへコピーできませんでした。ブラウザのクリップボード利用を許可して、もう一度お試しください。");
-    }
-  }
-
   function openNextIssueForm(detail) {
     const source = nextIssueSource(detail);
 
@@ -707,8 +682,8 @@
 
       <div class="edit-submit-box">
         <strong>新しい号として登録します。</strong><br>
-        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。内容を確認して送信すると、該当誌のCSVへ新しい1行を追加し、臨時サイトを再公開します。<br>
-        <strong>注意：</strong>公開前登録の切替は次工程で追加するため、現段階では登録後すぐ公開サイトへ反映されます。
+        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。内容と公開状態を確認して送信すると、該当誌のCSVへ新しい1行を追加します。<br>
+        <strong>公開状態：</strong>GitHubフォームの初期値は「非公開（登録だけする）」です。公開準備が整っている号だけ「公開」を選んでください。
         <div class="edit-submit-actions">
           <button class="admin-btn" id="submit-next-issue" type="button">登録内容を確認する</button>
           <button class="admin-btn secondary" id="back-from-next-issue" type="button">登録内容へ戻る</button>
@@ -760,24 +735,9 @@
         }
       }
 
-      const registration = {
-        "雛形号の書籍ID": String(detail.id || ""),
-        "雛形号の雑誌月号": String(detail.issue || ""),
-        "雑誌ID": String(detail.magazine_id || ""),
-        "雑誌名": String(detail.magazine_name || ""),
-        "新しい書籍ID": get("book_id"),
-      };
-      for (const [id,label] of editFields) {
-        const value = get(id);
-        if (value) registration[label] = value;
-      }
-
       submitButton.disabled = true;
       submitButton.textContent = "登録内容を準備中…";
       try {
-        const payload = encodeRegistrationPayload(registration);
-        copyRegistrationPayload(payload);
-
         const params = new URLSearchParams();
         params.set("template","magazine_new.yml");
         params.set("title",`[雑誌号新規] ${detail.magazine_name} ${get("issue")}`);
@@ -791,10 +751,6 @@
         params.set("pub_date",get("pub_date"));
 
         const targetUrl = `${issueBase}?${params.toString()}`;
-        window.alert(
-          "登録データをクリップボードにコピーしました。\n\n" +
-          "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてから送信してください。"
-        );
         openIssueForm(targetUrl);
       } catch (error) {
         console.error(error);
