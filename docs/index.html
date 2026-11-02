@@ -12,6 +12,32 @@
       .hero-service-panel { max-width: 1180px; }
       .hero-service-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
+
+    /* ホームの書籍・雑誌検索だけを少しコンパクトにする */
+    .section-search-home {
+      padding-top: 28px;
+      padding-bottom: 34px;
+    }
+    .section-search-home .section-heading {
+      margin-bottom: 14px;
+    }
+    .section-search-home .section-heading h2 {
+      font-size: clamp(1.65rem, 2.5vw, 2.2rem);
+    }
+    .section-search-home .home-book-search {
+      margin-top: 0;
+      padding: 16px 18px;
+    }
+    .section-search-home .home-book-search input {
+      min-height: 46px;
+      padding: 8px 13px;
+    }
+    .section-search-home .home-book-search button {
+      min-height: 46px;
+    }
+    .section-search-home .home-search-help {
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -73,6 +99,19 @@
       </div>
     </section>
 
+    <section class="section section-tint" id="news">
+      <div class="content-width">
+        <div class="section-heading section-heading-with-meta">
+          <div>
+            <p class="section-kicker">NEWS</p>
+            <h2>お知らせ</h2>
+          </div>
+          <a class="section-link" href="news/">お知らせ一覧へ →</a>
+        </div>
+        <div class="news-list" data-news-list data-limit="5"></div>
+      </div>
+    </section>
+
     <section class="section section-search-home">
       <div class="content-width">
         <div class="section-heading">
@@ -86,19 +125,6 @@
           <button type="submit">検索</button>
         </form>
         <p class="home-search-help">書籍と定期雑誌の各号を横断検索します。詳細検索では、分野・刊行年でも絞り込めます。</p>
-      </div>
-    </section>
-
-    <section class="section section-tint" id="news">
-      <div class="content-width">
-        <div class="section-heading section-heading-with-meta">
-          <div>
-            <p class="section-kicker">NEWS</p>
-            <h2>お知らせ</h2>
-          </div>
-          <a class="section-link" href="news/">お知らせ一覧へ →</a>
-        </div>
-        <div class="news-list" data-news-list data-limit="5"></div>
       </div>
     </section>
 
