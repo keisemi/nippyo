@@ -540,7 +540,7 @@
       price_body: "",
       isbn_old: "",
       isbn_new: "",
-      magazine_code_1: "",
+      magazine_code_1: text(detail.magazine_code_1),
       magazine_code_2: "",
 
       subtitle_before: "",
@@ -661,7 +661,7 @@
       <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　次号</h2>
       <p class="edit-intro">
         「${esc(detail.issue || "前号")}」を雛形にしています。
-        <strong>雑誌ID・雑誌名・判型・本誌編者</strong>だけを引き継ぎ、
+        <strong>雑誌ID・雑誌名・判型・本誌編者・雑誌コード(1)</strong>を引き継ぎ、
         書籍ID・月号・通巻・発刊日・ISBN・価格・頁数・特集・目次・外部リンクなどは空欄に戻しています。
       </p>
 
@@ -707,8 +707,9 @@
 
       <div class="edit-submit-box">
         <strong>新しい号として登録します。</strong><br>
-        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。内容を確認して送信すると、該当誌のCSVへ新しい1行を追加し、臨時サイトを再公開します。<br>
-        <strong>注意：</strong>公開前登録の切替は次工程で追加するため、現段階では登録後すぐ公開サイトへ反映されます。
+        「登録内容を確認する」を押すと、入力した登録データをクリップボードへコピーし、GitHubの確認フォームを開きます。<br>
+        GitHub画面の<strong>「登録データ」欄に Ctrl+V で貼り付け</strong>、公開状態を確認して送信してください。<br>
+        <strong>公開状態：</strong>初期値は「非公開（登録だけする）」です。公開準備が整っている号だけ「公開」を選んでください。
         <div class="edit-submit-actions">
           <button class="admin-btn" id="submit-next-issue" type="button">登録内容を確認する</button>
           <button class="admin-btn secondary" id="back-from-next-issue" type="button">登録内容へ戻る</button>
@@ -725,6 +726,7 @@
         ["issue","雑誌月号"],
         ["issue_number","雑誌通算番号"],
         ["pub_date","発刊日"],
+        ["magazine_code_1","雑誌コード(1)"],
       ];
       for (const [id,label] of required) {
         if (!get(id)) {
@@ -789,6 +791,10 @@
         params.set("mag_issue",get("issue"));
         params.set("issue_number",get("issue_number"));
         params.set("pub_date",get("pub_date"));
+        for (const id of ["format","pages","price_body","isbn_old","isbn_new","magazine_code_1","magazine_code_2","feature"]) {
+          const value = get(id);
+          if (value) params.set(id,value);
+        }
 
         const targetUrl = `${issueBase}?${params.toString()}`;
         window.alert(

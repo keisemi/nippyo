@@ -24,6 +24,15 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: registration_data
+    attributes:
+      label: 登録データ
+      description: "管理画面の「登録内容を確認する」を押したときにコピーされたデータを、Ctrl+Vで貼り付けてください。内容は編集しないでください。"
+      placeholder: "管理画面でコピーした登録データを貼り付け"
+    validations:
+      required: true
+
   - type: input
     id: magazine_code_1
     attributes:
