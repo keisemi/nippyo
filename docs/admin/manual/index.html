@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>日本評論社 臨時ホームページ</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="manual.css" />
+</head>
+<body>
+<div class="manual-tools" aria-label="マニュアル操作">
+  <a href="../">← 管理メニューへ戻る</a>
+  <a href="Nippyo_MAINTENANCE_v1_0.pdf">PDF版を開く</a>
+</div>
+<header id="title-block-header">
+<h1 class="title">日本評論社 臨時ホームページ</h1>
+<p class="subtitle">操作・メンテナンス手順書 v1.0</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<h2 id="toc-title">目次</h2>
+<ul>
+<li><a href="#最初に確認すること" id="toc-最初に確認すること">0.
+最初に確認すること</a></li>
+<li><a href="#更新に必要なもの" id="toc-更新に必要なもの">1.
+更新に必要なもの</a></li>
+<li><a href="#どの更新でも共通する流れ"
+id="toc-どの更新でも共通する流れ">2. どの更新でも共通する流れ</a></li>
+<li><a href="#第i部-書籍管理"
+id="toc-第i部-書籍管理">第I部　書籍管理</a>
+<ul>
+<li><a href="#書籍管理画面を開く" id="toc-書籍管理画面を開く">3.
+書籍管理画面を開く</a></li>
+<li><a href="#新しい書誌を登録する" id="toc-新しい書誌を登録する">4.
+新しい書誌を登録する</a></li>
+<li><a href="#既存書誌を検索確認する" id="toc-既存書誌を検索確認する">5.
+既存書誌を検索・確認する</a></li>
+<li><a href="#既存書誌を修正する" id="toc-既存書誌を修正する">6.
+既存書誌を修正する</a></li>
+<li><a href="#書籍を公開停止再公開する"
+id="toc-書籍を公開停止再公開する">7. 書籍を公開停止・再公開する</a></li>
+<li><a href="#書誌情報を削除する" id="toc-書誌情報を削除する">8.
+書誌情報を削除する</a></li>
+</ul></li>
+<li><a href="#第ii部-雑誌管理"
+id="toc-第ii部-雑誌管理">第II部　雑誌管理</a>
+<ul>
+<li><a href="#雑誌管理画面を開く" id="toc-雑誌管理画面を開く">9.
+雑誌管理画面を開く</a></li>
+<li><a href="#新しい雑誌号を登録する"
+id="toc-新しい雑誌号を登録する">10. 新しい雑誌号を登録する</a></li>
+<li><a href="#既存の雑誌号を修正する"
+id="toc-既存の雑誌号を修正する">11. 既存の雑誌号を修正する</a></li>
+<li><a href="#雑誌号を非公開再公開削除する"
+id="toc-雑誌号を非公開再公開削除する">12.
+雑誌号を非公開・再公開・削除する</a></li>
+<li><a href="#雑誌書影を追加差替え削除する"
+id="toc-雑誌書影を追加差替え削除する">13.
+雑誌書影を追加・差替え・削除する</a></li>
+</ul></li>
+<li><a href="#第iii部-お知らせ管理"
+id="toc-第iii部-お知らせ管理">第III部　お知らせ管理</a>
+<ul>
+<li><a href="#お知らせ管理画面を開く"
+id="toc-お知らせ管理画面を開く">14. お知らせ管理画面を開く</a></li>
+<li><a href="#新しいお知らせを登録する"
+id="toc-新しいお知らせを登録する">15. 新しいお知らせを登録する</a></li>
+<li><a href="#お知らせを修正する" id="toc-お知らせを修正する">16.
+お知らせを修正する</a></li>
+<li><a href="#お知らせを公開停止再公開する"
+id="toc-お知らせを公開停止再公開する">17.
+お知らせを公開停止・再公開する</a></li>
+<li><a href="#お知らせを完全削除する"
+id="toc-お知らせを完全削除する">18. お知らせを完全削除する</a></li>
+</ul></li>
+<li><a href="#第iv部-書籍関連ファイル管理"
+id="toc-第iv部-書籍関連ファイル管理">第IV部　書籍関連ファイル管理</a>
+<ul>
+<li><a href="#書籍関連ファイル管理を開く"
+id="toc-書籍関連ファイル管理を開く">19.
+書籍関連ファイル管理を開く</a></li>
+<li><a href="#書影" id="toc-書影">20. 書影</a></li>
+<li><a href="#正誤表" id="toc-正誤表">21. 正誤表</a></li>
+<li><a href="#付属データ" id="toc-付属データ">22. 付属データ</a></li>
+<li><a href="#関連リンク" id="toc-関連リンク">23. 関連リンク</a></li>
+</ul></li>
+<li><a href="#第v部-更新時の注意とトラブル対応"
+id="toc-第v部-更新時の注意とトラブル対応">第V部　更新時の注意とトラブル対応</a>
+<ul>
+<li><a href="#迷ったときの基本ルール"
+id="toc-迷ったときの基本ルール">24. 迷ったときの基本ルール</a></li>
+<li><a href="#ブラウザで古い表示が残る"
+id="toc-ブラウザで古い表示が残る">25. ブラウザで古い表示が残る</a></li>
+<li><a href="#長い内容紹介目次を修正するとき"
+id="toc-長い内容紹介目次を修正するとき">26.
+長い内容紹介・目次を修正するとき</a></li>
+<li><a href="#ファイルがアップロードできない"
+id="toc-ファイルがアップロードできない">27.
+ファイルがアップロードできない</a></li>
+</ul></li>
+<li><a href="#第vi部-通常更新で触らないもの"
+id="toc-第vi部-通常更新で触らないもの">第VI部　通常更新で触らないもの</a>
+<ul>
+<li><a href="#日常更新では直接編集しないもの"
+id="toc-日常更新では直接編集しないもの">28.
+日常更新では直接編集しないもの</a></li>
+</ul></li>
+<li><a href="#第vii部-管理者向け補足"
+id="toc-第vii部-管理者向け補足">第VII部　管理者向け補足</a>
+<ul>
+<li><a href="#管理者が扱う作業" id="toc-管理者が扱う作業">29.
+管理者が扱う作業</a></li>
+<li><a href="#github-desktopを使う場合"
+id="toc-github-desktopを使う場合">30. GitHub Desktopを使う場合</a></li>
+<li><a href="#正本と自動生成ファイル"
+id="toc-正本と自動生成ファイル">31. 正本と自動生成ファイル</a></li>
+</ul></li>
+<li><a href="#第viii部-初めて担当する人の練習"
+id="toc-第viii部-初めて担当する人の練習">第VIII部　初めて担当する人の練習</a>
+<ul>
+<li><a href="#最初の操作練習" id="toc-最初の操作練習">32.
+最初の操作練習</a></li>
+</ul></li>
+<li><a href="#第ix部-主なurl"
+id="toc-第ix部-主なurl">第IX部　主なURL</a>
+<ul>
+<li><a href="#日常更新" id="toc-日常更新">33. 日常更新</a></li>
+<li><a href="#公開管理" id="toc-公開管理">34. 公開・管理</a></li>
+</ul></li>
+</ul>
+</nav>
+<blockquote>
+<p><strong>作成者</strong>：尾崎大輔　ozaki@nippyo.co.jp<br />
+<strong>最終更新</strong>：2026-11-02<br />
+<strong>管理画面</strong>：<a
+href="https://keisemi.github.io/nippyo/admin/"
+class="uri">https://keisemi.github.io/nippyo/admin/</a><br />
+<strong>公開サイト</strong>：<a href="https://keisemi.github.io/nippyo/"
+class="uri">https://keisemi.github.io/nippyo/</a><br />
+<strong>GitHubリポジトリ</strong>：<a
+href="https://github.com/keisemi/nippyo"
+class="uri">https://github.com/keisemi/nippyo</a></p>
+</blockquote>
+<hr />
+<h2 id="最初に確認すること">0. 最初に確認すること</h2>
+<p>日常の更新は、原則として次の管理画面から始めます。</p>
+<p><a href="https://keisemi.github.io/nippyo/admin/"
+class="uri">https://keisemi.github.io/nippyo/admin/</a></p>
+<figure>
+<img src="../../assets/maintenance/01_admin_menu.png"
+alt="臨時HP 管理メニュー" />
+<figcaption aria-hidden="true">臨時HP 管理メニュー</figcaption>
+</figure>
+<h3 id="更新先の早見表">更新先の早見表</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>やりたいこと</th>
+<th>開く画面</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>書籍の新規登録・修正・公開停止・再公開・削除</td>
+<td><strong>書籍管理</strong></td>
+</tr>
+<tr class="even">
+<td>雑誌の新号登録・修正・公開／非公開・削除・雑誌書影</td>
+<td><strong>雑誌管理</strong></td>
+</tr>
+<tr class="odd">
+<td>お知らせの新規登録・修正・公開停止・再公開・完全削除</td>
+<td><strong>お知らせ管理</strong></td>
+</tr>
+<tr class="even">
+<td>書籍の書影・正誤表・付属データ・関連リンク</td>
+<td><strong>書籍関連ファイル管理</strong></td>
+</tr>
+</tbody>
+</table>
+<p>通常の更新では、CSV・JSON・HTMLを直接編集しません。GitHub
+Desktopも通常は使いません。</p>
+<h3 id="操作の意味を先に区別する">操作の意味を先に区別する</h3>
+<table>
+<thead>
+<tr class="header">
+<th>操作</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>新規登録</strong></td>
+<td>新しい書誌・雑誌号・お知らせ等を追加する</td>
+</tr>
+<tr class="even">
+<td><strong>修正</strong></td>
+<td>既存データを残したまま内容を変更する</td>
+</tr>
+<tr class="odd">
+<td><strong>公開停止／非公開</strong></td>
+<td>データは残し、公開サイトには表示しない</td>
+</tr>
+<tr class="even">
+<td><strong>再公開</strong></td>
+<td>非公開のデータを再び公開する</td>
+</tr>
+<tr class="odd">
+<td><strong>削除／完全削除</strong></td>
+<td>正本データそのものを削除する</td>
+</tr>
+</tbody>
+</table>
+<p><strong>迷った場合は、削除ではなく公開停止／非公開を使います。</strong></p>
+<hr />
+<h2 id="更新に必要なもの">1. 更新に必要なもの</h2>
+<p>更新を実行するには、<code>keisemi/nippyo</code>
+リポジトリで更新権限を持つGitHubアカウントが必要です。
+更新する際には、必ず「日本評論社」のGitHubアカウント（https://github.com/nippyo）に、ブラウザでGitHubにログインした状態で操作してください。</p>
+<p>日常更新では、次の2ページをブックマークしておくと便利です。</p>
+<ul>
+<li>管理画面：<a href="https://keisemi.github.io/nippyo/admin/"
+class="uri">https://keisemi.github.io/nippyo/admin/</a></li>
+<li>公開サイト：<a href="https://keisemi.github.io/nippyo/"
+class="uri">https://keisemi.github.io/nippyo/</a></li>
+</ul>
+<p>GitHubのリポジトリ画面やActions画面を普段から開く必要はありません。</p>
+<hr />
+<h2 id="どの更新でも共通する流れ">2. どの更新でも共通する流れ</h2>
+<p>通常の更新は、次の流れで行います。</p>
+<pre class="text"><code>管理画面で更新したい種類を選ぶ
+    ↓
+対象の書籍・雑誌号・お知らせ等を選ぶ
+    ↓
+必要な内容を入力・変更する
+    ↓
+GitHubの確認フォームを開く
+    ↓
+対象と入力内容を確認して送信する
+    ↓
+自動処理がデータ更新・公開を行う
+    ↓
+成功コメントを確認する
+    ↓
+公開サイトまたは管理画面で最終確認する</code></pre>
+<h3 id="githubの確認フォーム">2-1. GitHubの確認フォーム</h3>
+<p>管理画面からGitHubの確認フォームへ進むと、新しいタブが開きます。</p>
+<p>管理画面から引き継がれた次のような識別情報は、原則として変更しません。</p>
+<ul>
+<li>画面上部のIssueタイトル</li>
+<li>書籍ID・雑誌ID</li>
+<li>現在の書名</li>
+<li>現在の雑誌月号</li>
+<li>現在のURLやリンク番号</li>
+</ul>
+<p>対象を間違えた場合は、フォーム上で識別情報を書き換えず、いったん閉じて管理画面から対象を選び直してください。</p>
+<p>新規登録では、GitHubフォーム自体が最終登録内容の確認画面です。必須欄や、登録したいのに空欄になっている欄がないか確認してから送信します。</p>
+<h3 id="更新が成功したとき">2-2. 更新が成功したとき</h3>
+<p>正常に処理が終わると、Issueに次のコメントが表示されます。</p>
+<blockquote>
+<p>✅ 更新が完了しました。</p>
+<p>公開サイトへの反映も自動確認できました。</p>
+</blockquote>
+<p>その後、Issueは自動で閉じます。</p>
+<figure>
+<img src="../../assets/maintenance/13_update_success.png"
+alt="更新成功時のGitHub表示" />
+<figcaption aria-hidden="true">更新成功時のGitHub表示</figcaption>
+</figure>
+<p>この表示まで出れば、自動更新処理は完了です。</p>
+<p>最後に、内容そのものに誤りがないかを確認します。</p>
+<ul>
+<li>公開中のデータ：公開サイトで確認</li>
+<li>非公開で登録した雑誌号等：管理画面で登録内容と「非公開」表示を確認</li>
+</ul>
+<h3 id="更新が失敗したとき">2-3. 更新が失敗したとき</h3>
+<p>失敗時は、Issueに次の趣旨のコメントが表示されます。</p>
+<blockquote>
+<p>❌ 更新処理が完了しませんでした。<br />
+公開サイトへの反映完了を確認できていません。<br />
+このIssueのURLを管理担当者へ送ってください。Actions画面を確認する必要はありません。</p>
+</blockquote>
+<p>この場合は、同じ申請を何度も送り直さず、IssueのURLを管理担当者へ送ってください。</p>
+<hr />
+<h1 id="第i部-書籍管理">第I部　書籍管理</h1>
+<h2 id="書籍管理画面を開く">3. 書籍管理画面を開く</h2>
+<p>管理画面トップから <strong>「書籍管理」</strong> を開きます。</p>
+<p><a href="https://keisemi.github.io/nippyo/admin/books/"
+class="uri">https://keisemi.github.io/nippyo/admin/books/</a></p>
+<figure>
+<img src="../../assets/maintenance/02_books_home.png"
+alt="書籍管理画面" />
+<figcaption aria-hidden="true">書籍管理画面</figcaption>
+</figure>
+<p>書名・著者名・ISBN・書籍IDなどで対象書籍を検索できます。</p>
+<hr />
+<h2 id="新しい書誌を登録する">4. 新しい書誌を登録する</h2>
+<h3 id="新しい書誌を登録を押す">4-1. 「新しい書誌を登録」を押す</h3>
+<p>書籍管理画面上部の <strong>「新しい書誌を登録」</strong>
+を押します。</p>
+<p>GitHubの新規登録フォームが新しいタブで開きます。</p>
+<h3 id="通常書籍の書籍idは入力不要">4-2. 通常書籍の書籍IDは入力不要</h3>
+<p>通常書籍の書籍IDは、登録処理の中で自動設定されます。</p>
+<h4 id="日本評論社isbnがある場合">日本評論社ISBNがある場合</h4>
+<p>ISBNの商品番号5桁が書籍IDになります。</p>
+<pre class="text"><code>ISBN 978-4-535-54143-6
+              ↓
+書籍ID 54143</code></pre>
+<h4 id="isbnがない場合">ISBNがない場合</h4>
+<p><code>N</code> + 5桁の管理用IDが自動採番されます。</p>
+<pre class="text"><code>N09803</code></pre>
+<p>雑誌の各号にも「書籍ID」がありますが、通常書籍とは決め方が異なります。雑誌については「10.
+新しい雑誌号を登録する」を参照してください。</p>
+<h3 id="主な入力ルール">4-3. 主な入力ルール</h3>
+<table>
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>入力ルール</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>書名</td>
+<td>必須</td>
+</tr>
+<tr class="even">
+<td>副題</td>
+<td><code>副題（後）</code> に入力</td>
+</tr>
+<tr class="odd">
+<td>著者</td>
+<td>複数の場合は <code>|</code> で区切る</td>
+</tr>
+<tr class="even">
+<td>ISBN</td>
+<td>ハイフン付きで可</td>
+</tr>
+<tr class="odd">
+<td>Amazon ASIN</td>
+<td>任意。分かる場合のみ10桁</td>
+</tr>
+<tr class="even">
+<td>刊行年月</td>
+<td><code>2026-10</code> のように入力</td>
+</tr>
+<tr class="odd">
+<td>分野</td>
+<td>複数の場合は <code>|</code> で区切る</td>
+</tr>
+<tr class="even">
+<td>本体価格</td>
+<td>数字のみ</td>
+</tr>
+<tr class="odd">
+<td>頁数</td>
+<td>数字のみ</td>
+</tr>
+<tr class="even">
+<td>内容紹介・目次</td>
+<td>必要に応じて入力</td>
+</tr>
+</tbody>
+</table>
+<p>内容紹介には、次の形式でリンクを入れられます。</p>
+<pre class="text"><code>本書のサポートサイト[【コチラ】](https://example.com/)をご利用ください。</code></pre>
+<h3 id="登録後">4-4. 登録後</h3>
+<p>フォームを送信し、成功コメントと自動クローズを確認します。</p>
+<p>通常書籍の新規登録は公開用データに反映されます。公開サイトにまだ出したくない場合は、登録後に「公開停止」を使用します。</p>
+<p>書影・正誤表・付属データ・関連リンクは、書誌登録後に
+<strong>「書籍関連ファイル管理」</strong> から別途登録します。</p>
+<h3 id="トップページの新刊は自動更新">4-5.
+トップページの「新刊」は自動更新</h3>
+<p>トップページの
+<strong>「新刊」欄は別途更新する必要がありません。</strong></p>
+<p>書誌データの刊行年月をもとに、自動的に表示内容が切り替わります。</p>
+<ul>
+<li>当月刊行の公開中書籍を表示</li>
+<li>最大12冊まで表示</li>
+<li>公開停止中の書籍は表示しない</li>
+<li>当月刊行の書籍がない場合は、直近の過去月を表示</li>
+<li>将来月の書籍は、その月になるまで表示しない</li>
+</ul>
+<p>したがって、更新担当者が行うのは
+<strong>書誌登録・修正と刊行年月の確認</strong> までです。</p>
+<hr />
+<h2 id="既存書誌を検索確認する">5. 既存書誌を検索・確認する</h2>
+<p>検索欄に書名などを入力して <strong>「検索」</strong> を押します。</p>
+<figure>
+<img src="../../assets/maintenance/03_book_search_result.png"
+alt="書籍の検索結果" />
+<figcaption aria-hidden="true">書籍の検索結果</figcaption>
+</figure>
+<p>対象書籍が表示されたら、書名または
+<strong>「詳細を確認・編集」</strong> を押します。</p>
+<p>似た書名を取り違えないよう、ISBN・書籍IDも確認してください。</p>
+<hr />
+<h2 id="既存書誌を修正する">6. 既存書誌を修正する</h2>
+<p>詳細画面では、現在登録されている書誌情報と公開状態を確認できます。</p>
+<figure>
+<img src="../../assets/maintenance/04_book_detail_actions.png"
+alt="書誌詳細と操作ボタン" />
+<figcaption aria-hidden="true">書誌詳細と操作ボタン</figcaption>
+</figure>
+<p><strong>「この書誌を編集」</strong>
+を押すと、現在値が入力済みの編集画面が開きます。</p>
+<figure>
+<img src="../../assets/maintenance/05_book_edit.png"
+alt="書誌編集画面" />
+<figcaption aria-hidden="true">書誌編集画面</figcaption>
+</figure>
+<p>変更したい箇所だけ書き換えます。</p>
+<p>既存の値を削除して空欄にしたい場合は、その欄の内容を消して空欄にします。</p>
+<p>書影・正誤表・付属データ・関連リンクは、この書誌編集画面では変更しません。</p>
+<h3 id="変更内容を確認する">6-1. 変更内容を確認する</h3>
+<p>編集後、<strong>「変更内容を確認する」</strong> を押します。</p>
+<figure>
+<img src="../../assets/maintenance/06_book_edit_submit.png"
+alt="書誌編集画面の送信前操作" />
+<figcaption aria-hidden="true">書誌編集画面の送信前操作</figcaption>
+</figure>
+<p>変更した項目だけが「変更前／変更後」で表示されます。</p>
+<figure>
+<img src="../../assets/maintenance/07_book_change_confirmation.png"
+alt="書籍の変更内容確認" />
+<figcaption aria-hidden="true">書籍の変更内容確認</figcaption>
+</figure>
+<p>内容が正しければ <strong>「GitHub確認フォームへ進む」</strong>
+を押します。</p>
+<p>この時点では、まだ書誌データは変更されていません。</p>
+<hr />
+<h2 id="書籍を公開停止再公開する">7. 書籍を公開停止・再公開する</h2>
+<h3 id="公開停止">公開停止</h3>
+<p>一時的に公開サイトから取り下げたい場合は
+<strong>「この書誌を公開停止」</strong> を使います。</p>
+<p>書誌データは削除されません。</p>
+<p>公開停止すると、公開サイトの書籍検索・個別書誌ページ・トップページの新刊表示から対象書が表示されなくなります。</p>
+<h3 id="再公開">再公開</h3>
+<p>公開停止中の書籍には再公開ボタンが表示されます。</p>
+<p>再公開すると、現在登録されている書誌データをそのまま使って公開状態へ戻ります。</p>
+<hr />
+<h2 id="書誌情報を削除する">8. 書誌情報を削除する</h2>
+<p>削除は、誤登録・重複登録など、本当に不要な書誌だけに使用します。</p>
+<p>通常の掲載取り下げには「公開停止」を使ってください。</p>
+<p>削除時には、誤操作防止のため書籍IDを再入力し、削除確認にチェックします。</p>
+<p><strong>書誌情報を削除しても、書影・正誤表・付属データ等のファイルは自動削除されません。</strong>
+必要な場合はそれぞれ別途削除します。</p>
+<hr />
+<h1 id="第ii部-雑誌管理">第II部　雑誌管理</h1>
+<h2 id="雑誌管理画面を開く">9. 雑誌管理画面を開く</h2>
+<p>管理画面トップから <strong>「雑誌管理」</strong> を開きます。</p>
+<p><a href="https://keisemi.github.io/nippyo/admin/magazines/"
+class="uri">https://keisemi.github.io/nippyo/admin/magazines/</a></p>
+<figure>
+<img src="../../assets/maintenance/08_magazines_home.png"
+alt="雑誌管理画面" />
+<figcaption aria-hidden="true">雑誌管理画面</figcaption>
+</figure>
+<p>対象となる6誌から雑誌を選びます。</p>
+<ul>
+<li>法律時報</li>
+<li>法学セミナー</li>
+<li>経済セミナー</li>
+<li>数学セミナー</li>
+<li>こころの科学</li>
+<li>そだちの科学</li>
+</ul>
+<p>雑誌を選ぶと、最新号と既存号を確認できます。</p>
+<hr />
+<h2 id="新しい雑誌号を登録する">10. 新しい雑誌号を登録する</h2>
+<p>雑誌の新号登録は、<strong>管理画面で次号登録を開始し、GitHubフォームで最終内容を確認して送信する</strong>流れです。</p>
+<h3 id="対象誌を選ぶ">10-1. 対象誌を選ぶ</h3>
+<p>雑誌管理画面で対象誌を選び、最新号を確認します。</p>
+<p><strong>「最新号をもとに新しい号を登録」</strong>
+を押すと、管理画面内に次号登録画面が開きます。</p>
+<h3 id="管理画面で新号の基本情報を準備する">10-2.
+管理画面で新号の基本情報を準備する</h3>
+<p>次号登録画面では、前号を雛形にしつつ、新号用の入力画面が表示されます。</p>
+<ul>
+<li>雑誌ID・雑誌名は対象誌から決まります</li>
+<li>判型・本誌編者は前号の値が表示されます</li>
+<li>書籍IDは、既存の雑誌書籍IDの最大値＋1が候補として自動入力されます</li>
+<li>月号・通巻番号・発刊日など、新号で変わる項目を入力します</li>
+</ul>
+<p>雑誌の書籍IDは、通常書籍のようにISBN下5桁から決めるものではありません。通常は自動入力された候補をそのまま使います。</p>
+<h3 id="登録内容を確認するを押す">10-3.
+「登録内容を確認する」を押す</h3>
+<p>管理画面で <strong>「登録内容を確認する」</strong>
+を押すと、GitHubの新号登録フォームが開きます。</p>
+<p><strong>最終的に登録される内容は、このGitHubフォームに表示されている内容です。</strong></p>
+<p>特に次の項目を確認してください。</p>
+<ul>
+<li>公開状態</li>
+<li>雑誌コード(1)</li>
+<li>新しい書籍ID</li>
+<li>雑誌月号</li>
+<li>雑誌通算番号</li>
+<li>発刊日</li>
+<li>ページ数・本体価格</li>
+<li>ISBN</li>
+<li>特集・目次</li>
+<li>必要な外部リンク</li>
+</ul>
+<p>GitHubフォームに表示されている内容を確認し、必要な項目を入力して送信します。</p>
+<h3 id="公開状態を決める">10-4. 公開状態を決める</h3>
+<p>GitHubフォームの <strong>「公開状態」</strong>
+が最終的な公開設定です。</p>
+<p>初期値は <strong>「非公開（登録だけする）」</strong> です。</p>
+<ul>
+<li>先の号を事前登録する場合：通常は <strong>非公開</strong></li>
+<li>すぐ公開してよい号：<strong>公開</strong></li>
+</ul>
+<p>非公開で登録した号も管理画面には残るため、後から修正・公開できます。</p>
+<h3 id="雑誌コード1">10-5. 雑誌コード(1)</h3>
+<p>雑誌コード(1)は必須です。手元の誌面情報や既存号の登録内容を確認し、正しいコードを入力してください。</p>
+<p>分からない場合は推測せず、管理担当者に確認してください。</p>
+<h3 id="登録後の確認">10-6. 登録後の確認</h3>
+<p>送信後、成功コメントとIssueの自動クローズを確認します。</p>
+<ul>
+<li><strong>公開で登録した場合</strong>：公開サイトでも確認</li>
+<li><strong>非公開で登録した場合</strong>：雑誌管理画面で新号が登録され、「非公開」と表示されていることを確認</li>
+</ul>
+<hr />
+<h2 id="既存の雑誌号を修正する">11. 既存の雑誌号を修正する</h2>
+<p>対象号の <strong>「登録内容を確認」</strong>
+を開き、編集画面へ進みます。</p>
+<p>現在値が表示されるので、必要な箇所だけ変更します。</p>
+<p>変更内容の確認画面では、変更前／変更後を確認します。</p>
+<figure>
+<img src="../../assets/maintenance/09_magazine_change_confirmation.png"
+alt="雑誌号の変更内容確認" />
+<figcaption aria-hidden="true">雑誌号の変更内容確認</figcaption>
+</figure>
+<p>特に、月号・発刊日・特集・通巻番号・本体価格をよく確認してください。</p>
+<hr />
+<h2 id="雑誌号を非公開再公開削除する">12.
+雑誌号を非公開・再公開・削除する</h2>
+<h3 id="非公開">非公開</h3>
+<p>掲載を一時的に止めたい場合は <strong>非公開</strong> にします。</p>
+<p>書誌データ自体は残り、管理画面から引き続き確認・修正できます。</p>
+<h3 id="再公開-1">再公開</h3>
+<p>公開準備が整ったら再公開します。</p>
+<h3 id="削除">削除</h3>
+<p>誤登録・重複登録・テストデータなど、本当に不要な号だけに使用します。</p>
+<p>通常の掲載取り下げでは削除せず、非公開にしてください。</p>
+<p>雑誌号の書誌情報を削除しても、雑誌書影は自動削除されません。</p>
+<hr />
+<h2 id="雑誌書影を追加差替え削除する">13.
+雑誌書影を追加・差替え・削除する</h2>
+<p>雑誌管理画面で対象号を開き、書影管理から操作します。</p>
+<p>使用できる形式：</p>
+<ul>
+<li>JPG</li>
+<li>JPEG</li>
+<li>PNG</li>
+<li>WebP</li>
+</ul>
+<p><strong>1点、最大10MB</strong>です。</p>
+<p>削除時は専用の削除確認フォームが開きます。</p>
+<hr />
+<h1 id="第iii部-お知らせ管理">第III部　お知らせ管理</h1>
+<h2 id="お知らせ管理画面を開く">14. お知らせ管理画面を開く</h2>
+<p>管理画面トップから <strong>「お知らせ管理」</strong> を開きます。</p>
+<p><a href="https://keisemi.github.io/nippyo/admin/news/"
+class="uri">https://keisemi.github.io/nippyo/admin/news/</a></p>
+<figure>
+<img src="../../assets/maintenance/10_news_home.png"
+alt="お知らせ管理画面" />
+<figcaption aria-hidden="true">お知らせ管理画面</figcaption>
+</figure>
+<p>ここでは、新規登録・修正・公開停止・再公開・完全削除を行えます。</p>
+<hr />
+<h2 id="新しいお知らせを登録する">15. 新しいお知らせを登録する</h2>
+<p><strong>「新しいお知らせを登録」</strong> を押します。</p>
+<p>主な項目は次のとおりです。</p>
+<table>
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>日付</td>
+<td>空欄なら当日</td>
+</tr>
+<tr class="even">
+<td>種別</td>
+<td>空欄なら「お知らせ」</td>
+</tr>
+<tr class="odd">
+<td>タイトル</td>
+<td>新規登録では必須</td>
+</tr>
+<tr class="even">
+<td>本文</td>
+<td>必要に応じて入力</td>
+</tr>
+<tr class="odd">
+<td>リンク先</td>
+<td>必要に応じて入力</td>
+</tr>
+<tr class="even">
+<td>重要表示</td>
+<td>必要に応じて「はい／いいえ」を選ぶ</td>
+</tr>
+<tr class="odd">
+<td>公開する</td>
+<td>「はい／いいえ」を選ぶ</td>
+</tr>
+</tbody>
+</table>
+<p>新規登録では、重要表示と公開状態をできるだけ明示的に選んでから送信してください。</p>
+<p>送信後、成功コメントと自動クローズを確認します。</p>
+<hr />
+<h2 id="お知らせを修正する">16. お知らせを修正する</h2>
+<p>対象のお知らせの <strong>「修正」</strong> を押します。</p>
+<p>現在の登録内容を確認し、必要な箇所だけ変更します。</p>
+<p>本文やリンクを空にするなど、既存値を削除する変更は、管理画面・フォームの案内に従って行ってください。</p>
+<hr />
+<h2 id="お知らせを公開停止再公開する">17.
+お知らせを公開停止・再公開する</h2>
+<h3 id="公開停止-1">公開停止</h3>
+<p>一時的に掲載を止めたい場合は <strong>「公開停止」</strong>
+を使います。</p>
+<p>データは削除されず、管理画面には残ります。</p>
+<h3 id="再公開-2">再公開</h3>
+<p>公開停止中のお知らせには <strong>「再公開」</strong>
+が表示されます。</p>
+<p>現在の内容のまま公開サイトに戻せます。</p>
+<hr />
+<h2 id="お知らせを完全削除する">18. お知らせを完全削除する</h2>
+<p><strong>「完全削除」</strong>
+は、正本データそのものから消す操作です。</p>
+<p>一時的な掲載停止には使用しません。</p>
+<figure>
+<img src="../../assets/maintenance/11_news_delete_form.png"
+alt="お知らせ完全削除の確認フォーム" />
+<figcaption
+aria-hidden="true">お知らせ完全削除の確認フォーム</figcaption>
+</figure>
+<p>対象のお知らせが正しいことを確認し、削除確認にチェックして送信します。</p>
+<hr />
+<h1 id="第iv部-書籍関連ファイル管理">第IV部　書籍関連ファイル管理</h1>
+<h2 id="書籍関連ファイル管理を開く">19. 書籍関連ファイル管理を開く</h2>
+<p>管理画面トップから <strong>「書籍関連ファイル管理」</strong>
+を開きます。</p>
+<p><a href="https://keisemi.github.io/nippyo/admin/files/"
+class="uri">https://keisemi.github.io/nippyo/admin/files/</a></p>
+<figure>
+<img src="../../assets/maintenance/12_files_home.png"
+alt="書籍関連ファイル管理" />
+<figcaption aria-hidden="true">書籍関連ファイル管理</figcaption>
+</figure>
+<p>ここから次の4種類を管理します。</p>
+<ul>
+<li>書影</li>
+<li>正誤表</li>
+<li>付属データ</li>
+<li>関連リンク</li>
+</ul>
+<p>いずれも、まず対象書籍を検索してから操作します。</p>
+<hr />
+<h2 id="書影">20. 書影</h2>
+<p>追加・差替えに使える形式：</p>
+<ul>
+<li>JPG</li>
+<li>JPEG</li>
+<li>PNG</li>
+<li>WebP</li>
+</ul>
+<p><strong>1点、最大10MB</strong>です。</p>
+<p>削除しても、書誌情報そのものは削除されません。</p>
+<hr />
+<h2 id="正誤表">21. 正誤表</h2>
+<p>正誤表は <strong>PDF 1点、最大25MB</strong>です。</p>
+<p>管理画面の表示は次の意味です。</p>
+<ul>
+<li><strong>登録済み</strong>：正誤表PDFがある</li>
+<li><strong>要アップロード</strong>：正誤表の登録対象だがPDFがまだない</li>
+</ul>
+<p>追加・差替え・削除は専用フォームから行います。</p>
+<hr />
+<h2 id="付属データ">22. 付属データ</h2>
+<p>付属データは <strong>1点、最大25MB</strong>です。</p>
+<p>主な対応形式：</p>
+<ul>
+<li>PDF</li>
+<li>ZIP</li>
+<li>XLSX / XLS / XLSM</li>
+<li>CSV</li>
+<li>DOCX</li>
+<li>PPTX / PPT</li>
+<li>TXT</li>
+</ul>
+<p>複数ファイルを配布する場合は、ZIPにまとめて1点として登録してください。</p>
+<hr />
+<h2 id="関連リンク">23. 関連リンク</h2>
+<p>書籍に関連する外部ページを登録します。</p>
+<p>例：</p>
+<ul>
+<li>著者サポートサイト</li>
+<li>動画</li>
+<li>記事</li>
+<li>イベントページ</li>
+</ul>
+<p>主な入力項目は、リンク名・説明・URLです。</p>
+<p>URLは <code>https://</code> または <code>http://</code>
+から始まるものを入力します。</p>
+<p>複数リンクがある場合も、1件ずつ追加・修正・削除できます。</p>
+<hr />
+<h1
+id="第v部-更新時の注意とトラブル対応">第V部　更新時の注意とトラブル対応</h1>
+<h2 id="迷ったときの基本ルール">24. 迷ったときの基本ルール</h2>
+<h3 id="対象を間違えた">対象を間違えた</h3>
+<p>GitHubフォーム上で書籍ID・雑誌ID等を書き換えず、いったん閉じて管理画面から選び直します。</p>
+<h3 id="公開を止めたいだけ">公開を止めたいだけ</h3>
+<p>削除せず、公開停止／非公開にします。</p>
+<h3 id="更新に失敗した">更新に失敗した</h3>
+<p>同じ申請を繰り返さず、失敗したIssueのURLを管理担当者へ送ります。</p>
+<h3 id="分からない必須項目がある">分からない必須項目がある</h3>
+<p>推測して入力せず、確認してから送信します。</p>
+<hr />
+<h2 id="ブラウザで古い表示が残る">25. ブラウザで古い表示が残る</h2>
+<p>更新成功後も古い表示に見える場合は、まず強制再読み込みします。</p>
+<p>Windows：</p>
+<pre class="text"><code>Ctrl + F5</code></pre>
+<p>それでも変わらない場合は、シークレットウィンドウ等で確認してください。</p>
+<hr />
+<h2 id="長い内容紹介目次を修正するとき">26.
+長い内容紹介・目次を修正するとき</h2>
+<p>非常に長い内容紹介・目次などを複数同時に修正すると、管理画面からGitHubフォームへ渡す情報が長くなりすぎる場合があります。</p>
+<p>管理画面で「長すぎる」旨が表示された場合は、内容紹介だけ、目次だけ、というように分けて更新してください。</p>
+<hr />
+<h2 id="ファイルがアップロードできない">27.
+ファイルがアップロードできない</h2>
+<p>まずサイズと形式を確認してください。</p>
+<table>
+<thead>
+<tr class="header">
+<th>種類</th>
+<th style="text-align: right;">最大サイズ</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>書籍書影</td>
+<td style="text-align: right;">10MB</td>
+</tr>
+<tr class="even">
+<td>雑誌書影</td>
+<td style="text-align: right;">10MB</td>
+</tr>
+<tr class="odd">
+<td>正誤表PDF</td>
+<td style="text-align: right;">25MB</td>
+</tr>
+<tr class="even">
+<td>付属データ</td>
+<td style="text-align: right;">25MB</td>
+</tr>
+</tbody>
+</table>
+<p>付属データが複数ある場合はZIPにまとめます。</p>
+<hr />
+<h1
+id="第vi部-通常更新で触らないもの">第VI部　通常更新で触らないもの</h1>
+<h2 id="日常更新では直接編集しないもの">28.
+日常更新では直接編集しないもの</h2>
+<p>通常の更新では、次の操作は行いません。</p>
+<ul>
+<li><code>data/*.csv</code> を1件修正のために直接編集する</li>
+<li><code>docs/data/*.json</code> や <code>docs/data/*.js</code>
+を直接編集する</li>
+<li>GitHub Issueのシステム用タイトルを変更する</li>
+<li>自動入力された書籍ID・雑誌ID等を書き換える</li>
+<li>公開停止で済むデータを完全削除する</li>
+<li>失敗したIssueを確認せず何度も再送する</li>
+<li>GitHub Actionsの生成結果を手作業で書き換える</li>
+<li>Force Pushする</li>
+<li>古いリポジトリ一式で現在のリポジトリを丸ごと上書きする</li>
+</ul>
+<hr />
+<h1 id="第vii部-管理者向け補足">第VII部　管理者向け補足</h1>
+<h2 id="管理者が扱う作業">29. 管理者が扱う作業</h2>
+<p>次の作業は、日常更新とは分けて管理者が行います。</p>
+<ul>
+<li>トップページ・会社概要等のHTML修正</li>
+<li>特設ページの追加・修正</li>
+<li>管理画面そのものの改修</li>
+<li>大量データの一括更新</li>
+<li>Workflowや自動処理の修正</li>
+<li>通常フォームで対応できない例外的なファイル配置</li>
+<li>この操作マニュアルの更新</li>
+</ul>
+<hr />
+<h2 id="github-desktopを使う場合">30. GitHub Desktopを使う場合</h2>
+<p>管理者がHTML・画像・コード等を直接変更する場合の基本手順です。</p>
+<pre class="text"><code>GitHub Desktopを開く
+    ↓
+Fetch origin
+    ↓
+必要なら Pull origin
+    ↓
+変更するファイルだけ差し替える
+    ↓
+Changesで想定外の変更がないか確認
+    ↓
+Commit
+    ↓
+Push origin
+    ↓
+自動再構築・公開が成功したことを確認
+    ↓
+公開サイトを確認</code></pre>
+<h3 id="zipで修正版を受け取った場合">ZIPで修正版を受け取った場合</h3>
+<ol type="1">
+<li>ZIPを別の場所に展開する</li>
+<li>フォルダ構成を確認する</li>
+<li>ZIPに入っている変更ファイルだけを上書きする</li>
+<li>GitHub DesktopのChangesで差分を確認する</li>
+<li>Commit / Pushする</li>
+</ol>
+<p><strong>リポジトリ全体を古いZIPで丸ごと上書きしないでください。</strong></p>
+<hr />
+<h2 id="正本と自動生成ファイル">31. 正本と自動生成ファイル</h2>
+<p>このサイトでは、正本データを更新し、公開用ファイルを自動生成する方式を採っています。</p>
+<p>代表例：</p>
+<pre class="text"><code>正本
+  data/book_search_master.csv
+  data/news.csv
+  data/magazines/*.csv
+
+        ↓ 自動処理
+
+公開・検索用
+  docs/data/*.json
+  docs/data/*.js</code></pre>
+<p>通常更新では、公開用JSONやJavaScriptを直接修正しません。</p>
+<p>仕組みの変更時に扱う主な場所は次です。</p>
+<pre class="text"><code>scripts/
+.github/workflows/
+.github/ISSUE_TEMPLATE/</code></pre>
+<hr />
+<h1
+id="第viii部-初めて担当する人の練習">第VIII部　初めて担当する人の練習</h1>
+<h2 id="最初の操作練習">32. 最初の操作練習</h2>
+<p>新しい担当者は、お知らせを使って一連の流れを練習すると安全です。</p>
+<ol type="1">
+<li>テスト用のお知らせを新規登録</li>
+<li>成功コメントと自動クローズを確認</li>
+<li>公開サイトを確認</li>
+<li>公開停止</li>
+<li>再公開</li>
+<li>最後に完全削除</li>
+<li>それぞれ成功コメントを確認</li>
+</ol>
+<p>これで、管理画面・GitHub確認フォーム・自動更新・公開停止／再公開・完全削除の一連の操作を確認できます。</p>
+<hr />
+<h1 id="第ix部-主なurl">第IX部　主なURL</h1>
+<h2 id="日常更新">33. 日常更新</h2>
+<ul>
+<li>管理画面：<a href="https://keisemi.github.io/nippyo/admin/"
+class="uri">https://keisemi.github.io/nippyo/admin/</a></li>
+<li>書籍管理：<a href="https://keisemi.github.io/nippyo/admin/books/"
+class="uri">https://keisemi.github.io/nippyo/admin/books/</a></li>
+<li>雑誌管理：<a
+href="https://keisemi.github.io/nippyo/admin/magazines/"
+class="uri">https://keisemi.github.io/nippyo/admin/magazines/</a></li>
+<li>お知らせ管理：<a href="https://keisemi.github.io/nippyo/admin/news/"
+class="uri">https://keisemi.github.io/nippyo/admin/news/</a></li>
+<li>書籍関連ファイル管理：<a
+href="https://keisemi.github.io/nippyo/admin/files/"
+class="uri">https://keisemi.github.io/nippyo/admin/files/</a></li>
+<li>書影管理：<a
+href="https://keisemi.github.io/nippyo/admin/files/covers/"
+class="uri">https://keisemi.github.io/nippyo/admin/files/covers/</a></li>
+<li>正誤表管理：<a
+href="https://keisemi.github.io/nippyo/admin/files/errata/"
+class="uri">https://keisemi.github.io/nippyo/admin/files/errata/</a></li>
+<li>付属データ管理：<a
+href="https://keisemi.github.io/nippyo/admin/files/related/"
+class="uri">https://keisemi.github.io/nippyo/admin/files/related/</a></li>
+<li>関連リンク管理：<a
+href="https://keisemi.github.io/nippyo/admin/files/links/"
+class="uri">https://keisemi.github.io/nippyo/admin/files/links/</a></li>
+</ul>
+<h2 id="公開管理">34. 公開・管理</h2>
+<ul>
+<li>公開サイト：<a href="https://keisemi.github.io/nippyo/"
+class="uri">https://keisemi.github.io/nippyo/</a></li>
+<li>GitHubリポジトリ：<a href="https://github.com/keisemi/nippyo"
+class="uri">https://github.com/keisemi/nippyo</a></li>
+<li>Issues：<a href="https://github.com/keisemi/nippyo/issues"
+class="uri">https://github.com/keisemi/nippyo/issues</a></li>
+<li>Actions：<a href="https://github.com/keisemi/nippyo/actions"
+class="uri">https://github.com/keisemi/nippyo/actions</a>（管理者向け）</li>
+</ul>
+</body>
+</html>

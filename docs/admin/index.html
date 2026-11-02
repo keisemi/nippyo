@@ -23,6 +23,8 @@
     .admin-menu-card.is-disabled{background:#f7f8f6;border-top-color:#aab4a7;color:#666}
     .admin-menu-card.is-disabled .admin-menu-label{color:#777!important}
     .admin-menu-status{display:inline-block;margin-top:16px;padding:4px 9px;border:1px solid #c7cec5;border-radius:999px;color:#666;background:#fff;font-size:.82rem;font-weight:700}
+    .admin-menu-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+    .admin-menu-actions .admin-menu-link{margin-top:0}
     .admin-home-footer{margin-top:34px;padding-top:18px;border-top:1px solid #d9e0d8;color:#666;font-size:.9rem}
     @media(max-width:720px){.admin-menu-grid{grid-template-columns:1fr}.admin-home{padding-inline:16px}}
   </style>
@@ -74,11 +76,14 @@
         <span class="admin-menu-link">書籍関連ファイル管理を開く →</span>
       </a>
 
-      <div class="admin-menu-card is-disabled" aria-disabled="true">
+      <div class="admin-menu-card">
         <p class="admin-menu-label">HELP</p>
-        <h2>操作マニュアル</h2>
-        <p>日常更新の手順と、更新に失敗した場合の対応方法を掲載する予定です。</p>
-        <span class="admin-menu-status">準備中</span>
+        <h2>操作・メンテナンス手順書</h2>
+        <p>日常更新の手順、公開・非公開の扱い、更新に失敗した場合の対応方法を確認できます。</p>
+        <div class="admin-menu-actions">
+          <a class="admin-menu-link" href="manual/">HTML版を開く →</a>
+          <a class="admin-menu-link" href="manual/Nippyo_MAINTENANCE_v1_0.pdf">PDF版を開く →</a>
+        </div>
       </div>
     </section>
 
