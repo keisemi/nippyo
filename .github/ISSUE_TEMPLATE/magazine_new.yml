@@ -24,15 +24,6 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: registration_data
-    attributes:
-      label: 登録データ
-      description: "管理画面で登録データをクリップボードへコピー済みです。内容が自動入力されていればそのまま、空欄ならこの欄をクリックして Ctrl+V で貼り付けてください。内容は編集しないでください。"
-      placeholder: "空欄なら Ctrl+V で貼り付け"
-    validations:
-      required: true
-
   - type: input
     id: magazine_code_1
     attributes:

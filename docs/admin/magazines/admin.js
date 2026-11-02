@@ -540,7 +540,7 @@
       price_body: "",
       isbn_old: "",
       isbn_new: "",
-      magazine_code_1: text(detail.magazine_code_1),
+      magazine_code_1: "",
       magazine_code_2: "",
 
       subtitle_before: "",
@@ -584,24 +584,8 @@
   }
 
 
-  async function encodeRegistrationPayload(data) {
-    const raw = JSON.stringify(data);
-    if (typeof CompressionStream === "undefined") {
-      return "json1:" + raw;
-    }
-
-    const compressed = new Blob([raw], { type: "application/json" })
-      .stream()
-      .pipeThrough(new CompressionStream("gzip"));
-    const bytes = new Uint8Array(await new Response(compressed).arrayBuffer());
-
-    let binary = "";
-    for (const byte of bytes) binary += String.fromCharCode(byte);
-
-    return "gz1:" + btoa(binary)
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/g, "");
+  function encodeRegistrationPayload(data) {
+    return "json1:" + JSON.stringify(data);
   }
 
   function copyRegistrationPayload(payload) {
@@ -677,7 +661,7 @@
       <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　次号</h2>
       <p class="edit-intro">
         「${esc(detail.issue || "前号")}」を雛形にしています。
-        <strong>雑誌ID・雑誌名・判型・本誌編者・雑誌コード(1)</strong>を引き継ぎ、
+        <strong>雑誌ID・雑誌名・判型・本誌編者</strong>だけを引き継ぎ、
         書籍ID・月号・通巻・発刊日・ISBN・価格・頁数・特集・目次・外部リンクなどは空欄に戻しています。
       </p>
 
@@ -723,9 +707,8 @@
 
       <div class="edit-submit-box">
         <strong>新しい号として登録します。</strong><br>
-        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。<br>
-        <strong>登録データは通常、自動入力されるので変更しないでください。</strong> 内容が非常に長い場合だけ、画面の案内に従って Ctrl+V で貼り付けます。<br>
-        <strong>公開状態：</strong>初期値は「非公開（登録だけする）」です。公開準備が整っている号だけ「公開」を選んでください。
+        「登録内容を確認する」を押すとGitHubの確認フォームが開きます。内容を確認して送信すると、該当誌のCSVへ新しい1行を追加し、臨時サイトを再公開します。<br>
+        <strong>注意：</strong>公開前登録の切替は次工程で追加するため、現段階では登録後すぐ公開サイトへ反映されます。
         <div class="edit-submit-actions">
           <button class="admin-btn" id="submit-next-issue" type="button">登録内容を確認する</button>
           <button class="admin-btn secondary" id="back-from-next-issue" type="button">登録内容へ戻る</button>
@@ -742,7 +725,6 @@
         ["issue","雑誌月号"],
         ["issue_number","雑誌通算番号"],
         ["pub_date","発刊日"],
-        ["magazine_code_1","雑誌コード(1)"],
       ];
       for (const [id,label] of required) {
         if (!get(id)) {
@@ -793,7 +775,7 @@
       submitButton.disabled = true;
       submitButton.textContent = "登録内容を準備中…";
       try {
-        const payload = await encodeRegistrationPayload(registration);
+        const payload = encodeRegistrationPayload(registration);
         copyRegistrationPayload(payload);
 
         const params = new URLSearchParams();
@@ -807,24 +789,11 @@
         params.set("mag_issue",get("issue"));
         params.set("issue_number",get("issue_number"));
         params.set("pub_date",get("pub_date"));
-        for (const id of ["format","pages","price_body","isbn_old","isbn_new","magazine_code_1","magazine_code_2","feature"]) {
-          const value = get(id);
-          if (value) params.set(id,value);
-        }
-        params.set("registration_data", payload);
 
-        let targetUrl = `${issueBase}?${params.toString()}`;
-        if (targetUrl.length > 7000) {
-          params.delete("registration_data");
-          targetUrl = `${issueBase}?${params.toString()}`;
-        }
-
+        const targetUrl = `${issueBase}?${params.toString()}`;
         window.alert(
           "登録データをクリップボードにコピーしました。\n\n" +
-          "次のGitHub画面で「登録データ」欄を確認してください。\n" +
-          "・内容が入っていれば、そのまま送信できます。\n" +
-          "・空欄なら、その欄をクリックして Ctrl+V で貼り付けてください。\n\n" +
-          "登録データの内容は編集しないでください。"
+          "次のGitHub画面で『登録データ』欄をクリックし、Ctrl+Vで貼り付けてから送信してください。"
         );
         openIssueForm(targetUrl);
       } catch (error) {

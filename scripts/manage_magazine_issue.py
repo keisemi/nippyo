@@ -129,10 +129,7 @@ def decode_registration_payload(value: str) -> dict[str, str]:
             raw = gzip.decompress(compressed).decode("utf-8")
             payload = json.loads(raw)
         else:
-            raise ValueError(
-                "管理画面から自動入力された登録データではありません。"
-                "「登録データ」欄は手入力せず、雑誌管理画面から登録し直してください。"
-            )
+            raise ValueError("未対応の登録データ形式")
     except Exception as error:
         raise SystemExit(f"登録データを復元できません: {error}") from error
 
@@ -162,7 +159,6 @@ def use_compact_new_payload(fields: dict[str, str]) -> dict[str, str]:
     packed = fields.get("登録データ", "").strip()
     if not packed:
         return fields
-    publication_state = fields.get("公開状態", "").strip()
     decoded = decode_registration_payload(packed)
 
     for label in (
@@ -180,7 +176,6 @@ def use_compact_new_payload(fields: dict[str, str]) -> dict[str, str]:
                 f"{label}が確認欄と登録データで一致しません。"
                 "管理画面から登録し直してください。"
             )
-    decoded["公開状態"] = publication_state
     return decoded
 
 def read_rows(path: Path):
@@ -467,18 +462,6 @@ def apply_new(fields: dict[str, str]) -> None:
         raise SystemExit(f"未対応の公開状態です: {publication_state}")
 
     magazine_id, expected_name, path = magazine_by_code1(magazine_code_1)
-    selected_magazine_id = fields.get("雑誌ID", "").strip()
-    selected_magazine_name = fields.get("雑誌名", "").strip()
-    if selected_magazine_id and selected_magazine_id != magazine_id:
-        raise SystemExit(
-            f"雑誌コード(1)と管理画面で選んだ雑誌IDが一致しません。"
-            f" 選択: {selected_magazine_id} / コード判定: {magazine_id}"
-        )
-    if selected_magazine_name and selected_magazine_name != expected_name:
-        raise SystemExit(
-            f"雑誌コード(1)と管理画面で選んだ雑誌名が一致しません。"
-            f" 選択: {selected_magazine_name} / コード判定: {expected_name}"
-        )
     fieldnames, rows, encoding = read_rows(path)
     missing = sorted((set(LABEL_TO_COLUMN.values()) | NEW_ISSUE_CLEAR_COLUMNS | {"WEB公開属性", "雑誌ID"}) - set(fieldnames))
     if missing:
@@ -528,7 +511,6 @@ def main() -> None:
         apply_edit(fields)
         return
     if title.startswith("[雑誌号新規]"):
-        fields = use_compact_new_payload(fields)
         apply_new(fields)
         return
     if title.startswith("[雑誌号公開停止]"):
