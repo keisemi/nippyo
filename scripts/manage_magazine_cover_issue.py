@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT / "data" / "magazines"
 COVERS_DIR = ROOT / "docs" / "assets" / "magazine-covers"
 NO_RESPONSE = "_No response_"
-MAX_BYTES = 11 * 1024 * 1024
+MAX_BYTES = 10 * 1024 * 1024
 ALLOWED_URL_RE = re.compile(
     r"https://github\.com/user-attachments/assets/[A-Za-z0-9_-]+(?:\?[^\s)\]>]+)?"
 )

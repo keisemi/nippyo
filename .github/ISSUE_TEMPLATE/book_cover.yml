@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         管理画面から対象書籍を選択した後の確認画面です。
-        **追加・差替えの場合は、JPG・JPEG・PNG・WebP画像を1点だけ選択してください。**
+        **追加・差替えの場合は、JPG・JPEG・PNG・WebP画像を1点だけ選択してください（最大10MB）。**
         削除の場合は画像ファイルの選択は不要です。
 
   - type: input
@@ -39,7 +39,7 @@ body:
     id: image_file
     attributes:
       label: 画像ファイル
-      description: 追加・差替えの場合のみ、JPG・JPEG・PNG・WebP画像を1点選択してください。
+      description: 追加・差替えの場合のみ、JPG・JPEG・PNG・WebP画像を1点選択してください（最大10MB）。
     validations:
       required: false
 
