@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>立ち読みPDF管理｜日本評論社 臨時ホームページ</title>
+  <link rel="stylesheet" href="../../../css/site.css">
+  <style>
+    .admin-wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px}
+    .admin-links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 18px}
+    .admin-wrap h1{margin:8px 0 12px;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(2rem,4vw,2.7rem);font-weight:500}
+    .admin-note{margin:22px 0;padding:16px 18px;background:#eef4ec;border-left:5px solid #255e17;line-height:1.75}
+    .admin-search{display:grid;grid-template-columns:minmax(260px,1fr) auto auto auto;gap:10px;margin:22px 0}
+    .admin-search input,.admin-search select{font-size:16px;padding:12px 14px;border:1px solid #b9c5b6;border-radius:6px;background:#fff}
+    .admin-btn{display:inline-block;background:#255e17;color:#fff;text-decoration:none;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}
+    .admin-btn.danger{background:#fff;color:#8a1f11;border:1px solid #b94b3d}
+    .result-count{margin:12px 0;color:#4b5a49}
+    .preview-result{border:1px solid #d4ddd2;border-radius:8px;padding:16px;margin:12px 0;background:#fff}
+    .preview-result h2{font-size:19px;margin:0 0 8px}
+    .preview-meta{display:flex;gap:8px 14px;flex-wrap:wrap;font-size:14px;color:#586455;margin-bottom:12px}
+    .preview-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .status{display:inline-block;padding:2px 8px;border:1px solid #cbd5c8;border-radius:999px;font-size:12px}
+    .status.on{background:#eef4ec;color:#255e17}
+    .status.off{background:#f3f3f3;color:#666}
+    .type-badge{display:inline-block;margin-right:8px;padding:2px 8px;border:1px solid #b8cbb4;border-radius:999px;color:#255e17;font-size:12px;font-weight:700;vertical-align:middle}
+    .empty{padding:24px;border:1px dashed #b9c5b6;border-radius:8px;color:#5e685c}
+    @media(max-width:820px){.admin-search{grid-template-columns:1fr}.admin-search input{min-width:0}}
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <p class="admin-links">
+      <a href="../">← 書籍関連ファイル管理に戻る</a>
+      <a href="../../">← 管理画面ホームに戻る</a>
+      <a href="https://github.com/keisemi/nippyo">← リポジトリに戻る</a>
+    </p>
+
+    <p class="section-kicker">PREVIEW PDF</p>
+    <h1>立ち読みPDF管理</h1>
+
+    <div class="admin-note">
+      書籍と雑誌号の立ち読みPDFを管理します。書名・著者・ISBN・書籍ID、または雑誌名・月号・特集などで検索できます。<br>
+      PDFの選択は、対象を選んだ後のGitHub確認画面で行います。元のファイル名は何でも構いません。登録時に、書籍・雑誌とも <strong>sample_&lt;書籍ID&gt;.pdf</strong> に統一します。<strong>1点につき最大25MB</strong>です。
+    </div>
+
+    <div class="admin-search">
+      <input id="preview-query" type="search" placeholder="書名・著者・雑誌名・月号・ISBN・書籍IDで検索" autocomplete="off">
+      <select id="type-filter" aria-label="対象種別">
+        <option value="all">対象：すべて</option>
+        <option value="book">対象：書籍</option>
+        <option value="magazine">対象：雑誌</option>
+      </select>
+      <select id="state-filter" aria-label="立ち読みPDFの登録状態">
+        <option value="all">立ち読み：すべて</option>
+        <option value="yes">立ち読み：登録済み</option>
+        <option value="no">立ち読み：未登録</option>
+      </select>
+      <button class="admin-btn" id="search-button" type="button">検索</button>
+    </div>
+
+    <p class="result-count" id="result-count">検索語を入力するか、対象・登録状態を選んでください。</p>
+    <div id="results"></div>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

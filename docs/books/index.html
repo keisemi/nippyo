@@ -185,6 +185,11 @@
       const loadApp = () => {
         const script = document.createElement("script");
         script.src = `js/app.js?v=${Date.now()}`;
+        script.onload = () => {
+          const previewScript = document.createElement("script");
+          previewScript.src = `js/preview.js?v=${Date.now()}`;
+          document.body.appendChild(previewScript);
+        };
         document.body.appendChild(script);
       };
       const externalLinksScript = document.createElement("script");

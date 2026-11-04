@@ -1,0 +1,83 @@
+name: "【入力用】立ち読みPDFを管理"
+description: "管理画面で対象の書籍または雑誌号を選んでから、立ち読みPDFの追加・差替えを行います。"
+title: "[立ち読み管理] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        管理画面から対象を選択した後の確認画面です。
+        **追加・差替えの場合は、PDFを1点だけ選択してください。**
+        元のファイル名は何でも構いません。登録時に `sample_<書籍ID>.pdf` へ自動的に変更します。
+
+  - type: input
+    id: target_type
+    attributes:
+      label: 対象種別
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: book_id
+    attributes:
+      label: 書籍ID
+      description: 管理画面から自動入力されます。変更しないでください。
+    validations:
+      required: true
+
+  - type: input
+    id: current_title
+    attributes:
+      label: 現在の書名
+      description: 書籍の場合のみ管理画面から自動入力されます。雑誌の場合は空欄のままにしてください。
+    validations:
+      required: false
+
+  - type: input
+    id: magazine_id
+    attributes:
+      label: 雑誌ID
+      description: 雑誌の場合のみ管理画面から自動入力されます。書籍の場合は空欄のままにしてください。
+    validations:
+      required: false
+
+  - type: input
+    id: magazine_name
+    attributes:
+      label: 雑誌名
+      description: 雑誌の場合のみ管理画面から自動入力されます。書籍の場合は空欄のままにしてください。
+    validations:
+      required: false
+
+  - type: input
+    id: current_issue
+    attributes:
+      label: 現在の雑誌月号
+      description: 雑誌の場合のみ管理画面から自動入力されます。書籍の場合は空欄のままにしてください。
+    validations:
+      required: false
+
+  - type: dropdown
+    id: operation
+    attributes:
+      label: 操作
+      options:
+        - 追加・差替え
+    validations:
+      required: true
+
+  - type: upload
+    id: pdf_file
+    attributes:
+      label: 立ち読みPDF
+      description: PDFを1点選択してください（最大25MB）。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認
+      options:
+        - label: 対象と操作内容を確認しました。
+          required: true
