@@ -1,15 +1,20 @@
+import base64
 import csv
+import gzip
 import json
 import os
 import re
 from pathlib import Path
 
+
 import manage_book
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "data" / "book_search_master.csv"
 HIDDEN_IDS_FILE = ROOT / "data" / "book_hidden_ids.txt"
 NO_RESPONSE = "_No response_"
+
 
 LABEL_TO_ENV = {
     "書名": "BOOK_TITLE",
@@ -37,6 +42,14 @@ LABEL_TO_ENV = {
     "関連情報・付属データ": "BOOK_HAS_RELATED_INFO",
 }
 
+COMPACT_EDIT_LABELS = {
+    "書名", "副題（後）", "著者", "著者よみ", "書名よみ", "旧ISBN", "新ISBN",
+    "Amazon ASIN", "刊行年月", "分野", "シリーズ", "シリーズ巻数", "本体価格", "判型",
+    "頁数", "HP検索用キーワード", "刊行年月備考", "内容紹介", "目次", "原書名",
+}
+
+
+
 
 def parse_sections(body: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {}
@@ -48,6 +61,7 @@ def parse_sections(body: str) -> dict[str, str]:
         "再公開の確認",
         "削除確認用の書籍ID",
         "削除の確認",
+        "修正データ",
         *LABEL_TO_ENV.keys(),
     }
     for line in (body or "").splitlines():
@@ -58,12 +72,48 @@ def parse_sections(body: str) -> dict[str, str]:
         if current is not None:
             sections[current].append(line)
 
+
     out: dict[str, str] = {}
     for key, lines in sections.items():
         value = "\n".join(lines).strip()
         if value == NO_RESPONSE:
             value = ""
         out[key] = value
+    return out
+
+
+
+
+def decode_edit_payload(value: str) -> dict[str, str]:
+    value = (value or "").strip()
+    if not value:
+        return {}
+    try:
+        if value.startswith("gz1:"):
+            encoded = value[4:]
+            encoded += "=" * (-len(encoded) % 4)
+            compressed = base64.urlsafe_b64decode(encoded.encode("ascii"))
+            raw = gzip.decompress(compressed).decode("utf-8")
+            payload = json.loads(raw)
+        elif value.startswith("json1:"):
+            payload = json.loads(value[6:])
+        else:
+            raise ValueError("未対応の修正データ形式")
+    except Exception as error:
+        raise SystemExit(f"修正データを復元できません: {error}") from error
+
+    if not isinstance(payload, dict) or not payload:
+        raise SystemExit("修正データが空、またはオブジェクト形式ではありません。")
+
+    unknown = sorted(set(payload) - COMPACT_EDIT_LABELS)
+    if unknown:
+        raise SystemExit("修正データに未対応の項目があります: " + ", ".join(unknown))
+
+    out: dict[str, str] = {}
+    for key, item in payload.items():
+        if not isinstance(item, str):
+            raise SystemExit(f"修正データの値が文字列ではありません: {key}")
+        out[key] = item
     return out
 
 
@@ -79,9 +129,13 @@ def get_issue() -> dict:
     return issue
 
 
+
+
 def load_rows() -> list[dict[str, str]]:
     with MASTER.open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
+
+
 
 
 def load_hidden_ids() -> set[str]:
@@ -96,12 +150,16 @@ def load_hidden_ids() -> set[str]:
     return hidden
 
 
+
+
 def save_hidden_ids(hidden_ids: set[str]) -> None:
     lines = [
         "# 公開停止中の書籍ID。管理画面から自動更新します。",
         *sorted(hidden_ids),
     ]
     HIDDEN_IDS_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 
 
 def extract_product_code(isbn: str) -> str:
@@ -113,6 +171,8 @@ def extract_product_code(isbn: str) -> str:
     if digits.startswith("4535") and len(digits) >= 9:
         return digits[4:9]
     return ""
+
+
 
 
 def make_new_book_id(fields: dict[str, str]) -> str:
@@ -131,6 +191,7 @@ def make_new_book_id(fields: dict[str, str]) -> str:
             raise SystemExit(f"書籍ID {code} はすでに登録されています。既存書誌を修正してください。")
         return code
 
+
     # ISBNなしは N + 5桁連番。既存のN番号の最大値+1を採用する。
     n_values = []
     for book_id in used:
@@ -144,6 +205,8 @@ def make_new_book_id(fields: dict[str, str]) -> str:
             return candidate
         next_number += 1
     raise SystemExit("ISBNなし書籍用IDの空き番号がありません。")
+
+
 
 
 def verify_edit_target(book_id: str, current_title: str) -> None:
@@ -163,6 +226,8 @@ def verify_edit_target(book_id: str, current_title: str) -> None:
         )
 
 
+
+
 def hide_book(book_id: str, current_title: str) -> None:
     verify_edit_target(book_id, current_title)
     hidden_ids = load_hidden_ids()
@@ -173,6 +238,8 @@ def hide_book(book_id: str, current_title: str) -> None:
     print("操作: 公開停止")
     print(f"書籍ID: {book_id}")
     print(f"書名: {current_title}")
+
+
 
 
 def restore_book(book_id: str, current_title: str) -> None:
@@ -187,6 +254,8 @@ def restore_book(book_id: str, current_title: str) -> None:
     print(f"書名: {current_title}")
 
 
+
+
 def delete_book(book_id: str, current_title: str, confirmation_id: str) -> None:
     verify_edit_target(book_id, current_title)
     if confirmation_id != book_id:
@@ -196,17 +265,21 @@ def delete_book(book_id: str, current_title: str, confirmation_id: str) -> None:
             f"確認入力: {confirmation_id or '（空欄）'}"
         )
 
+
     rows = manage_book.load_master()
     remaining = [row for row in rows if (row.get("id") or "").strip() != book_id]
     if len(remaining) != len(rows) - 1:
         raise SystemExit(f"書籍ID {book_id} の削除対象を1件に特定できません。CSVは変更していません。")
 
+
     manage_book.save_master(remaining)
+
 
     hidden_ids = load_hidden_ids()
     if book_id in hidden_ids:
         hidden_ids.remove(book_id)
         save_hidden_ids(hidden_ids)
+
 
     print("操作: 書誌削除")
     print(f"書籍ID: {book_id}")
@@ -215,10 +288,13 @@ def delete_book(book_id: str, current_title: str, confirmation_id: str) -> None:
     print("書影・正誤表・付属データ等のファイルは削除していません。")
 
 
+
+
 def main() -> None:
     issue = get_issue()
     issue_title = (issue.get("title") or "").strip()
     fields = parse_sections(issue.get("body") or "")
+
 
     if issue_title.startswith("[書誌公開停止]"):
         book_id = fields.get("書籍ID", "").strip()
@@ -230,6 +306,7 @@ def main() -> None:
         hide_book(book_id, current_title)
         return
 
+
     if issue_title.startswith("[書誌再公開]"):
         book_id = fields.get("書籍ID", "").strip()
         if not book_id:
@@ -239,6 +316,7 @@ def main() -> None:
             raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
         restore_book(book_id, current_title)
         return
+
 
     if issue_title.startswith("[書誌削除]"):
         book_id = fields.get("書籍ID", "").strip()
@@ -256,6 +334,7 @@ def main() -> None:
         delete_book(book_id, current_title, confirmation_id)
         return
 
+
     if issue_title.startswith("[書誌修正]"):
         operation = "既存データ修正"
         book_id = fields.get("書籍ID", "").strip()
@@ -265,6 +344,19 @@ def main() -> None:
         if not current_title:
             raise SystemExit("現在の書名がありません。管理用検索ページからIssueを開いてください。")
         verify_edit_target(book_id, current_title)
+
+        compact_value = fields.get("修正データ", "").strip()
+        if compact_value:
+            normal_values = [
+                label for label in COMPACT_EDIT_LABELS
+                if fields.get(label, "").strip()
+            ]
+            if normal_values:
+                raise SystemExit(
+                    "長文用の修正データと個別の修正欄が同時に入力されています。"
+                    "管理画面からやり直してください。"
+                )
+            fields.update(decode_edit_payload(compact_value))
     elif issue_title.startswith("[書誌新規]"):
         operation = "新規登録"
         book_id = make_new_book_id(fields)
@@ -272,8 +364,10 @@ def main() -> None:
     else:
         raise SystemExit("書誌管理用Issueではありません。")
 
+
     os.environ["BOOK_OPERATION"] = operation
     os.environ["BOOK_ID"] = book_id
+
 
     for label, env_name in LABEL_TO_ENV.items():
         value = fields.get(label, "")
@@ -281,7 +375,10 @@ def main() -> None:
             value = value or "なし"
         os.environ[env_name] = value
 
+
     manage_book.main()
+
+
 
 
 if __name__ == "__main__":

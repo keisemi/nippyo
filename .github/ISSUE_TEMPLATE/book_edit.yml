@@ -11,6 +11,7 @@ body:
         現在の値を削除する変更は `__CLEAR__` として引き継がれます。
         内容紹介・目次の文中リンクは `[【コチラ】](https://example.com/)` の形式で登録できます。
 
+
   - type: input
     id: book_id
     attributes:
@@ -18,6 +19,7 @@ body:
       description: "管理用検索ページから自動入力されます。変更しないでください。"
     validations:
       required: true
+
 
   - type: input
     id: current_title
@@ -27,16 +29,19 @@ body:
     validations:
       required: true
 
+
   - type: input
     id: title
     attributes:
       label: 書名
       description: "変更した場合だけ入力されます。空欄なら変更しません。"
 
+
   - type: input
     id: subtitle_after
     attributes:
       label: 副題（後）
+
 
   - type: input
     id: author
@@ -44,25 +49,30 @@ body:
       label: 著者
       description: "複数の場合は | で区切ります。"
 
+
   - type: input
     id: author_kana
     attributes:
       label: 著者よみ
+
 
   - type: input
     id: title_kana
     attributes:
       label: 書名よみ
 
+
   - type: input
     id: isbn_old
     attributes:
       label: 旧ISBN
 
+
   - type: input
     id: isbn_new
     attributes:
       label: 新ISBN
+
 
   - type: input
     id: amazon_asin
@@ -70,11 +80,13 @@ body:
       label: Amazon ASIN
       description: "10桁。不明なら空欄で変更なし。"
 
+
   - type: input
     id: pub_month
     attributes:
       label: 刊行年月
       description: "例：2026-10"
+
 
   - type: input
     id: genres
@@ -82,15 +94,18 @@ body:
       label: 分野
       description: "複数の場合は | で区切ります。"
 
+
   - type: input
     id: series
     attributes:
       label: シリーズ
 
+
   - type: input
     id: series_volume
     attributes:
       label: シリーズ巻数
+
 
   - type: input
     id: price_body
@@ -98,10 +113,12 @@ body:
       label: 本体価格
       description: "数字のみ。"
 
+
   - type: input
     id: format
     attributes:
       label: 判型
+
 
   - type: input
     id: pages
@@ -109,30 +126,50 @@ body:
       label: 頁数
       description: "数字のみ。"
 
+
   - type: textarea
     id: hp_keywords
     attributes:
       label: HP検索用キーワード
+
 
   - type: input
     id: pub_note
     attributes:
       label: 刊行年月備考
 
+
   - type: textarea
     id: description
     attributes:
       label: 内容紹介
+
 
   - type: textarea
     id: toc
     attributes:
       label: 目次
 
+
   - type: textarea
     id: original_title
     attributes:
       label: 原書名
+
+
+  - type: markdown
+    attributes:
+      value: |
+        ### 長文の修正について
+        内容紹介・目次などが長い場合は、管理画面で確認した変更内容を下の「修正データ」にまとめて自動入力します。
+        この場合、上の個別欄が空欄でも、管理画面で確認した内容が更新されます。
+
+  - type: textarea
+    id: edit_payload
+    attributes:
+      label: 修正データ
+      description: "長文修正時に管理画面から自動入力されます。内容を変更しないでください。通常の修正では空欄のままです。"
+
 
   - type: markdown
     attributes:

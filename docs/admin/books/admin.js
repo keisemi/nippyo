@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+
   const queryInput = document.getElementById("book-query");
   const searchButton = document.getElementById("search-button");
   const results = document.getElementById("results");
@@ -11,15 +12,18 @@
   const modalClose = document.getElementById("book-modal-close");
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
 
+
   function openIssueForm(url) {
     window.open(url, "_blank", "noopener");
   }
+
 
   let books = [];
   let dataVersion = Date.now().toString();
   let lastModalTrigger = null;
   let searchIndexPromise = null;
   const detailCache = new Map();
+
 
   const editFields = [
     ["title", "書名", "input"],
@@ -44,7 +48,35 @@
     ["original_title", "原書名", "textarea"],
   ];
 
+
   const issueFieldName = (id) => id === "pub_month_raw" ? "pub_month" : id;
+
+
+  function bytesToBase64Url(bytes) {
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+  }
+
+
+  async function encodeCompactEditPayload(payload) {
+    const json = JSON.stringify(payload);
+    if (typeof CompressionStream === "undefined") {
+      return `json1:${json}`;
+    }
+    const compressed = new Blob([json], { type: "application/json" })
+      .stream()
+      .pipeThrough(new CompressionStream("gzip"));
+    const bytes = new Uint8Array(await new Response(compressed).arrayBuffer());
+    return `gz1:${bytesToBase64Url(bytes)}`;
+  }
+
 
   function normalize(value) {
     return String(value ?? "")
@@ -53,11 +85,13 @@
       .replace(/[\s\-‐-‒–—―ー]/g, "");
   }
 
+
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
     })[c]);
   }
+
 
   function safeLinkHref(value) {
     const href = String(value || "").trim();
@@ -65,6 +99,7 @@
     if (/^(?:\.\.?\/|\/)/.test(href)) return href;
     return "";
   }
+
 
   function richText(value) {
     const source = String(value || "");
@@ -87,13 +122,16 @@
     return out.replace(/\r?\n/g, "<br>");
   }
 
+
   function authorDisplay(value) {
     return String(value || "").split("|").filter(Boolean).join("／");
   }
 
+
   function subtitle(book) {
     return [book.subtitle_before, book.subtitle_after].filter(Boolean).join(" ");
   }
+
 
   function formatMonth(value) {
     const m = String(value || "").match(/^(\d{4})[.\/-]?(\d{1,2})?$/);
@@ -101,16 +139,19 @@
     return m[2] ? `${m[1]}年${Number(m[2])}月` : `${m[1]}年`;
   }
 
+
   function detailRow(label, value) {
     if (value === null || value === undefined || value === "") return "";
     return `<div class="detail-row"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
   }
+
 
   function newUrl() {
     const params = new URLSearchParams();
     params.set("template", "book_new.yml");
     return `${issueBase}?${params.toString()}`;
   }
+
 
   function hideUrl(book) {
     const params = new URLSearchParams();
@@ -121,6 +162,7 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+
   function restoreUrl(book) {
     const params = new URLSearchParams();
     params.set("template", "book_restore.yml");
@@ -129,6 +171,7 @@
     params.set("current_title", book.title);
     return `${issueBase}?${params.toString()}`;
   }
+
 
   function deleteUrl(book) {
     const params = new URLSearchParams();
@@ -139,6 +182,7 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+
   function closeBookModal() {
     if (!modal || modal.hidden) return;
     modal.hidden = true;
@@ -146,6 +190,7 @@
     if (lastModalTrigger && typeof lastModalTrigger.focus === "function") lastModalTrigger.focus();
     lastModalTrigger = null;
   }
+
 
   async function readDataVersion() {
     const stamp = Date.now().toString();
@@ -160,6 +205,7 @@
     }
     return stamp;
   }
+
 
   function expandRows(payload, key) {
     const rows = payload && Array.isArray(payload[key]) ? payload[key] : null;
@@ -177,6 +223,7 @@
     });
   }
 
+
   function normalizeSearchBook(book) {
     const statusFlags = Number(book.status_flags || 0);
     return {
@@ -187,6 +234,7 @@
       has_related_info: book.has_related_info ?? Boolean(statusFlags & 2),
     };
   }
+
 
   async function loadSearchData() {
     dataVersion = await readDataVersion();
@@ -200,6 +248,7 @@
     }
     return expandRows(payload, "books").map(normalizeSearchBook);
   }
+
 
   async function ensureSearchIndex() {
     if (!searchIndexPromise) {
@@ -226,6 +275,7 @@
     return searchIndexPromise;
   }
 
+
   async function loadDetailShard(detailKey) {
     const key = String(detailKey || "undated");
     if (!detailCache.has(key)) {
@@ -251,12 +301,14 @@
     return detailCache.get(key);
   }
 
+
   async function loadBookDetail(book) {
     const shard = await loadDetailShard(book.detail_key);
     const detail = shard[String(book.id)];
     if (!detail) throw new Error(`書籍ID ${book.id} の詳細データが見つかりません。`);
     return { ...book, ...detail };
   }
+
 
   function fieldHtml(id, label, kind, value) {
     const common = `id="edit-${esc(id)}" data-field="${esc(id)}"`;
@@ -269,6 +321,7 @@
     }
     return `<label class="edit-field"><span>${esc(label)}</span><input type="text" ${common} value="${esc(value)}">${note}</label>`;
   }
+
 
   function adminSource(detail) {
     return {
@@ -298,11 +351,14 @@
     };
   }
 
+
   function openEditForm(book, detail, trigger) {
     const source = adminSource(detail);
     lastModalTrigger = trigger || document.activeElement;
 
+
     const fields = editFields.map(([id, label, kind]) => fieldHtml(id, label, kind, source[id] || "")).join("");
+
 
     modalContent.innerHTML = `
       <p class="admin-modal-kicker">書誌編集</p>
@@ -325,8 +381,9 @@
       </form>
     `;
 
+
     const form = document.getElementById("book-edit-form");
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const params = new URLSearchParams();
       params.set("template", "book_edit.yml");
@@ -334,6 +391,7 @@
       params.set("title", `[書誌修正] ${nextTitle}`);
       params.set("book_id", source.id);
       params.set("current_title", source.title);
+
 
       const changedItems = [];
       for (const [id, label] of editFields) {
@@ -346,16 +404,34 @@
         }
       }
 
+
       if (!changedItems.length) {
         window.alert("変更された項目がありません。");
         return;
       }
 
-      const targetUrl = `${issueBase}?${params.toString()}`;
+
+      let targetUrl = `${issueBase}?${params.toString()}`;
       if (targetUrl.length > 7000) {
-        window.alert("変更内容が長いため、一度に確認画面へ送れません。内容紹介・目次などの長文は1項目ずつ更新してください。");
-        return;
+        const compactPayload = {};
+        for (const item of changedItems) {
+          compactPayload[item.label] = item.after === "" && item.before !== "" ? "__CLEAR__" : item.after;
+        }
+
+        const compactParams = new URLSearchParams();
+        compactParams.set("template", "book_edit.yml");
+        compactParams.set("title", `[書誌修正] ${nextTitle}`);
+        compactParams.set("book_id", source.id);
+        compactParams.set("current_title", source.title);
+        compactParams.set("edit_payload", await encodeCompactEditPayload(compactPayload));
+        targetUrl = `${issueBase}?${compactParams.toString()}`;
+
+        if (targetUrl.length > 7000) {
+          window.alert("変更内容が非常に長く、長文用の送信形式でも確認画面へ送れません。管理担当者にご連絡ください。");
+          return;
+        }
       }
+
 
       const preview = document.createElement("div");
       preview.id = "book-change-confirmation";
@@ -389,6 +465,7 @@
         </div>
       `;
 
+
       const editGrid = form.querySelector(".edit-grid");
       const adminNote = form.querySelector(".admin-note");
       const submitBox = form.querySelector(".edit-submit-box");
@@ -398,6 +475,7 @@
       adminNote.hidden = true;
       submitBox.hidden = true;
       form.insertBefore(preview, submitBox);
+
 
       document.getElementById("continue-book-update").addEventListener("click", () => {
         openIssueForm(targetUrl);
@@ -413,10 +491,12 @@
     });
     document.getElementById("back-to-detail").addEventListener("click", () => renderBookModal(book, detail, trigger));
 
+
     modal.hidden = false;
     document.body.classList.add("modal-open");
     modalClose?.focus();
   }
+
 
   function openHide(book) {
     const ok = window.confirm(
@@ -429,6 +509,7 @@
     openIssueForm(hideUrl(book));
   }
 
+
   function openRestore(book) {
     const ok = window.confirm(
       `「${book.title}」を再公開します。\n\n` +
@@ -439,6 +520,7 @@
     if (!ok) return;
     openIssueForm(restoreUrl(book));
   }
+
 
   function openDelete(book) {
     const ok = window.confirm(
@@ -453,12 +535,14 @@
     openIssueForm(deleteUrl(book));
   }
 
+
   function renderBookModal(book, detail, trigger) {
     const sub = subtitle(detail);
     const series = [detail.series, detail.series_volume].filter(Boolean).join(" ");
     const isbnRows = [];
     if (detail.isbn_new) isbnRows.push(detailRow("ISBN", detail.isbn_new));
     if (detail.isbn_old && detail.isbn_old !== detail.isbn_new) isbnRows.push(detailRow("旧ISBN", detail.isbn_old));
+
 
     const metaRows = [
       detailRow("書籍ID", detail.id),
@@ -472,6 +556,7 @@
       detail.original_title ? detailRow("原書名", detail.original_title) : ""
     ].filter(Boolean).join("");
 
+
     const genreTags = (detail.genres || []).map((g) => `<span class="tag">${esc(g)}</span>`).join("");
     const statusItems = [];
     if (detail.errata_pdf) statusItems.push("正誤表ファイルが登録されています");
@@ -479,6 +564,7 @@
     const publicationAction = detail.published === false
       ? '<p class="publication-stopped">この書籍は現在、公開停止中です。</p><button class="admin-btn" id="restore-book" type="button">この書誌を再公開</button>'
       : '<button class="admin-btn danger" id="hide-book" type="button">この書誌を公開停止</button>';
+
 
     modalContent.innerHTML = `
       <p class="admin-modal-kicker">現在の登録内容</p>
@@ -505,19 +591,23 @@
     document.getElementById("restore-book")?.addEventListener("click", () => openRestore(detail));
     document.getElementById("delete-book")?.addEventListener("click", () => openDelete(detail));
 
+
     modal.hidden = false;
     document.body.classList.add("modal-open");
     modalClose?.focus();
   }
 
+
   async function openBookModal(book, trigger) {
     if (!book || !modal || !modalContent) return;
     lastModalTrigger = trigger || document.activeElement;
+
 
     modalContent.innerHTML = `<p class="admin-modal-kicker">現在の登録内容</p><h2 id="admin-modal-title" class="admin-modal-title">${esc(book.title || "（書名未登録）")}</h2><p>詳細情報を読み込んでいます…</p>`;
     modal.hidden = false;
     document.body.classList.add("modal-open");
     modalClose?.focus();
+
 
     try {
       const detail = await loadBookDetail(book);
@@ -527,6 +617,7 @@
       modalContent.innerHTML = `<p class="admin-modal-kicker">現在の登録内容</p><h2 id="admin-modal-title" class="admin-modal-title">${esc(book.title || "（書名未登録）")}</h2><p>詳細情報を読み込めませんでした。ページを再読み込みしてください。</p>`;
     }
   }
+
 
   function render(items) {
     results.replaceChildren();
@@ -539,10 +630,12 @@
       return;
     }
 
+
     count.textContent = `${items.length.toLocaleString()}件表示`;
     items.forEach((book) => {
       const card = document.createElement("article");
       card.className = "book-result";
+
 
       const h2 = document.createElement("h2");
       const titleButton = document.createElement("button");
@@ -552,6 +645,7 @@
       titleButton.addEventListener("click", () => openBookModal(book, titleButton));
       h2.appendChild(titleButton);
       card.appendChild(h2);
+
 
       const meta = document.createElement("div");
       meta.className = "book-meta";
@@ -572,8 +666,10 @@
       meta.appendChild(status);
       card.appendChild(meta);
 
+
       const actions = document.createElement("div");
       actions.className = "book-actions";
+
 
       const detailButton = document.createElement("button");
       detailButton.type = "button";
@@ -582,10 +678,12 @@
       detailButton.addEventListener("click", () => openBookModal(book, detailButton));
       actions.appendChild(detailButton);
 
+
       card.appendChild(actions);
       results.appendChild(card);
     });
   }
+
 
   async function search() {
     const terms = queryInput.value.trim().split(/\s+/).filter(Boolean).map(normalize);
@@ -595,6 +693,7 @@
       return;
     }
 
+
     try {
       await ensureSearchIndex();
     } catch (error) {
@@ -603,15 +702,18 @@
       return;
     }
 
+
     const matched = books.filter((book) =>
       terms.every((term) => String(book.__adminSearch || "").includes(term))
     ).slice(0, 50);
+
 
     render(matched);
     if (matched.length === 50) {
       count.textContent += "（上位50件。さらに絞り込んでください）";
     }
   }
+
 
   async function init() {
     try {
@@ -636,6 +738,7 @@
       count.textContent = "書誌データを読み込めませんでした。ページを再読み込みしてください。";
     }
   }
+
 
   init();
 })();
