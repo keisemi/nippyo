@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+
   const selector = document.getElementById("magazine-selector");
   const choices = [...selector.querySelectorAll("[data-magazine-id]")];
   const queryInput = document.getElementById("issue-query");
@@ -14,15 +15,42 @@
   const newIssueSource = document.getElementById("new-issue-source");
   const newIssueButton = document.getElementById("new-issue-button");
 
+
   let issues = [];
   let selectedMagazineId = "";
   let version = Date.now().toString();
   const detailCache = new Map();
   const issueBase = "https://github.com/keisemi/nippyo/issues/new";
 
+
   function openIssueForm(url) {
     window.open(url, "_blank", "noopener");
   }
+
+  function bytesToBase64Url(bytes) {
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+  }
+
+  async function encodeCompactEditPayload(payload) {
+    const json = JSON.stringify(payload);
+    if (typeof CompressionStream === "undefined") {
+      return `json1:${json}`;
+    }
+    const compressed = new Blob([json], { type: "application/json" })
+      .stream()
+      .pipeThrough(new CompressionStream("gzip"));
+    const bytes = new Uint8Array(await new Response(compressed).arrayBuffer());
+    return `gz1:${bytesToBase64Url(bytes)}`;
+  }
+
 
   function newIssueUrl() {
     const params = new URLSearchParams();
@@ -30,6 +58,7 @@
     params.set("new_book_id", nextAvailableBookId());
     return `${issueBase}?${params.toString()}`;
   }
+
 
   function publicationUrl(detail, publish) {
     const params = new URLSearchParams();
@@ -42,6 +71,7 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+
   function deleteUrl(detail) {
     const params = new URLSearchParams();
     params.set("template", "magazine_delete.yml");
@@ -52,6 +82,7 @@
     params.set("current_issue", String(detail.issue || ""));
     return `${issueBase}?${params.toString()}`;
   }
+
 
   function coverIssueUrl(detail, operation) {
     const params = new URLSearchParams();
@@ -68,6 +99,7 @@
     return `${issueBase}?${params.toString()}`;
   }
 
+
   function openPublicationChange(detail, publish) {
     const action = publish ? "公開" : "非公開";
     const ok = window.confirm(
@@ -81,6 +113,7 @@
     openIssueForm(publicationUrl(detail, publish));
   }
 
+
   function openDelete(detail) {
     const ok = window.confirm(
       `「${detail.magazine_name} ${detail.issue || ""}」の書誌情報そのものを削除します。\n\n` +
@@ -93,6 +126,7 @@
     if (!ok) return;
     openIssueForm(deleteUrl(detail));
   }
+
 
   const ebookLabels = {
     kindle:"Amazon Kindle",
@@ -114,6 +148,8 @@
   };
 
 
+
+
   const editFields = [
     ["issue","雑誌月号","input","基本情報"],
     ["issue_number","雑誌通算番号","input","基本情報"],
@@ -126,12 +162,14 @@
     ["magazine_code_1","雑誌コード(1)","input","基本情報"],
     ["magazine_code_2","雑誌コード(2)","input","基本情報"],
 
+
     ["subtitle_before","前副題","input","特集1"],
     ["feature","特集","input","特集1"],
     ["feature_yomi","特集よみ","input","特集1"],
     ["feature_subtitle","後副題","input","特集1"],
     ["description_heading","特集内容紹介文見出","input","特集1"],
     ["description","特集内容紹介文","textarea","特集1"],
+
 
     ["subtitle_before2","前副題2","input","特集2"],
     ["feature2","特集2","input","特集2"],
@@ -140,7 +178,9 @@
     ["description_heading2","特集2 内容紹介文見出","input","特集2"],
     ["description2","特集2 内容紹介文","textarea","特集2"],
 
+
     ["toc","目次","textarea-large","目次"],
+
 
     ["external_link_title_1","外部リンク1 タイトル","input","外部リンク"],
     ["external_link_comment_1","外部リンク1 コメント","textarea","外部リンク"],
@@ -152,8 +192,10 @@
     ["external_link_comment_3","外部リンク3 コメント","textarea","外部リンク"],
     ["external_link_url_3","外部リンク3 URL","input","外部リンク"],
 
+
     ["editor","本誌編者","textarea","その他"],
   ];
+
 
   const issueFieldIds = {
     issue:"mag_issue",
@@ -191,11 +233,13 @@
     editor:"editor",
   };
 
+
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (c) => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     })[c]);
   }
+
 
   function normalize(value) {
     return String(value ?? "")
@@ -204,6 +248,7 @@
       .replace(/[‐-‒–—―−ーｰ]/g, "-")
       .replace(/[・･,，、。\./:;；：()（）\[\]【】「」『』<>＜＞\s-]/g, "");
   }
+
 
   function decodeRows(payload) {
     if (!payload || !Array.isArray(payload.columns) || !Array.isArray(payload.issues)) {
@@ -215,6 +260,7 @@
       return item;
     });
   }
+
 
   async function readVersion() {
     const stamp = Date.now().toString();
@@ -228,6 +274,7 @@
     return stamp;
   }
 
+
   async function loadData() {
     version = await readVersion();
     const [dataResponse,indexResponse] = await Promise.all([
@@ -237,13 +284,16 @@
     if (!dataResponse.ok) throw new Error(`雑誌データを取得できませんでした（HTTP ${dataResponse.status}）`);
     if (!indexResponse.ok) throw new Error(`雑誌検索索引を取得できませんでした（HTTP ${indexResponse.status}）`);
 
+
     const payload = await dataResponse.json();
     const indexPayload = await indexResponse.json();
     const rows = decodeRows(payload);
 
+
     if (!Array.isArray(indexPayload.search) || indexPayload.search.length !== rows.length) {
       throw new Error("雑誌検索索引と表示データの件数が一致しません。");
     }
+
 
     rows.forEach((issue,index) => {
       issue.__search = normalize([
@@ -263,35 +313,43 @@
       ].filter(Boolean).join(" "));
     });
 
+
     return rows;
   }
+
 
   function issueDetailUrl(issue) {
     return `../../books/?${new URLSearchParams({mag:String(issue.id || "")}).toString()}`;
   }
 
+
   function backnumberUrl(issue) {
     return `../../magazines/backnumbers/?${new URLSearchParams({magazine:String(issue.magazine_id || "")}).toString()}`;
   }
+
 
   function coverUrl(issue) {
     if (!issue.cover) return "";
     return `../../${String(issue.cover).replace(/^\/+/,"")}`;
   }
 
+
   function featureText(issue) {
-    return [issue.feature, issue.feature_subtitle].filter(Boolean).join("　");
+    return [issue.feature, issue.feature_subtitle].filter(Boolean).join(" ");
   }
+
 
   function yen(value) {
     const number = Number(value);
     return Number.isFinite(number) && number > 0 ? `${number.toLocaleString("ja-JP")}円` : "";
   }
 
+
   function closeDetail() {
     detailOverlay.hidden = true;
     document.body.classList.remove("detail-open");
   }
+
 
   async function loadDetail(issue) {
     const key = issue.pub_year ? String(issue.pub_year) : "undated";
@@ -310,10 +368,12 @@
     return detail;
   }
 
+
   function row(label,value) {
     if (value === null || value === undefined || value === "") return "";
     return `<tr><th>${esc(label)}</th><td>${esc(value)}</td></tr>`;
   }
+
 
   function renderLinks(title, links, formatter) {
     if (!Array.isArray(links) || !links.length) return "";
@@ -325,6 +385,8 @@
       </section>
     `;
   }
+
+
 
 
   function editSource(detail) {
@@ -343,12 +405,14 @@
       magazine_code_1: text(detail.magazine_code_1),
       magazine_code_2: text(detail.magazine_code_2),
 
+
       subtitle_before: text(detail.subtitle_before),
       feature: text(detail.feature),
       feature_yomi: text(detail.feature_yomi),
       feature_subtitle: text(detail.feature_subtitle),
       description_heading: text(detail.description_heading),
       description: text(detail.description),
+
 
       subtitle_before2: text(detail.subtitle_before2),
       feature2: text(detail.feature2),
@@ -357,7 +421,9 @@
       description_heading2: text(detail.description_heading2),
       description2: text(detail.description2),
 
+
       toc: text(detail.toc),
+
 
       external_link_title_1: text(link(0).title),
       external_link_comment_1: text(link(0).comment),
@@ -369,9 +435,11 @@
       external_link_comment_3: text(link(2).comment),
       external_link_url_3: text(link(2).url),
 
+
       editor: text(detail.editor),
     };
   }
+
 
   function editFieldHtml(id,label,kind,value) {
     const wide = kind !== "input" ? " wide" : "";
@@ -381,6 +449,7 @@
     }
     return `<label class="edit-field"><span>${esc(label)}</span><input id="edit-${esc(id)}" type="text" value="${esc(value)}"></label>`;
   }
+
 
   function openEditForm(detail) {
     const source = editSource(detail);
@@ -396,9 +465,10 @@
       return `<section class="edit-section"><h3>${esc(group)}</h3><div class="edit-grid">${fields}</div></section>`;
     }).join("");
 
+
     detailContent.innerHTML = `
       <p class="detail-kicker">雑誌号編集</p>
-      <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　${esc(detail.issue || "")}</h2>
+      <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)} ${esc(detail.issue || "")}</h2>
       <p class="edit-intro">現在登録されている値を入力済みにしています。この画面ではまだCSVは変更されません。必要な箇所だけ変更し、最後にGitHubの確認フォームへ進んでください。変更していない項目はCSVを書き換えません。</p>
       <form id="magazine-edit-form">
         <div class="edit-fixed">
@@ -417,9 +487,11 @@
       </form>
     `;
 
+
     document.getElementById("back-to-magazine-detail").addEventListener("click", () => renderDetail(detail));
-    document.getElementById("magazine-edit-form").addEventListener("submit", (event) => {
+    document.getElementById("magazine-edit-form").addEventListener("submit", async (event) => {
       event.preventDefault();
+
 
       const params = new URLSearchParams();
       params.set("template","magazine_edit.yml");
@@ -427,6 +499,7 @@
       params.set("magazine_id",String(detail.magazine_id || ""));
       params.set("magazine_name",String(detail.magazine_name || ""));
       params.set("current_issue",String(detail.issue || ""));
+
 
       const changedItems = [];
       for (const [id,label] of editFields) {
@@ -438,19 +511,40 @@
         }
       }
 
+
       if (!changedItems.length) {
         window.alert("変更された項目がありません。");
         return;
       }
 
+
       const nextIssue = String(document.getElementById("edit-issue").value || "").trim() || String(detail.issue || "");
       params.set("title",`[雑誌号修正] ${detail.magazine_name} ${nextIssue}`);
 
-      const targetUrl = `${issueBase}?${params.toString()}`;
+
+      let targetUrl = `${issueBase}?${params.toString()}`;
       if (targetUrl.length > 7000) {
-        window.alert("変更内容が長いため、一度に確認フォームへ送れません。目次・内容紹介などの長文は、ほかの変更と分けて1項目ずつ更新してください。");
-        return;
+        const compactPayload = {};
+        for (const item of changedItems) {
+          compactPayload[item.label] = item.after === "" && item.before !== "" ? "__CLEAR__" : item.after;
+        }
+
+        const compactParams = new URLSearchParams();
+        compactParams.set("template", "magazine_edit.yml");
+        compactParams.set("title", `[雑誌号修正] ${detail.magazine_name} ${nextIssue}`);
+        compactParams.set("book_id", String(detail.id || ""));
+        compactParams.set("magazine_id", String(detail.magazine_id || ""));
+        compactParams.set("magazine_name", String(detail.magazine_name || ""));
+        compactParams.set("current_issue", String(detail.issue || ""));
+        compactParams.set("edit_payload", await encodeCompactEditPayload(compactPayload));
+        targetUrl = `${issueBase}?${compactParams.toString()}`;
+
+        if (targetUrl.length > 7000) {
+          window.alert("変更内容が非常に長く、長文用の送信形式でも確認フォームへ送れません。管理担当者にご連絡ください。");
+          return;
+        }
       }
+
 
       const priorityIds = new Set(["issue","pub_date","feature","feature2","issue_number","price_body"]);
       const orderedItems = [
@@ -491,6 +585,7 @@
         </div>
       `;
 
+
       const sections = Array.from(document.querySelectorAll("#magazine-edit-form .edit-section"));
       const submitBox = document.querySelector("#magazine-edit-form > .edit-submit-box");
       const existingPreview = document.getElementById("magazine-change-confirmation");
@@ -498,6 +593,7 @@
       sections.forEach((section) => { section.hidden = true; });
       submitBox.hidden = true;
       submitBox.parentNode.insertBefore(preview, submitBox);
+
 
       document.getElementById("continue-magazine-update").addEventListener("click", () => {
         openIssueForm(targetUrl);
@@ -511,6 +607,8 @@
       preview.scrollIntoView({ block: "start" });
     });
   }
+
+
 
 
   function nextAvailableBookId() {
@@ -528,6 +626,7 @@
     return String(candidate);
   }
 
+
   function nextIssueSource(detail) {
     const text = (value) => value === null || value === undefined ? "" : String(value);
     return {
@@ -543,12 +642,14 @@
       magazine_code_1: "",
       magazine_code_2: "",
 
+
       subtitle_before: "",
       feature: "",
       feature_yomi: "",
       feature_subtitle: "",
       description_heading: "",
       description: "",
+
 
       subtitle_before2: "",
       feature2: "",
@@ -557,7 +658,9 @@
       description_heading2: "",
       description2: "",
 
+
       toc: "",
+
 
       external_link_title_1: "",
       external_link_comment_1: "",
@@ -569,9 +672,11 @@
       external_link_comment_3: "",
       external_link_url_3: "",
 
+
       editor: text(detail.editor),
     };
   }
+
 
   function nextIssueFieldHtml(id,label,kind,value,help="") {
     const wide = kind !== "input" ? " wide" : "";
@@ -584,8 +689,11 @@
   }
 
 
+
+
   function openNextIssueForm(detail) {
     const source = nextIssueSource(detail);
+
 
     const basics = [
       nextIssueFieldHtml("book_id","書籍ID","input",source.book_id,"既存の雑誌書籍IDの最大値＋1を自動入力します。必要なら変更できます。"),
@@ -601,6 +709,7 @@
       nextIssueFieldHtml("magazine_code_2","雑誌コード(2)","input",source.magazine_code_2),
     ].join("");
 
+
     const feature1 = [
       nextIssueFieldHtml("subtitle_before","前副題","input",""),
       nextIssueFieldHtml("feature","特集","input",""),
@@ -610,6 +719,7 @@
       nextIssueFieldHtml("description","特集内容紹介文","textarea",""),
     ].join("");
 
+
     const feature2 = [
       nextIssueFieldHtml("subtitle_before2","前副題2","input",""),
       nextIssueFieldHtml("feature2","特集2","input",""),
@@ -618,6 +728,7 @@
       nextIssueFieldHtml("description_heading2","特集2 内容紹介文見出","input",""),
       nextIssueFieldHtml("description2","特集2 内容紹介文","textarea",""),
     ].join("");
+
 
     const links = [
       nextIssueFieldHtml("external_link_title_1","外部リンク1 タイトル","input",""),
@@ -631,14 +742,16 @@
       nextIssueFieldHtml("external_link_url_3","外部リンク3 URL","input",""),
     ].join("");
 
+
     detailContent.innerHTML = `
       <p class="detail-kicker">次号登録の準備</p>
-      <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　次号</h2>
+      <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)} 次号</h2>
       <p class="edit-intro">
         「${esc(detail.issue || "前号")}」を雛形にしています。
         <strong>雑誌ID・雑誌名・判型・本誌編者</strong>だけを引き継ぎ、
         書籍ID・月号・通巻・発刊日・ISBN・価格・頁数・特集・目次・外部リンクなどは空欄に戻しています。
       </p>
+
 
       <div class="edit-fixed">
         <div><strong>雑誌ID</strong><br><code>${esc(detail.magazine_id)}</code></div>
@@ -646,20 +759,24 @@
         <div><strong>雛形にした号</strong><br>${esc(detail.issue || "")}</div>
       </div>
 
+
       <section class="edit-section">
         <h3>基本情報</h3>
         <div class="edit-grid">${basics}</div>
       </section>
+
 
       <section class="edit-section">
         <h3>特集1</h3>
         <div class="edit-grid">${feature1}</div>
       </section>
 
+
       <section class="edit-section">
         <h3>特集2</h3>
         <div class="edit-grid">${feature2}</div>
       </section>
+
 
       <section class="edit-section">
         <h3>目次</h3>
@@ -668,10 +785,12 @@
         </div>
       </section>
 
+
       <section class="edit-section">
         <h3>外部リンク</h3>
         <div class="edit-grid">${links}</div>
       </section>
+
 
       <section class="edit-section">
         <h3>その他</h3>
@@ -679,6 +798,7 @@
           ${nextIssueFieldHtml("editor","本誌編者","textarea",source.editor,"前号から自動継承")}
         </div>
       </section>
+
 
       <div class="edit-submit-box">
         <strong>新しい号として登録します。</strong><br>
@@ -690,6 +810,7 @@
         </div>
       </div>
     `;
+
 
     document.getElementById("back-from-next-issue").addEventListener("click", () => renderDetail(detail));
     document.getElementById("submit-next-issue").addEventListener("click", async () => {
@@ -708,6 +829,7 @@
           return;
         }
       }
+
 
       if (!/^[A-Za-z0-9_-]+$/.test(get("book_id"))) {
         window.alert("書籍IDは半角英数字・ハイフン・アンダースコアで入力してください。");
@@ -735,6 +857,7 @@
         }
       }
 
+
       submitButton.disabled = true;
       submitButton.textContent = "登録内容を準備中…";
       try {
@@ -750,6 +873,7 @@
         params.set("issue_number",get("issue_number"));
         params.set("pub_date",get("pub_date"));
 
+
         const targetUrl = `${issueBase}?${params.toString()}`;
         openIssueForm(targetUrl);
       } catch (error) {
@@ -761,10 +885,11 @@
     });
   }
 
+
   function renderDetail(detail) {
     const cover = coverUrl(detail);
     const feature1 = featureText(detail);
-    const feature2 = [detail.feature2, detail.feature2_subtitle].filter(Boolean).join("　");
+    const feature2 = [detail.feature2, detail.feature2_subtitle].filter(Boolean).join(" ");
     const contributors = Array.isArray(detail.contributors) ? detail.contributors.join("／") : "";
     const identifiers = [
       detail.isbn_old ? `旧ISBN：${detail.isbn_old}` : "",
@@ -773,6 +898,7 @@
       detail.magazine_code_2 ? `雑誌コード(2)：${detail.magazine_code_2}` : "",
     ].filter(Boolean).join(" ／ ");
 
+
     const external = renderLinks("外部リンク", detail.external_links, (link) => `
       <li>
         <a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.title || link.url)}</a>
@@ -780,9 +906,11 @@
       </li>
     `);
 
+
     const ebooks = renderLinks("電子書籍リンク", detail.ebook_links, (link) => `
       <li><a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(ebookLabels[link.service] || link.service || link.url)}</a></li>
     `);
+
 
     detailContent.innerHTML = `
       <div class="detail-header">
@@ -793,11 +921,12 @@
         </div>
         <div>
           <p class="detail-kicker">現在の登録内容</p>
-          <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)}　${esc(detail.issue || "")}</h2>
+          <h2 id="detail-title" class="detail-title">${esc(detail.magazine_name)} ${esc(detail.issue || "")}</h2>
           ${feature1 ? `<p class="detail-feature">特集：${esc(feature1)}</p>` : ""}
           ${feature2 ? `<p class="detail-feature">特集2：${esc(feature2)}</p>` : ""}
         </div>
       </div>
+
 
       <table class="detail-table">
         <tbody>
@@ -816,12 +945,14 @@
         </tbody>
       </table>
 
+
       ${detail.description || detail.description_heading ? `
         <section class="detail-section">
           <h3>${esc(detail.description_heading || "特集内容紹介")}</h3>
           <div class="detail-text">${esc(detail.description || "")}</div>
         </section>
       ` : ""}
+
 
       ${detail.description2 || detail.description_heading2 ? `
         <section class="detail-section">
@@ -830,12 +961,14 @@
         </section>
       ` : ""}
 
+
       ${detail.toc ? `
         <section class="detail-section">
           <h3>目次</h3>
           <div class="detail-text">${esc(detail.toc)}</div>
         </section>
       ` : ""}
+
 
       <section class="detail-section">
         <h3>この号の管理</h3>
@@ -848,6 +981,7 @@
         </div>
       </section>
 
+
       <section class="detail-section">
         <h3>この号の書影</h3>
         <p>現在の書影：<strong>${cover ? "登録済み" : "なし"}</strong></p>
@@ -857,6 +991,7 @@
         </div>
       </section>
 
+
       <section class="detail-section">
         <h3>この号の書誌情報を削除</h3>
         <p><strong>書誌情報そのものを削除する場合のみ使用してください。</strong><br>通常の掲載取り下げは「この号を非公開にする」を使用してください。削除しても雑誌書影などのファイルは自動削除しません。</p>
@@ -864,6 +999,7 @@
           <button id="delete-magazine" class="admin-btn danger" type="button">この号の書誌情報を削除</button>
         </div>
       </section>
+
 
       ${external}
       ${ebooks}
@@ -873,6 +1009,7 @@
     document.getElementById("restore-magazine")?.addEventListener("click", () => openPublicationChange(detail, true));
     document.getElementById("delete-magazine")?.addEventListener("click", () => openDelete(detail));
   }
+
 
   async function openDetail(issue) {
     detailOverlay.hidden = false;
@@ -887,8 +1024,10 @@
     }
   }
 
+
   function render(items, total) {
     results.replaceChildren();
+
 
     if (!items.length) {
       count.textContent = "該当する号がありません。";
@@ -896,11 +1035,13 @@
       return;
     }
 
+
     if (total > items.length) {
       count.textContent = `${total.toLocaleString()}件中${items.length.toLocaleString()}件表示（さらに絞り込んでください）`;
     } else {
       count.textContent = `${total.toLocaleString()}件表示`;
     }
+
 
     items.forEach((issue) => {
       const article = document.createElement("article");
@@ -909,6 +1050,7 @@
       const feature = featureText(issue);
       const contributors = Array.isArray(issue.contributors) ? issue.contributors.slice(0,6).join("／") : "";
 
+
       article.innerHTML = `
         <div>
           ${cover
@@ -916,7 +1058,7 @@
             : '<div class="issue-cover-empty">書影なし</div>'}
         </div>
         <div>
-          <h2>${esc(issue.magazine_name)}　${esc(issue.issue || "（月号未登録）")}</h2>
+          <h2>${esc(issue.magazine_name)} ${esc(issue.issue || "（月号未登録）")}</h2>
           ${feature ? `<p class="issue-feature">特集：${esc(feature)}</p>` : ""}
           <div class="issue-meta">
             <span>書籍ID：${esc(issue.id)}</span>
@@ -934,12 +1076,14 @@
         </div>
       `;
 
+
       article.querySelector("[data-detail-id]").addEventListener("click", () => {
         void openDetail(issue);
       });
       results.appendChild(article);
     });
   }
+
 
   function runSearch() {
     if (!selectedMagazineId) {
@@ -948,15 +1092,20 @@
       return;
     }
 
+
     const terms = queryInput.value.trim().split(/\s+/).filter(Boolean).map(normalize);
+
 
     const matched = issues.filter((issue) => {
       if (String(issue.magazine_id || "") !== selectedMagazineId) return false;
       return terms.every((term) => String(issue.__search || "").includes(term));
     });
 
+
     render(matched.slice(0,50), matched.length);
   }
+
+
 
 
   function publicationKey(issue) {
@@ -967,6 +1116,7 @@
     }
     return Number(issue?.pub_year || 0) * 10000;
   }
+
 
   function latestIssueForMagazine(magazineId) {
     const candidates = issues.filter((issue) => String(issue.magazine_id || "") === String(magazineId || ""));
@@ -980,6 +1130,7 @@
       return String(b.id || "").localeCompare(String(a.id || ""), "ja", {numeric:true});
     })[0];
   }
+
 
   function updateNewIssueAction() {
     const latest = latestIssueForMagazine(selectedMagazineId);
@@ -999,6 +1150,7 @@
     newIssueAction.hidden = false;
   }
 
+
   async function openNextIssueFrom(issue) {
     if (!issue) return;
     detailOverlay.hidden = false;
@@ -1013,6 +1165,7 @@
     }
   }
 
+
   function selectMagazine(id) {
     selectedMagazineId = String(id || "");
     choices.forEach((button) => {
@@ -1023,9 +1176,11 @@
     runSearch();
   }
 
+
   async function init() {
     try {
       issues = await loadData();
+
 
       choices.forEach((button) => {
         button.addEventListener("click", () => selectMagazine(button.dataset.magazineId));
@@ -1037,6 +1192,7 @@
       queryInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") runSearch();
       });
+
 
       detailClose.addEventListener("click", closeDetail);
       detailOverlay.addEventListener("click", (event) => {
@@ -1051,5 +1207,7 @@
     }
   }
 
+
   init();
 })();
+

@@ -8,9 +8,11 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT / "data" / "magazines"
 NO_RESPONSE = "_No response_"
+
 
 MAGAZINES = {
     "1": ("法律時報", "01_horitsu_jiho.csv"),
@@ -20,6 +22,7 @@ MAGAZINES = {
     "6": ("こころの科学", "05_kokoro_no_kagaku.csv"),
     "7": ("そだちの科学", "06_sodachi_no_kagaku.csv"),
 }
+
 
 LABEL_TO_COLUMN = {
     "雑誌月号": "雑誌月号",
@@ -57,6 +60,9 @@ LABEL_TO_COLUMN = {
     "本誌編者": "本誌編者",
 }
 
+COMPACT_EDIT_LABELS = set(LABEL_TO_COLUMN)
+
+
 # 雛形号から新号へコピーしてはいけない、号ごとの項目。
 # ここにない列（WEB公開属性、出版形態、雑誌ID、商品別消費税率等）は固定項目として継承する。
 NEW_ISSUE_CLEAR_COLUMNS = {
@@ -78,6 +84,8 @@ NEW_ISSUE_CLEAR_COLUMNS = {
 }
 
 
+
+
 def get_issue() -> dict:
     event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
     if not event_path:
@@ -90,11 +98,13 @@ def get_issue() -> dict:
     return issue
 
 
+
+
 def parse_sections(body: str) -> dict[str, str]:
     known = {
         "書籍ID", "雑誌ID", "雑誌名", "現在の雑誌月号", "確認",
         "削除確認用の書籍ID", "削除の確認",
-        "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID", "登録データ", "公開状態",
+        "雛形号の書籍ID", "雛形号の雑誌月号", "新しい書籍ID", "登録データ", "修正データ", "公開状態",
         *LABEL_TO_COLUMN.keys(),
     }
     sections: dict[str, list[str]] = {}
@@ -107,6 +117,7 @@ def parse_sections(body: str) -> dict[str, str]:
         if current is not None:
             sections[current].append(line)
 
+
     out: dict[str, str] = {}
     for key, lines in sections.items():
         value = "\n".join(lines).strip()
@@ -115,6 +126,42 @@ def parse_sections(body: str) -> dict[str, str]:
         out[key] = value
     return out
 
+
+
+
+
+
+def decode_edit_payload(value: str) -> dict[str, str]:
+    value = (value or "").strip()
+    if not value:
+        return {}
+    try:
+        if value.startswith("gz1:"):
+            encoded = value[4:]
+            encoded += "=" * (-len(encoded) % 4)
+            compressed = base64.urlsafe_b64decode(encoded.encode("ascii"))
+            raw = gzip.decompress(compressed).decode("utf-8")
+            payload = json.loads(raw)
+        elif value.startswith("json1:"):
+            payload = json.loads(value[6:])
+        else:
+            raise ValueError("未対応の修正データ形式")
+    except Exception as error:
+        raise SystemExit(f"修正データを復元できません: {error}") from error
+
+    if not isinstance(payload, dict) or not payload:
+        raise SystemExit("修正データが空、またはオブジェクト形式ではありません。")
+
+    unknown = sorted(set(payload) - COMPACT_EDIT_LABELS)
+    if unknown:
+        raise SystemExit("修正データに未対応の項目があります: " + ", ".join(unknown))
+
+    out: dict[str, str] = {}
+    for key, item in payload.items():
+        if not isinstance(item, str):
+            raise SystemExit(f"修正データの値が文字列ではありません: {key}")
+        out[key] = item
+    return out
 
 
 def decode_registration_payload(value: str) -> dict[str, str]:
@@ -133,8 +180,10 @@ def decode_registration_payload(value: str) -> dict[str, str]:
     except Exception as error:
         raise SystemExit(f"登録データを復元できません: {error}") from error
 
+
     if not isinstance(payload, dict):
         raise SystemExit("登録データがオブジェクトではありません。")
+
 
     allowed = {
         "雛形号の書籍ID", "雛形号の雑誌月号", "雑誌ID", "雑誌名", "新しい書籍ID",
@@ -143,6 +192,7 @@ def decode_registration_payload(value: str) -> dict[str, str]:
     unknown = sorted(set(payload) - allowed)
     if unknown:
         raise SystemExit("登録データに未対応の項目があります: " + ", ".join(unknown))
+
 
     out: dict[str, str] = {}
     for key, item in payload.items():
@@ -155,11 +205,14 @@ def decode_registration_payload(value: str) -> dict[str, str]:
     return out
 
 
+
+
 def use_compact_new_payload(fields: dict[str, str]) -> dict[str, str]:
     packed = fields.get("登録データ", "").strip()
     if not packed:
         return fields
     decoded = decode_registration_payload(packed)
+
 
     for label in (
         "雛形号の書籍ID", "雛形号の雑誌月号", "雑誌ID", "雑誌名",
@@ -178,6 +231,7 @@ def use_compact_new_payload(fields: dict[str, str]) -> dict[str, str]:
             )
     return decoded
 
+
 def read_rows(path: Path):
     last_error = None
     for encoding in ("utf-8-sig", "cp932"):
@@ -190,6 +244,8 @@ def read_rows(path: Path):
         except UnicodeDecodeError as error:
             last_error = error
     raise SystemExit(f"CSVの文字コードを判定できません: {path} ({last_error})")
+
+
 
 
 def write_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]], encoding: str) -> None:
@@ -207,21 +263,27 @@ def write_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]], en
             temp.unlink()
 
 
+
+
 def append_row(path: Path, fieldnames: list[str], row: dict[str, str], encoding: str) -> None:
     raw = path.read_bytes()
     line_ending = "\r\n" if b"\r\n" in raw[:100000] else "\n"
     codec = "utf-8" if encoding == "utf-8-sig" else encoding
+
 
     buffer = io.StringIO(newline="")
     writer = csv.DictWriter(buffer, fieldnames=fieldnames, lineterminator=line_ending, extrasaction="ignore")
     writer.writerow(row)
     payload = buffer.getvalue().encode(codec)
 
+
     prefix = b""
     if raw and not raw.endswith(b"\n") and not raw.endswith(b"\r"):
         prefix = line_ending.encode("ascii")
     with path.open("ab") as f:
         f.write(prefix + payload)
+
+
 
 
 def validate_changed_value(label: str, value: str) -> None:
@@ -237,6 +299,8 @@ def validate_changed_value(label: str, value: str) -> None:
             raise SystemExit(f"{label}は http:// または https:// から始まるURLを入力してください。")
 
 
+
+
 def validate_magazine(magazine_id: str, magazine_name: str):
     if magazine_id not in MAGAZINES:
         raise SystemExit(f"未対応の雑誌IDです: {magazine_id}")
@@ -248,10 +312,13 @@ def validate_magazine(magazine_id: str, magazine_name: str):
     return expected_name, SOURCE_DIR / filename
 
 
+
+
 def magazine_by_code1(code1: str):
     code1 = (code1 or "").strip()
     if not re.fullmatch(r"\d{5}", code1):
         raise SystemExit("雑誌コード(1)は5桁の数字で入力してください。")
+
 
     fixed = {
         "08027": "1",  # 法律時報
@@ -260,6 +327,7 @@ def magazine_by_code1(code1: str):
         "05423": "4",  # 数学セミナー
     }
     magazine_id = fixed.get(code1)
+
 
     if magazine_id is None:
         number = int(code1)
@@ -272,17 +340,22 @@ def magazine_by_code1(code1: str):
         elif 90701 <= number <= 90999:
             magazine_id = "7"
 
+
     if magazine_id is None:
         raise SystemExit(f"未対応の雑誌コード(1)です: {code1}")
 
+
     name, filename = MAGAZINES[magazine_id]
     return magazine_id, name, SOURCE_DIR / filename
+
+
 
 
 def latest_source_row(rows: list[dict[str, str]], magazine_id: str):
     candidates = [row for row in rows if str(row.get("雑誌ID") or "").strip() == magazine_id]
     if not candidates:
         raise SystemExit(f"雑誌ID {magazine_id} の雛形号がありません。")
+
 
     def sort_key(row: dict[str, str]):
         raw_date = str(row.get("発刊日") or "").strip()
@@ -295,7 +368,10 @@ def latest_source_row(rows: list[dict[str, str]], magazine_id: str):
         book_id = re.sub(r"\D", "", str(row.get("書籍ID") or ""))
         return (date_key, int(issue_no or 0), int(book_id or 0))
 
+
     return max(candidates, key=sort_key)
+
+
 
 
 def find_one(rows: list[dict[str, str]], book_id: str, label: str):
@@ -307,6 +383,8 @@ def find_one(rows: list[dict[str, str]], book_id: str, label: str):
     return matches[0]
 
 
+
+
 def all_existing_ids() -> set[str]:
     result = set()
     for _magazine_id, (_name, filename) in MAGAZINES.items():
@@ -315,11 +393,26 @@ def all_existing_ids() -> set[str]:
     return result
 
 
+
+
 def apply_edit(fields: dict[str, str]) -> None:
     book_id = fields.get("書籍ID", "").strip()
     magazine_id = fields.get("雑誌ID", "").strip()
     magazine_name = fields.get("雑誌名", "").strip()
     current_issue = fields.get("現在の雑誌月号", "").strip()
+
+    compact_value = fields.get("修正データ", "").strip()
+    if compact_value:
+        normal_values = [
+            label for label in COMPACT_EDIT_LABELS
+            if fields.get(label, "").strip()
+        ]
+        if normal_values:
+            raise SystemExit(
+                "長文用の修正データと個別の修正欄が同時に入力されています。"
+                "管理画面からやり直してください。"
+            )
+        fields.update(decode_edit_payload(compact_value))
 
     if not book_id or not magazine_id or not current_issue:
         raise SystemExit("対象号の識別情報が不足しています。管理画面からやり直してください。")
@@ -328,6 +421,7 @@ def apply_edit(fields: dict[str, str]) -> None:
     missing = sorted(set(LABEL_TO_COLUMN.values()) - set(fieldnames))
     if missing:
         raise SystemExit("雑誌CSVに必要な列がありません: " + ", ".join(missing))
+
 
     row_index, row = find_one(rows, book_id, expected_name)
     actual_magazine_id = str(row.get("雑誌ID") or "").strip()
@@ -340,6 +434,7 @@ def apply_edit(fields: dict[str, str]) -> None:
             f"管理画面表示: {current_issue}\nCSV: {actual_issue}\n"
             "管理画面を再読み込みして対象号を選び直してください。"
         )
+
 
     changes = []
     for label, column in LABEL_TO_COLUMN.items():
@@ -353,8 +448,10 @@ def apply_edit(fields: dict[str, str]) -> None:
             row[column] = value
             changes.append((label, before, value))
 
+
     if not changes:
         raise SystemExit("変更された項目がありません。")
+
 
     rows[row_index] = row
     write_rows(path, fieldnames, rows, encoding)
@@ -363,19 +460,24 @@ def apply_edit(fields: dict[str, str]) -> None:
         print(f" - {label}: {before.replace(chr(10), ' ')[:100]!r} -> {after.replace(chr(10), ' ')[:100]!r}")
 
 
+
+
 def apply_visibility(fields: dict[str, str], publish: bool) -> None:
     book_id = fields.get("書籍ID", "").strip()
     magazine_id = fields.get("雑誌ID", "").strip()
     magazine_name = fields.get("雑誌名", "").strip()
     current_issue = fields.get("現在の雑誌月号", "").strip()
 
+
     if not book_id or not magazine_id or not current_issue:
         raise SystemExit("対象号の識別情報が不足しています。雑誌管理画面からやり直してください。")
+
 
     expected_name, path = validate_magazine(magazine_id, magazine_name)
     fieldnames, rows, encoding = read_rows(path)
     if "WEB公開属性" not in fieldnames:
         raise SystemExit("雑誌CSVにWEB公開属性列がありません。")
+
 
     row_index, row = find_one(rows, book_id, expected_name)
     actual_magazine_id = str(row.get("雑誌ID") or "").strip()
@@ -389,10 +491,12 @@ def apply_visibility(fields: dict[str, str], publish: bool) -> None:
             "管理画面を再読み込みして対象号を選び直してください。"
         )
 
+
     before = str(row.get("WEB公開属性") or "").strip()
     after = "1" if publish else "0"
     if before == after:
         raise SystemExit("指定した公開状態にすでになっています。")
+
 
     row["WEB公開属性"] = after
     rows[row_index] = row
@@ -401,12 +505,15 @@ def apply_visibility(fields: dict[str, str], publish: bool) -> None:
     print(f" - WEB公開属性: {before!r} -> {after!r}")
 
 
+
+
 def apply_delete(fields: dict[str, str]) -> None:
     book_id = fields.get("書籍ID", "").strip()
     magazine_id = fields.get("雑誌ID", "").strip()
     magazine_name = fields.get("雑誌名", "").strip()
     current_issue = fields.get("現在の雑誌月号", "").strip()
     confirmation_id = fields.get("削除確認用の書籍ID", "").strip()
+
 
     if not book_id or not magazine_id or not current_issue:
         raise SystemExit("対象号の識別情報が不足しています。雑誌管理画面からやり直してください。")
@@ -417,9 +524,11 @@ def apply_delete(fields: dict[str, str]) -> None:
             f"確認入力: {confirmation_id or '（空欄）'}"
         )
 
+
     expected_name, path = validate_magazine(magazine_id, magazine_name)
     fieldnames, rows, encoding = read_rows(path)
     row_index, row = find_one(rows, book_id, expected_name)
+
 
     actual_magazine_id = str(row.get("雑誌ID") or "").strip()
     actual_issue = str(row.get("雑誌月号") or "").strip()
@@ -432,11 +541,14 @@ def apply_delete(fields: dict[str, str]) -> None:
             "管理画面を再読み込みして対象号を選び直してください。"
         )
 
+
     del rows[row_index]
     write_rows(path, fieldnames, rows, encoding)
     print(f"雑誌号書誌削除: {expected_name} / {current_issue} / 書籍ID {book_id}")
     print(f"残存件数: {len(rows):,}")
     print("雑誌書影などのファイルは削除していません。")
+
+
 
 
 def apply_new(fields: dict[str, str]) -> None:
@@ -447,12 +559,14 @@ def apply_new(fields: dict[str, str]) -> None:
     pub_date = fields.get("発刊日", "").strip()
     publication_state = fields.get("公開状態", "").strip()
 
+
     if not all([magazine_code_1, new_book_id, new_issue, new_issue_number, pub_date, publication_state]):
         raise SystemExit("新号登録に必要な情報が不足しています。GitHubフォームから登録し直してください。")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", new_book_id):
         raise SystemExit("新しい書籍IDは半角英数字・ハイフン・アンダースコアで入力してください。")
     if new_book_id in all_existing_ids():
         raise SystemExit(f"書籍ID {new_book_id} はすでに雑誌CSVで使われています。")
+
 
     if publication_state in {"非公開（登録だけする）", "非公開", "0"}:
         publication_flag = "0"
@@ -461,20 +575,24 @@ def apply_new(fields: dict[str, str]) -> None:
     else:
         raise SystemExit(f"未対応の公開状態です: {publication_state}")
 
+
     magazine_id, expected_name, path = magazine_by_code1(magazine_code_1)
     fieldnames, rows, encoding = read_rows(path)
     missing = sorted((set(LABEL_TO_COLUMN.values()) | NEW_ISSUE_CLEAR_COLUMNS | {"WEB公開属性", "雑誌ID"}) - set(fieldnames))
     if missing:
         raise SystemExit("雑誌CSVに必要な列がありません: " + ", ".join(missing))
 
+
     source = latest_source_row(rows, magazine_id)
     source_book_id = str(source.get("書籍ID") or "").strip()
     source_issue = str(source.get("雑誌月号") or "").strip()
+
 
     if any(str(row.get("雑誌月号") or "").strip() == new_issue for row in rows):
         raise SystemExit(f"雑誌月号 {new_issue} はすでに {expected_name} に登録されています。")
     if any(str(row.get("雑誌通算番号") or "").strip() == new_issue_number for row in rows):
         raise SystemExit(f"雑誌通算番号 {new_issue_number} はすでに {expected_name} に登録されています。")
+
 
     new_row = dict(source)
     for column in NEW_ISSUE_CLEAR_COLUMNS:
@@ -484,6 +602,7 @@ def apply_new(fields: dict[str, str]) -> None:
     new_row["雑誌コード(1)"] = magazine_code_1
     new_row["WEB公開属性"] = publication_flag
 
+
     for label, column in LABEL_TO_COLUMN.items():
         raw = fields.get(label, "")
         if raw == "":
@@ -491,9 +610,11 @@ def apply_new(fields: dict[str, str]) -> None:
         validate_changed_value(label, raw)
         new_row[column] = raw
 
+
     for column, label in (("雑誌月号", "雑誌月号"), ("雑誌通算番号", "雑誌通算番号"), ("発刊日", "発刊日")):
         if not str(new_row.get(column) or "").strip():
             raise SystemExit(f"{label}がありません。")
+
 
     append_row(path, fieldnames, new_row, encoding)
     print(f"雑誌号新規登録: {expected_name} / {new_issue} / 書籍ID {new_book_id}")
@@ -502,10 +623,13 @@ def apply_new(fields: dict[str, str]) -> None:
     print(f"更新ファイル: {path.relative_to(ROOT)} / encoding={encoding}")
 
 
+
+
 def main() -> None:
     issue = get_issue()
     title = str(issue.get("title") or "").strip()
     fields = parse_sections(str(issue.get("body") or ""))
+
 
     if title.startswith("[雑誌号修正]"):
         apply_edit(fields)
@@ -525,5 +649,8 @@ def main() -> None:
     raise SystemExit("雑誌号管理用Issueではありません。")
 
 
+
+
 if __name__ == "__main__":
     main()
+
