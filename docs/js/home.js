@@ -45,6 +45,7 @@
   list.innerHTML = selected.map((book) => {
     const author = String(book.author || "").split("|").filter(Boolean).join("／");
     const price = Number(book.price_body || 0);
+    const taxIncluded = price ? Math.round(price * 1.1) : 0;
     const cover = book.cover
       ? `<img class="new-book-cover" src="${esc(book.cover)}" alt="${esc(book.title)} 書影" loading="lazy">`
       : `<div class="new-book-cover-placeholder" aria-hidden="true">NIPPYO</div>`;
@@ -57,7 +58,7 @@
           <h3><a href="books/?${qs}">${esc(book.title || "（書名未登録）")}</a></h3>
           ${author ? `<p class="new-book-author">${esc(author)}</p>` : ""}
           ${book.isbn ? `<p class="new-book-meta">ISBN ${esc(book.isbn)}</p>` : ""}
-          ${price ? `<p class="new-book-price">本体 ${price.toLocaleString("ja-JP")}円</p>` : ""}
+          ${price ? `<p class="new-book-price">税込${taxIncluded.toLocaleString("ja-JP")}円（本体${price.toLocaleString("ja-JP")}円）</p>` : ""}
         </div>
       </article>`;
   }).join("");

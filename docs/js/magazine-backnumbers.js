@@ -152,6 +152,8 @@
       els.list.innerHTML = slice.map((issue) => {
         const feature = [issue.feature, issue.feature_subtitle].filter(Boolean).join("　");
         const meta = issue.issue_number ? `通巻${issue.issue_number}号` : "";
+        const price = Number(issue.price_body || 0);
+        const taxIncluded = price ? Math.round(price * 1.1) : 0;
         const url = detailUrl(issue);
         const coverAlt = [issue.magazine_name, issue.issue].filter(Boolean).join(" ");
         const cover = issue.cover
@@ -164,6 +166,7 @@
               <h2 class="backnumber-item-title">${esc(issue.issue || "（月号未登録）")}</h2>
               ${feature ? `<p class="backnumber-feature">特集：${esc(feature)}</p>` : ""}
               ${meta ? `<p class="backnumber-meta">${esc(meta)}</p>` : ""}
+              ${price ? `<p class="backnumber-meta">税込${taxIncluded.toLocaleString("ja-JP")}円（本体${price.toLocaleString("ja-JP")}円）</p>` : ""}
             </div>
           </div>
           <div class="backnumber-side">

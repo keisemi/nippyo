@@ -121,7 +121,9 @@
 
   function formatPrice(value) {
     const n = Number(value);
-    return Number.isFinite(n) && n > 0 ? `本体価格 ${n.toLocaleString("ja-JP")}円` : "";
+    if (!Number.isFinite(n) || n <= 0) return "";
+    const taxIncluded = Math.round(n * 1.1);
+    return `税込${taxIncluded.toLocaleString("ja-JP")}円（本体${n.toLocaleString("ja-JP")}円）`;
   }
 
   function subtitle(book) {
@@ -577,7 +579,7 @@
       ...isbnRows,
       detail.format ? detailRow("判型", detail.format) : "",
       detail.pages ? detailRow("頁数", `${detail.pages}頁`) : "",
-      detail.price_body ? detailRow("本体価格", `${Number(detail.price_body).toLocaleString("ja-JP")}円`) : "",
+      detail.price_body ? detailRow("価格", formatPrice(detail.price_body)) : "",
       series ? detailRow("シリーズ", series) : "",
       detail.original_title ? detailRow("原書名", detail.original_title) : ""
     ].filter(Boolean).join("");
@@ -648,7 +650,7 @@
       magazineCodes ? detailRow("雑誌コード", magazineCodes) : "",
       detail.format ? detailRow("判型", detail.format) : "",
       detail.pages ? detailRow("頁数", `${detail.pages}頁`) : "",
-      detail.price_body ? detailRow("本体価格", `${Number(detail.price_body).toLocaleString("ja-JP")}円`) : "",
+      detail.price_body ? detailRow("価格", formatPrice(detail.price_body)) : "",
       detail.editor ? detailRow("本誌編者", detail.editor) : ""
     ].filter(Boolean).join("");
 
