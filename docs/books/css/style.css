@@ -237,6 +237,17 @@ body.modal-open { overflow: hidden; }
   gap: 30px;
   align-items: start;
 }
+.cover-zoom-button {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.cover-zoom-button:focus-visible {
+  outline: 3px solid #527a20;
+  outline-offset: 4px;
+}
 .book-modal-cover {
   display: block;
   width: 180px;
