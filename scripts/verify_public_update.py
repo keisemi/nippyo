@@ -73,7 +73,7 @@ def verify_exact(relative: str) -> None:
 
 
 def verify_book_data() -> None:
-    verify_exact("data/books-last-updated.txt")
+    verify_exact("data/last-updated.txt")
     verify_exact("data/books-search.json")
 
 
