@@ -18,6 +18,8 @@ ISSUE_BODY = os.environ.get("ISSUE_BODY", "")
 
 RETRIES = 6
 RETRY_SECONDS = 3
+CONTENT_RETRIES = 12
+CONTENT_RETRY_SECONDS = 5
 
 
 def section_value(body: str, label: str) -> str:
@@ -65,11 +67,24 @@ def verify_exact(relative: str) -> None:
     local_path = DOCS / relative
     if not local_path.is_file():
         raise SystemExit(f"公開後確認用のローカルファイルがありません: {local_path}")
-    local = local_path.read_bytes()
-    remote = fetch(relative)
-    if hashlib.sha256(local).digest() != hashlib.sha256(remote).digest():
-        raise SystemExit(f"公開後確認で内容が一致しません: {relative}")
-    print(f"公開後確認OK: {relative}")
+
+    local_digest = hashlib.sha256(local_path.read_bytes()).digest()
+    for attempt in range(CONTENT_RETRIES):
+        remote_digest = hashlib.sha256(fetch(relative)).digest()
+        if local_digest == remote_digest:
+            print(f"公開後確認OK: {relative}")
+            return
+        if attempt + 1 < CONTENT_RETRIES:
+            print(
+                f"公開反映待ち: {relative} "
+                f"({attempt + 1}/{CONTENT_RETRIES})。{CONTENT_RETRY_SECONDS}秒後に再確認します。"
+            )
+            time.sleep(CONTENT_RETRY_SECONDS)
+
+    raise SystemExit(
+        f"公開後確認で内容が一致しません: {relative} "
+        f"（{CONTENT_RETRIES}回確認）"
+    )
 
 
 def verify_book_data() -> None:
