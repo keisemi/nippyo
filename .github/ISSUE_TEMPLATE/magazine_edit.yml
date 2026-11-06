@@ -10,7 +10,6 @@ body:
         現在の値を削除したい場合だけ、その欄に `__CLEAR__` と入力してください。
         目次・内容紹介などの長文も、このGitHubフォームへ直接入力できます。
 
-
   - type: input
     id: book_id
     attributes:
@@ -18,7 +17,6 @@ body:
       description: 管理画面から自動入力されます。変更しないでください。
     validations:
       required: true
-
 
   - type: input
     id: magazine_id
@@ -28,7 +26,6 @@ body:
     validations:
       required: true
 
-
   - type: input
     id: magazine_name
     attributes:
@@ -36,7 +33,6 @@ body:
       description: 対象誌の確認用です。変更しないでください。
     validations:
       required: true
-
 
   - type: input
     id: current_issue
@@ -46,18 +42,15 @@ body:
     validations:
       required: true
 
-
   - type: input
     id: mag_issue
     attributes:
       label: 雑誌月号
 
-
   - type: input
     id: issue_number
     attributes:
       label: 雑誌通算番号
-
 
   - type: input
     id: pub_date
@@ -65,12 +58,10 @@ body:
       label: 発刊日
       description: 例：2026-11-17
 
-
   - type: input
     id: format
     attributes:
       label: 判型
-
 
   - type: input
     id: pages
@@ -78,175 +69,161 @@ body:
       label: ページ数
       description: 数字のみ。
 
-
   - type: input
     id: price_body
     attributes:
       label: 本体価格
       description: 数字のみ。
 
-
   - type: input
     id: isbn_old
     attributes:
       label: 旧ISBN
-
 
   - type: input
     id: isbn_new
     attributes:
       label: 新ISBN
 
-
   - type: input
     id: magazine_code_1
     attributes:
       label: 雑誌コード(1)
-
 
   - type: input
     id: magazine_code_2
     attributes:
       label: 雑誌コード(2)
 
-
   - type: input
     id: subtitle_before
     attributes:
       label: 前副題
-
 
   - type: input
     id: feature
     attributes:
       label: 特集
 
-
   - type: input
     id: feature_yomi
     attributes:
       label: 特集よみ
-
 
   - type: input
     id: feature_subtitle
     attributes:
       label: 後副題
 
-
   - type: input
     id: description_heading
     attributes:
       label: 特集内容紹介文見出
-
 
   - type: textarea
     id: description
     attributes:
       label: 特集内容紹介文
 
-
   - type: input
     id: subtitle_before2
     attributes:
       label: 前副題2
-
 
   - type: input
     id: feature2
     attributes:
       label: 特集2
 
-
   - type: input
     id: feature2_yomi
     attributes:
       label: 特集2よみ
-
 
   - type: input
     id: feature2_subtitle
     attributes:
       label: 後副題2
 
-
   - type: input
     id: description_heading2
     attributes:
       label: 特集2 内容紹介文見出
-
 
   - type: textarea
     id: description2
     attributes:
       label: 特集2 内容紹介文
 
-
   - type: textarea
     id: toc
     attributes:
       label: 目次
-
 
   - type: input
     id: external_link_title_1
     attributes:
       label: 外部リンク1 タイトル
 
-
   - type: textarea
     id: external_link_comment_1
     attributes:
       label: 外部リンク1 コメント
-
 
   - type: input
     id: external_link_url_1
     attributes:
       label: 外部リンク1 URL
 
-
   - type: input
     id: external_link_title_2
     attributes:
       label: 外部リンク2 タイトル
-
 
   - type: textarea
     id: external_link_comment_2
     attributes:
       label: 外部リンク2 コメント
 
-
   - type: input
     id: external_link_url_2
     attributes:
       label: 外部リンク2 URL
-
 
   - type: input
     id: external_link_title_3
     attributes:
       label: 外部リンク3 タイトル
 
-
   - type: textarea
     id: external_link_comment_3
     attributes:
       label: 外部リンク3 コメント
-
 
   - type: input
     id: external_link_url_3
     attributes:
       label: 外部リンク3 URL
 
-
   - type: textarea
     id: editor
     attributes:
       label: 本誌編者
 
+  - type: input
+    id: next_issue
+    attributes:
+      label: 次号予告
+
+  - type: input
+    id: next_feature
+    attributes:
+      label: 次号特集
+
+  - type: textarea
+    id: next_comment
+    attributes:
+      label: 次号コメント
 
   - type: markdown
     attributes:
@@ -267,4 +244,3 @@ body:
       options:
         - label: 対象号と変更内容を確認しました。
           required: true
-

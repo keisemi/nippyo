@@ -98,6 +98,7 @@ jobs:
           git add docs/data/magazine-admin-search.json
           git add docs/data/magazine-admin-search-index.json
           git add docs/data/magazine-admin-details
+          git add docs/data/magazine-next-issues.json
           git add docs/data/magazine-last-updated.txt
           if git diff --cached --quiet; then
             echo "変更がありません。"
@@ -178,4 +179,3 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body $'❌ 更新処理が完了しませんでした。\n\n公開サイトへの反映完了を確認できていません。\n\nこのIssueのURLを管理担当者へ送ってください。Actions画面を確認する必要はありません。'
-
