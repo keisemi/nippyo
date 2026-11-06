@@ -216,6 +216,18 @@ body:
       label: 次号予告
 
   - type: input
+    id: next_release_date
+    attributes:
+      label: 発売予定日
+      description: 例：2027年1月27日発売予定
+
+  - type: input
+    id: next_price_tax_included
+    attributes:
+      label: 予定価格（税込）
+      description: 例：1,650円
+
+  - type: input
     id: next_feature
     attributes:
       label: 次号特集

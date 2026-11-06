@@ -98,7 +98,7 @@ def main():
                     raise SystemExit(f"雑誌号ID（書籍ID）が重複しています: {issue_id}")
                 visibility[issue_id] = state == "1"
 
-            # 各誌の最新公開号だけから次号予告3項目を取得する。
+            # 各誌の最新公開号だけから次号予告5項目を取得する。
             published_rows = [
                 row for row in rows
                 if clean_cell(row.get("WEB公開属性")) == "1"
@@ -124,12 +124,13 @@ def main():
                         "magazine_name": magazine_name,
                         "issue": clean_cell(latest.get("雑誌月号")),
                         "next_issue": clean_cell(latest.get("次号予告")),
+                        "next_release_date": clean_cell(latest.get("次号発売予定日")),
+                        "next_price_tax_included": clean_cell(latest.get("次号予定価格（税込）")),
                         "next_feature": clean_cell(latest.get("次号特集")),
                         "next_comment": clean_cell(latest.get("次号コメント")),
                     }
                 )
 
-            # 既存ビルダーは全件1を前提としている。生成時だけ1にし、必ずfinallyで元バイトへ戻す。
             write_temp_public_copy(path, fieldnames, rows, encoding, raw)
 
         subprocess.run([sys.executable, str(BASE_BUILDER)], cwd=ROOT, check=True)
@@ -158,7 +159,6 @@ def main():
         extra = sorted(set(ids) - set(visibility))
         raise SystemExit(f"生成データとCSVのIDが一致しません。missing={missing[:5]} extra={extra[:5]}")
 
-    # 管理画面用は全件保持し、公開状態列を追加する。
     admin_columns = [*columns, "published"]
     admin_rows = [
         [*row, bool(visibility[str(row[id_index])])]
@@ -173,7 +173,6 @@ def main():
     admin_search_text = json_write(ADMIN_SEARCH, admin_search_payload)
     admin_index_text = json_write(ADMIN_INDEX, admin_index_payload)
 
-    # 公開用は公開中の号だけに絞る。元行順を保ち、default_orderだけ新indexへ写し替える。
     public_old_indices = [i for i, row in enumerate(rows) if visibility[str(row[id_index])]]
     old_to_new = {old: new for new, old in enumerate(public_old_indices)}
     public_rows = [rows[i] for i in public_old_indices]
@@ -192,14 +191,12 @@ def main():
     public_search_text = json_write(PUBLIC_SEARCH, public_search_payload)
     public_index_text = json_write(PUBLIC_INDEX, public_index_payload)
 
-    # 各誌の最新公開号に登録された次号予告だけを軽量JSONとして出力する。
     next_issues.sort(key=lambda item: item["magazine_id"])
     next_issues_text = json_write(
         NEXT_ISSUES_FILE,
         {"magazines": next_issues},
     )
 
-    # 年別詳細も、管理用は全件／公開用は公開中だけに分離する。
     ADMIN_DETAIL_DIR.mkdir(parents=True, exist_ok=True)
     for old in ADMIN_DETAIL_DIR.glob("magazine-admin-details-*.json"):
         old.unlink()
