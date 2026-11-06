@@ -370,7 +370,9 @@ for magazine_id, magazine_name, filename in MAGAZINES:
 
     fieldnames, rows, encoding = read_source_csv(path)
     source_encodings[filename] = encoding
-    if fieldnames != EXPECTED_COLUMNS:
+    optional_columns = {"次号発売予定日", "次号予定価格（税込）"}
+    base_fieldnames = [column for column in fieldnames if column not in optional_columns]
+    if base_fieldnames != EXPECTED_COLUMNS:
         raise SystemExit(f"CSV列構成が想定と一致しません: {path}")
     if not rows:
         raise SystemExit(f"雑誌CSVが空です: {path}")
