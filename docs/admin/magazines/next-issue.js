@@ -151,9 +151,11 @@
   }
 
   function injectBlock() {
-    document.getElementById("next-issue-management")?.remove();
-
     if (!selectedIssueId) return;
+
+    const existing = document.getElementById("next-issue-management");
+    if (existing) return;
+
     const item = nextByIssueId.get(selectedIssueId);
     if (!item) return;
 
