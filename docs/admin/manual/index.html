@@ -27,11 +27,11 @@
 <body>
 <div class="manual-tools" aria-label="マニュアル操作">
   <a href="../">← 管理メニューへ戻る</a>
-  <a href="Nippyo_MAINTENANCE_v1_2.pdf">PDF版を開く</a>
+  <a href="Nippyo_MAINTENANCE_v1_3.pdf">PDF版を開く</a>
 </div>
 <header id="title-block-header">
 <h1 class="title">日本評論社 臨時ホームページ</h1>
-<p class="subtitle">操作・メンテナンス手順書 v1.2</p>
+<p class="subtitle">操作・メンテナンス手順書 v1.3</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <h2 id="toc-title">目次</h2>
@@ -73,6 +73,8 @@ id="toc-雑誌号を非公開再公開削除する">12.
 <li><a href="#雑誌書影を追加差替え削除する"
 id="toc-雑誌書影を追加差替え削除する">13.
 雑誌書影を追加・差替え・削除する</a></li>
+<li><a href="#次号予告を登録編集する"
+id="toc-次号予告を登録編集する">13-1. 次号予告を登録・編集する</a></li>
 </ul></li>
 <li><a href="#第iii部-お知らせ管理"
 id="toc-第iii部-お知らせ管理">第III部 お知らせ管理</a>
@@ -148,7 +150,7 @@ id="toc-第ix部-主なurl">第IX部 主なURL</a>
 </nav>
 <blockquote>
 <p><strong>作成者</strong>：尾崎大輔 ozaki@nippyo.co.jp<br />
-<strong>最終更新</strong>：2026-11-05<br />
+<strong>最終更新</strong>：2026-11-06<br />
 <strong>管理画面</strong>：<a
 href="https://keisemi.github.io/nippyo/admin/"
 class="uri">https://keisemi.github.io/nippyo/admin/</a><br />
@@ -186,7 +188,7 @@ alt="臨時HP 管理メニュー" />
 <td><strong>書籍管理</strong></td>
 </tr>
 <tr class="even">
-<td>雑誌の新号登録・修正・公開／非公開・削除・雑誌書影</td>
+<td>雑誌の新号登録・修正・公開／非公開・削除・雑誌書影・次号予告</td>
 <td><strong>雑誌管理</strong></td>
 </tr>
 <tr class="odd">
@@ -578,6 +580,50 @@ alt="雑誌号の変更内容確認" />
 </ul>
 <p><strong>1点、最大10MB</strong>です。</p>
 <p>削除時は専用の削除確認フォームが開きます。</p>
+<hr />
+<h2 id="次号予告を登録編集する">13-1. 次号予告を登録・編集する</h2>
+<p>各雑誌の次号情報は、<strong>現在公開されている最新号</strong>に登録します。</p>
+<p>雑誌管理画面で対象誌を選び、最新公開号の <strong>「登録内容を確認」</strong> を開きます。「次号予告」欄の <strong>「次号予告を登録・編集」</strong> を押してください。</p>
+<h3 id="次号予告の入力項目">入力項目</h3>
+<table>
+<thead>
+<tr class="header"><th>項目</th><th>入力内容</th></tr>
+</thead>
+<tbody>
+<tr class="odd"><td>次号予告</td><td>次に刊行する号の月号表記。例：<code>2027年2・3月号</code></td></tr>
+<tr class="even"><td>発売予定日</td><td>予定している発売日。例：<code>2027年1月27日</code></td></tr>
+<tr class="odd"><td>予定価格（税込）</td><td>税込の予定価格。例：<code>1705円</code></td></tr>
+<tr class="even"><td>次号特集</td><td>次号の特集名</td></tr>
+<tr class="odd"><td>次号コメント</td><td>次号の内容紹介、予定記事・執筆者など</td></tr>
+</tbody>
+</table>
+<p><strong>「次号予告」には月号表記だけ</strong>を入力し、発売予定日や価格はそれぞれ専用欄に入力します。</p>
+<p>既存の次号情報を修正する場合は、現在の値が入力済みの状態で編集画面が開きます。必要な箇所だけ変更してください。登録済みの項目を削除したい場合は、その欄を空欄にします。</p>
+<p>入力後、<strong>「GitHubの確認フォームへ進む」</strong> を押します。GitHubの確認フォームでは、対象の雑誌号と変更内容を確認し、「確認」にチェックして送信してください。書籍ID・雑誌ID・現在の雑誌月号など、自動入力された識別情報は変更しません。</p>
+<figure>
+<img src="../../assets/maintenance/18_next_issue_github_form.png"
+alt="次号予告の発売予定日と予定価格が引き継がれたGitHub確認フォーム" style="max-width:88%;" />
+<figcaption aria-hidden="true">発売予定日・予定価格（税込）もGitHubの確認フォームへ引き継がれます</figcaption>
+</figure>
+<p>正常に処理が終わると、Issueに「✅ 更新が完了しました」と表示され、自動で閉じます。</p>
+<h3 id="次号予告の公開サイト表示">公開サイトでの表示</h3>
+<p>次号情報が1項目以上登録されている場合、公開サイトの最新号カードに <strong>「次号予告」</strong> ボタンが表示されます。</p>
+<figure>
+<img src="../../assets/maintenance/17_next_issue_button.png"
+alt="雑誌最新号カードに表示された次号予告ボタン" style="max-width:58%;" />
+<figcaption aria-hidden="true">最新号カードに「次号予告」ボタンが表示されます</figcaption>
+</figure>
+<p>「次号予告」を押すと、登録した次号情報がポップアップで表示されます。5項目のうち、<strong>空欄の項目は公開サイトには表示されません。</strong></p>
+<figure>
+<img src="../../assets/maintenance/19_next_issue_public.png"
+alt="発売予定日・予定価格・特集・コメントが表示された次号予告ポップアップ" style="max-width:78%;" />
+<figcaption aria-hidden="true">次号予告の公開表示例</figcaption>
+</figure>
+<h3 id="新しい号を公開したとき">新しい号を公開したとき</h3>
+<p>次号予告は、常に<strong>最新公開号</strong>に登録された情報だけが公開サイトに表示されます。</p>
+<p>新しい号を公開すると、その号が新しい「最新公開号」になるため、それまでの号に登録されていた次号予告は自動的に表から外れます。新号公開後は、その新しい最新号に対して、さらに次の号の「次号予告」を登録してください。</p>
+<p>非公開で事前登録している号があっても、公開サイトの次号予告は現在の<strong>最新公開号</strong>を基準に表示されます。</p>
+<p>CSVやJSONを直接編集する必要はありません。</p>
 <hr />
 <h1 id="第iii部-お知らせ管理">第III部 お知らせ管理</h1>
 <h2 id="お知らせ管理画面を開く">14. お知らせ管理画面を開く</h2>
