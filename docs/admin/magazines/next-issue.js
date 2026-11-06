@@ -63,6 +63,8 @@
 
     const fields = [
       ["next_issue", text(item.next_issue), values.next_issue],
+      ["next_release_date", text(item.next_release_date), values.next_release_date],
+      ["next_price_tax_included", text(item.next_price_tax_included), values.next_price_tax_included],
       ["next_feature", text(item.next_feature), values.next_feature],
       ["next_comment", text(item.next_comment), values.next_comment],
     ];
@@ -86,6 +88,8 @@
       <table class="detail-table">
         <tbody>
           <tr><th>次号予告</th><td>${shown(item.next_issue)}</td></tr>
+          <tr><th>発売予定日</th><td>${shown(item.next_release_date)}</td></tr>
+          <tr><th>予定価格（税込）</th><td>${shown(item.next_price_tax_included)}</td></tr>
           <tr><th>次号特集</th><td>${shown(item.next_feature)}</td></tr>
           <tr><th>次号コメント</th><td><div class="detail-text">${shown(item.next_comment)}</div></td></tr>
         </tbody>
@@ -109,6 +113,14 @@
           <label class="edit-field wide">
             <span>次号予告</span>
             <input type="text" data-next-issue-input value="${esc(text(item.next_issue))}">
+          </label>
+          <label class="edit-field">
+            <span>発売予定日</span>
+            <input type="text" data-next-release-date-input value="${esc(text(item.next_release_date))}" placeholder="例：2027年1月27日発売予定">
+          </label>
+          <label class="edit-field">
+            <span>予定価格（税込）</span>
+            <input type="text" data-next-price-input value="${esc(text(item.next_price_tax_included))}" placeholder="例：1,650円">
           </label>
           <label class="edit-field wide">
             <span>次号特集</span>
@@ -134,6 +146,8 @@
       event.preventDefault();
       const values = {
         next_issue: section.querySelector("[data-next-issue-input]")?.value || "",
+        next_release_date: section.querySelector("[data-next-release-date-input]")?.value || "",
+        next_price_tax_included: section.querySelector("[data-next-price-input]")?.value || "",
         next_feature: section.querySelector("[data-next-feature-input]")?.value || "",
         next_comment: section.querySelector("[data-next-comment-input]")?.value || "",
       };
