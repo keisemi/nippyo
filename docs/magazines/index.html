@@ -29,6 +29,14 @@
     .magazine-grid .magazine-links .button {
       width: 100%;
       text-align: center;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .magazine-grid .magazine-links .keisemi-note-link {
+      white-space: nowrap;
+    }
+    .magazine-link-line {
+      display: block;
     }
     .magazine-current {
       margin-top: 16px;
@@ -82,6 +90,9 @@
     .magazine-current-actions .button {
       width: 100%;
       text-align: center;
+      white-space: nowrap;
+      padding-left: 16px;
+      padding-right: 16px;
     }
     .magazine-current-actions button.button {
       font: inherit;
@@ -229,8 +240,8 @@
           <h2 id="keisemi-title">経済セミナー</h2>
           <div class="magazine-current" data-magazine-current>最新号情報を読み込んでいます。</div>
           <div class="magazine-links">
-            <a class="button button-secondary" href="https://note.com/keisemi" target="_blank" rel="noopener noreferrer">『経済セミナー』公式note</a>
-            <a class="button button-secondary" href="https://keisemi.github.io/keisemi-article-index/" target="_blank" rel="noopener noreferrer">『経済セミナー』全記事データベース</a>
+            <a class="button button-secondary keisemi-note-link" href="https://note.com/keisemi" target="_blank" rel="noopener noreferrer">『経済セミナー』公式note</a>
+            <a class="button button-secondary" href="https://keisemi.github.io/keisemi-article-index/" target="_blank" rel="noopener noreferrer"><span class="magazine-link-line">『経済セミナー』</span><span class="magazine-link-line">全記事データベース</span></a>
           </div>
         </section>
 
