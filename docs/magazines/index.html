@@ -76,11 +76,17 @@
       line-height: 1.6;
     }
     .magazine-current-actions {
+      display: grid;
+      gap: 10px;
       margin-top: 14px;
     }
     .magazine-current-actions .button {
       width: 100%;
       text-align: center;
+    }
+    .magazine-current-actions button.button {
+      font: inherit;
+      cursor: pointer;
     }
     .magazine-data-updated {
       margin: 20px 0 0;
@@ -88,6 +94,80 @@
       font-size: .88rem;
       text-align: right;
     }
+    body.next-issue-modal-open { overflow: hidden; }
+    .next-issue-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .next-issue-modal[hidden] { display: none; }
+    .next-issue-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .42);
+    }
+    .next-issue-modal-panel {
+      position: relative;
+      width: min(560px, 100%);
+      max-height: min(80vh, 720px);
+      overflow: auto;
+      padding: 30px;
+      background: #fff;
+      border-top: 4px solid var(--green);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .22);
+      outline: none;
+    }
+    .next-issue-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      background: transparent;
+      color: #555;
+      font: inherit;
+      font-size: 1.65rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .next-issue-modal-close:hover { color: var(--green); }
+    .next-issue-modal-panel h2 {
+      margin: 0;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 1.8rem;
+      font-weight: 500;
+    }
+    .next-issue-modal-magazine {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .next-issue-item {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .next-issue-item-label {
+      margin: 0 0 5px;
+      color: var(--green);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .next-issue-value {
+      margin: 0;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+    .next-issue-issue-value {
+      font-size: 1.08rem;
+      font-weight: 700;
+    }
+    .next-issue-feature-value { font-weight: 700; }
+    .next-issue-comment-value { color: #444; }
     @media (max-width: 980px) {
       .magazine-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -102,6 +182,8 @@
       }
       .magazine-current-layout { grid-template-columns: 84px minmax(0, 1fr); }
       .magazine-current-cover { width: 84px; }
+      .next-issue-modal { padding: 16px; }
+      .next-issue-modal-panel { padding: 24px 20px; }
     }
   </style>
 </head>
@@ -170,6 +252,29 @@
           <p class="card-kicker">MAGAZINE</p>
           <h2 id="sodachi-title">そだちの科学</h2>
           <div class="magazine-current" data-magazine-current>最新号情報を読み込んでいます。</div>
+        </section>
+      </div>
+
+      <div class="next-issue-modal" id="nextIssueModal" hidden>
+        <div class="next-issue-modal-backdrop" data-next-issue-close></div>
+        <section class="next-issue-modal-panel" id="nextIssueModalPanel" role="dialog" aria-modal="true" aria-labelledby="nextIssueModalTitle" tabindex="-1">
+          <button class="next-issue-modal-close" type="button" aria-label="次号予告を閉じる" data-next-issue-close>×</button>
+          <p class="section-kicker">NEXT ISSUE</p>
+          <h2 id="nextIssueModalTitle">次号予告</h2>
+          <p class="next-issue-modal-magazine" id="nextIssueModalMagazine"></p>
+
+          <div class="next-issue-item" data-next-issue-block>
+            <p class="next-issue-value next-issue-issue-value" data-next-issue-value></p>
+          </div>
+
+          <div class="next-issue-item" data-next-feature-block>
+            <p class="next-issue-item-label">特集</p>
+            <p class="next-issue-value next-issue-feature-value" data-next-feature-value></p>
+          </div>
+
+          <div class="next-issue-item" data-next-comment-block>
+            <p class="next-issue-value next-issue-comment-value" data-next-comment-value></p>
+          </div>
         </section>
       </div>
 
