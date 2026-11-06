@@ -7,9 +7,13 @@
   const nextIssueModalPanel = document.getElementById("nextIssueModalPanel");
   const nextIssueModalMagazine = document.getElementById("nextIssueModalMagazine");
   const nextIssueBlock = nextIssueModal?.querySelector("[data-next-issue-block]");
+  const nextReleaseDateBlock = nextIssueModal?.querySelector("[data-next-release-date-block]");
+  const nextPriceBlock = nextIssueModal?.querySelector("[data-next-price-block]");
   const nextFeatureBlock = nextIssueModal?.querySelector("[data-next-feature-block]");
   const nextCommentBlock = nextIssueModal?.querySelector("[data-next-comment-block]");
   const nextIssueValue = nextIssueModal?.querySelector("[data-next-issue-value]");
+  const nextReleaseDateValue = nextIssueModal?.querySelector("[data-next-release-date-value]");
+  const nextPriceValue = nextIssueModal?.querySelector("[data-next-price-value]");
   const nextFeatureValue = nextIssueModal?.querySelector("[data-next-feature-value]");
   const nextCommentValue = nextIssueModal?.querySelector("[data-next-comment-value]");
   let lastFocusedElement = null;
@@ -58,8 +62,13 @@
   }
 
   function hasNextIssue(item) {
-    return Boolean(item && [item.next_issue, item.next_feature, item.next_comment]
-      .some((value) => String(value || "").trim()));
+    return Boolean(item && [
+      item.next_issue,
+      item.next_release_date,
+      item.next_price_tax_included,
+      item.next_feature,
+      item.next_comment
+    ].some((value) => String(value || "").trim()));
   }
 
   function nextIssuesByMagazine(payload) {
@@ -106,6 +115,8 @@
       nextIssueModalMagazine.textContent = String(item.magazine_name || "").trim();
     }
     setOptionalBlock(nextIssueBlock, nextIssueValue, item.next_issue);
+    setOptionalBlock(nextReleaseDateBlock, nextReleaseDateValue, item.next_release_date);
+    setOptionalBlock(nextPriceBlock, nextPriceValue, item.next_price_tax_included);
     setOptionalBlock(nextFeatureBlock, nextFeatureValue, item.next_feature);
     setOptionalBlock(nextCommentBlock, nextCommentValue, item.next_comment);
     nextIssueModal.hidden = false;
