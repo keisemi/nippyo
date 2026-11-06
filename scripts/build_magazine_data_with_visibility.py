@@ -14,6 +14,7 @@ PUBLIC_DETAIL_DIR = OUTPUT_DIR / "magazine-details"
 ADMIN_SEARCH = OUTPUT_DIR / "magazine-admin-search.json"
 ADMIN_INDEX = OUTPUT_DIR / "magazine-admin-search-index.json"
 ADMIN_DETAIL_DIR = OUTPUT_DIR / "magazine-admin-details"
+NEXT_ISSUES_FILE = OUTPUT_DIR / "magazine-next-issues.json"
 UPDATED_FILE = OUTPUT_DIR / "magazine-last-updated.txt"
 BASE_BUILDER = ROOT / "scripts" / "build_magazine_data.py"
 
@@ -25,6 +26,15 @@ MAGAZINE_FILES = [
     "05_kokoro_no_kagaku.csv",
     "06_sodachi_no_kagaku.csv",
 ]
+
+MAGAZINE_NAMES = {
+    "1": "法律時報",
+    "2": "法学セミナー",
+    "3": "経済セミナー",
+    "4": "数学セミナー",
+    "6": "こころの科学",
+    "7": "そだちの科学",
+}
 
 
 def read_rows(path: Path):
@@ -57,9 +67,14 @@ def json_write(path: Path, payload):
     return text
 
 
+def clean_cell(value):
+    return str(value or "").replace("\x00", "").strip()
+
+
 def main():
     originals = {}
     visibility = {}
+    next_issues = []
 
     try:
         for filename in MAGAZINE_FILES:
@@ -71,8 +86,8 @@ def main():
                 raise SystemExit(f"公開状態の判定に必要な列がありません: {path}")
 
             for row in rows:
-                issue_id = str(row.get("書籍ID") or "").strip()
-                state = str(row.get("WEB公開属性") or "").strip()
+                issue_id = clean_cell(row.get("書籍ID"))
+                state = clean_cell(row.get("WEB公開属性"))
                 if not issue_id:
                     raise SystemExit(f"空の書籍IDがあります: {path}")
                 if state not in {"0", "1"}:
@@ -82,6 +97,37 @@ def main():
                 if issue_id in visibility:
                     raise SystemExit(f"雑誌号ID（書籍ID）が重複しています: {issue_id}")
                 visibility[issue_id] = state == "1"
+
+            # 各誌の最新公開号だけから次号予告3項目を取得する。
+            published_rows = [
+                row for row in rows
+                if clean_cell(row.get("WEB公開属性")) == "1"
+            ]
+            if published_rows:
+                latest = max(
+                    published_rows,
+                    key=lambda row: (
+                        clean_cell(row.get("発刊日")),
+                        clean_cell(row.get("書籍ID")),
+                    ),
+                )
+                magazine_id = clean_cell(latest.get("雑誌ID"))
+                magazine_name = MAGAZINE_NAMES.get(magazine_id)
+                if not magazine_name:
+                    raise SystemExit(
+                        f"未定義の雑誌IDです: {path} / 書籍ID {clean_cell(latest.get('書籍ID'))} / 雑誌ID {magazine_id!r}"
+                    )
+                next_issues.append(
+                    {
+                        "issue_id": clean_cell(latest.get("書籍ID")),
+                        "magazine_id": magazine_id,
+                        "magazine_name": magazine_name,
+                        "issue": clean_cell(latest.get("雑誌月号")),
+                        "next_issue": clean_cell(latest.get("次号予告")),
+                        "next_feature": clean_cell(latest.get("次号特集")),
+                        "next_comment": clean_cell(latest.get("次号コメント")),
+                    }
+                )
 
             # 既存ビルダーは全件1を前提としている。生成時だけ1にし、必ずfinallyで元バイトへ戻す。
             write_temp_public_copy(path, fieldnames, rows, encoding, raw)
@@ -146,6 +192,13 @@ def main():
     public_search_text = json_write(PUBLIC_SEARCH, public_search_payload)
     public_index_text = json_write(PUBLIC_INDEX, public_index_payload)
 
+    # 各誌の最新公開号に登録された次号予告だけを軽量JSONとして出力する。
+    next_issues.sort(key=lambda item: item["magazine_id"])
+    next_issues_text = json_write(
+        NEXT_ISSUES_FILE,
+        {"magazines": next_issues},
+    )
+
     # 年別詳細も、管理用は全件／公開用は公開中だけに分離する。
     ADMIN_DETAIL_DIR.mkdir(parents=True, exist_ok=True)
     for old in ADMIN_DETAIL_DIR.glob("magazine-admin-details-*.json"):
@@ -184,6 +237,7 @@ def main():
         public_index_text,
         admin_search_text,
         admin_index_text,
+        next_issues_text,
         *detail_texts,
     ])
     version = hashlib.sha256(version_source.encode("utf-8")).hexdigest()[:16]
@@ -197,6 +251,7 @@ def main():
     print(f" - 非公開: {hidden_count:,}号")
     print(f" - 管理用検索: {ADMIN_SEARCH}")
     print(f" - 管理用詳細: {ADMIN_DETAIL_DIR}")
+    print(f" - 次号予告: {NEXT_ISSUES_FILE}")
 
 
 if __name__ == "__main__":
