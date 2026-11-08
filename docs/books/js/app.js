@@ -180,7 +180,9 @@
       return `https://www.amazon.co.jp/s?k=${encodeURIComponent(isbn)}`;
     }
 
-    const query = [book.title, authorDisplay(book.author)].filter(Boolean).join(" ").trim();
+    const query = (book.type === "magazine_issue" || book.__type === "magazine_issue")
+      ? magazineTitle(book)
+      : [book.title, authorDisplay(book.author)].filter(Boolean).join(" ").trim();
     return query
       ? `https://www.amazon.co.jp/s?k=${encodeURIComponent(query)}`
       : "";
@@ -674,6 +676,7 @@
         </div>
       </div>
       ${metaRows ? `<dl class="detail-grid">${metaRows}</dl>` : ""}
+      ${amazonButton(detail)}
       ${detail.description ? `<section class="book-detail-section"><h3>${esc(descriptionHeading)}</h3><p class="book-detail-copy">${detailText(detail.description)}</p></section>` : ""}
       ${detail.description2 ? `<section class="book-detail-section"><h3>${esc(descriptionHeading2)}</h3><p class="book-detail-copy">${detailText(detail.description2)}</p></section>` : ""}
       ${detail.toc ? `<section class="book-detail-section"><h3>目次</h3><div class="book-detail-toc">${detailText(detail.toc)}</div></section>` : ""}

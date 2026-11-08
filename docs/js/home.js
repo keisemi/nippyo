@@ -33,7 +33,7 @@
 
   if (note) {
     note.textContent = targetYm
-      ? `${targetYm.replace(".", "年")}月刊行の書籍を自動表示しています。`
+      ? `${targetYm.replace(".", "年")}月刊行の書籍を表示しています。`
       : "刊行年月を確認できる書籍がありません。";
   }
 
