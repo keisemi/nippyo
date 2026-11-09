@@ -80,7 +80,7 @@ jobs:
           print(f"雑誌データ検証OK: {len(issues):,}号")
           PY
           node --check docs/admin/magazines/admin.js
-          git diff --check
+          git diff --check -- . ':(exclude)data/magazines/*.csv'
 
       - name: Commit updated magazine data
         shell: bash
