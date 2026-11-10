@@ -27,11 +27,11 @@
 <body>
 <div class="manual-tools" aria-label="マニュアル操作">
   <a href="../">← 管理メニューへ戻る</a>
-  <a href="Nippyo_MAINTENANCE_v1_3.pdf">PDF版を開く</a>
+  <a href="Nippyo_MAINTENANCE_v1_4.pdf">PDF版を開く</a>
 </div>
 <header id="title-block-header">
 <h1 class="title">日本評論社 臨時ホームページ</h1>
-<p class="subtitle">操作・メンテナンス手順書 v1.3</p>
+<p class="subtitle">操作・メンテナンス手順書 v1.4</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <h2 id="toc-title">目次</h2>
@@ -150,7 +150,7 @@ id="toc-第ix部-主なurl">第IX部 主なURL</a>
 </nav>
 <blockquote>
 <p><strong>作成者</strong>：尾崎大輔 ozaki@nippyo.co.jp<br />
-<strong>最終更新</strong>：2026-11-06<br />
+<strong>最終更新</strong>：2026-11-10<br />
 <strong>管理画面</strong>：<a
 href="https://keisemi.github.io/nippyo/admin/"
 class="uri">https://keisemi.github.io/nippyo/admin/</a><br />
@@ -491,26 +491,14 @@ alt="雑誌管理画面" />
 <p>雑誌を選ぶと、最新号と既存号を確認できます。</p>
 <hr />
 <h2 id="新しい雑誌号を登録する">10. 新しい雑誌号を登録する</h2>
-<p>雑誌の新号登録は、<strong>管理画面で次号登録を開始し、GitHubフォームで最終内容を確認して送信する</strong>流れです。</p>
+<p>雑誌の新号登録は、<strong>管理画面からGitHubの新号登録フォームを直接開き、フォーム上で内容を確認・入力して送信する</strong>流れです。</p>
 <h3 id="対象誌を選ぶ">10-1. 対象誌を選ぶ</h3>
 <p>雑誌管理画面で対象誌を選び、最新号を確認します。</p>
 <p><strong>「最新号をもとに新しい号を登録」</strong>
-を押すと、管理画面内に次号登録画面が開きます。</p>
-<h3 id="管理画面で新号の基本情報を準備する">10-2.
-管理画面で新号の基本情報を準備する</h3>
-<p>次号登録画面では、前号を雛形にしつつ、新号用の入力画面が表示されます。</p>
-<ul>
-<li>雑誌ID・雑誌名は対象誌から決まります</li>
-<li>判型・本誌編者は前号の値が表示されます</li>
-<li>書籍IDは、既存の雑誌書籍IDの最大値＋1が候補として自動入力されます</li>
-<li>月号・通巻番号・発刊日など、新号で変わる項目を入力します</li>
-</ul>
-<p>雑誌の書籍IDは、通常書籍のようにISBN下5桁から決めるものではありません。通常は自動入力された候補をそのまま使います。</p>
-<h3 id="登録内容を確認するを押す">10-3.
-「登録内容を確認する」を押す</h3>
-<p>管理画面で <strong>「登録内容を確認する」</strong>
-を押すと、GitHubの新号登録フォームが開きます。</p>
-<p><strong>最終的に登録される内容は、このGitHubフォームに表示されている内容です。</strong></p>
+を押すと、GitHubの新号登録フォームが直接開きます。</p>
+<h3 id="githubの新号登録フォームに入力する">10-2.
+GitHubの新号登録フォームに入力する</h3>
+<p>GitHubフォームに表示された項目を確認し、新号の情報を入力します。</p>
 <p>特に次の項目を確認してください。</p>
 <ul>
 <li>公開状態</li>
@@ -524,7 +512,10 @@ alt="雑誌管理画面" />
 <li>特集・目次</li>
 <li>必要な外部リンク</li>
 </ul>
-<p>GitHubフォームに表示されている内容を確認し、必要な項目を入力して送信します。</p>
+<h3 id="入力内容を確認して送信する">10-3.
+入力内容を確認して送信する</h3>
+<p><strong>最終的に登録される内容は、このGitHubフォームに表示・入力されている内容です。</strong></p>
+<p>内容を確認し、必要な項目を入力して送信します。</p>
 <h3 id="公開状態を決める">10-4. 公開状態を決める</h3>
 <p>GitHubフォームの <strong>「公開状態」</strong>
 が最終的な公開設定です。</p>
