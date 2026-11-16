@@ -22,6 +22,14 @@
     return "";
   };
 
+  const safeTextUrl = (value) => {
+    const url = String(value || "").trim();
+    const webUrl = safeUrl(url);
+    if (webUrl) return webUrl;
+    if (/^mailto:[^\s<>"']+$/i.test(url)) return url;
+    return "";
+  };
+
   const renderNewsText = (value) => {
     const text = String(value ?? "");
     const linkPattern = /\[([^\]\r\n]+)\]\(([^)\r\n]+)\)/g;
@@ -31,7 +39,7 @@
     for (const match of text.matchAll(linkPattern)) {
       const full = match[0];
       const label = match[1];
-      const url = safeUrl(match[2]);
+      const url = safeTextUrl(match[2]);
       const index = match.index ?? 0;
 
       html += esc(text.slice(lastIndex, index));

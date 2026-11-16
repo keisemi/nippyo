@@ -53,7 +53,7 @@ body:
     id: text
     attributes:
       label: 本文
-      description: "空欄可。修正で空欄なら変更しません。内容を空にする場合は __CLEAR__ と入力してください。"
+      description: "空欄可。修正で空欄なら変更しません。内容を空にする場合は __CLEAR__ と入力してください。本文内のリンクは [表示名](https://...)、メールアドレスへのリンクは [表示名](mailto:address@example.com) の形式で入力できます。"
 
   - type: input
     id: url
