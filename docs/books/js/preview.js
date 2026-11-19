@@ -21,19 +21,24 @@
       }
       .preview-reading-link {
         display: inline-block;
-        margin-top: 9px;
-        color: var(--accent);
+        margin-top: 10px;
+        padding: 7px 16px;
+        border: 1px solid #b7b7b7;
+        border-radius: 4px;
+        background: #e5e5e5;
+        color: #264b1f;
         font-size: 13px;
         font-weight: 700;
-        line-height: 1.5;
+        line-height: 1.4;
         text-decoration: none;
         white-space: nowrap;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
       }
       .preview-reading-link:hover,
       .preview-reading-link:focus-visible {
-        color: var(--accent-dark);
-        text-decoration: underline;
-        text-underline-offset: .18em;
+        background: #d7d7d7;
+        color: #173c10;
+        text-decoration: none;
       }
       .preview-reading-link:focus-visible {
         outline: 2px solid rgba(37, 94, 23, .35);
