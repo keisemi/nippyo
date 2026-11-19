@@ -1,9 +1,10 @@
 {
-  "updated": "2026/11/04 13:30:54",
+  "updated": "2026/11/20 05:33:27",
   "books": {
     "54118": "assets/preview/books/sample_54118.pdf?v=c38e89ef4bd9641b"
   },
   "magazines": {
-    "9792": "assets/preview/magazines/sample_9792.pdf?v=df644a5a24bfed5b"
+    "9792": "assets/preview/magazines/sample_9792.pdf?v=df644a5a24bfed5b",
+    "9825": "assets/preview/magazines/sample_9825.pdf?v=05a0a5e6edc7a410"
   }
 }
